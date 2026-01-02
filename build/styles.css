@@ -1,0 +1,350 @@
+/* MyPlugins Styles */
+.lazy-plugin-filter {
+    margin: 4px;
+    font-size: 90%;
+}
+
+/* MyStatusBar Styles */
+/*
+  Structure
+*/
+
+div.statusbar-organizer-presets-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1em;
+    padding: 1em;
+    width: 100%;
+}
+
+div.statusbar-organizer-rows-container-wrapper {
+    width: 100%;
+    position: relative;
+}
+
+div.statusbar-organizer-rows-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    padding: 1em;
+    width: 100%;
+}
+
+/*
+  Presets
+*/
+
+div.statusbar-organizer-preset {
+    background: var(--background-primary-alt);
+    opacity: 0.75;
+    color: var(--text-normal);
+    border-radius: 0.25em;
+    padding: 0.5em;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    gap: 0.5em;
+}
+
+div.statusbar-organizer-preset:hover,
+div.statusbar-organizer-preset-active {
+    opacity: 1;
+}
+
+div.statusbar-organizer-preset:hover>span {
+    display: inherit;
+}
+
+input.statusbar-organizer-preset-name {
+    all: unset;
+    font: inherit;
+    color: inherit;
+    pointer-events: none;
+    text-align: center;
+}
+
+input.statusbar-organizer-preset-name:focus {
+    text-decoration: underline;
+}
+
+span.statusbar-organizer-preset-delete {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    display: none;
+}
+
+span.statusbar-organizer-preset-rename {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    display: none;
+}
+
+/*
+  Rows
+*/
+
+div.statusbar-organizer-row {
+    background: var(--background-primary-alt);
+    color: var(--text-normal);
+    border-radius: 0.25em;
+    display: grid;
+    grid-template-columns: 1.5em 1fr 1fr 4em;
+    padding: 0.5em 1em;
+    width: 100%;
+}
+
+div.statusbar-organizer-row>span {
+    display: inline-block;
+    height: 1.75em;
+    line-height: 0.7;
+    padding: 0.5em 0em;
+}
+
+span.statusbar-organizer-row-handle {
+    padding: 0 !important;
+    cursor: move;
+}
+
+span.statusbar-organizer-row-title {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+span.statusbar-organizer-row-handle::after {
+    content: '·· ·· ·· ··';
+    display: inline-block;
+    height: 1.75em;
+    line-height: 0.25rem;
+    padding: 0.275em 0em;
+    width: 1em;
+    word-wrap: normal;
+}
+
+span.statusbar-organizer-row-preview {
+    border-radius: 0.25em;
+    margin-top: 0.2em;
+    padding: 0.5em !important;
+    font-size: 0.8rem;
+    background: var(--background-secondary-alt);
+    overflow: hidden;
+}
+
+span.statusbar-organizer-row-visibility {
+    padding-top: 0.3em !important;
+    cursor: pointer;
+    text-align: right;
+}
+
+div.statusbar-organizer-row-drag {
+    position: absolute;
+    background: var(--background-modifier-active-hover)
+}
+
+div.statusbar-organizer-row-drag>span.statusbar-organizer-row-preview {
+    opacity: 0.9;
+}
+
+div.statusbar-organizer-row-clone {
+    background: transparent;
+}
+
+div.statusbar-organizer-row-clone>span {
+    visibility: hidden !important;
+}
+
+div.statusbar-organizer-row-disabled {
+    color: var(--color-red);
+    opacity: 0.5;
+}
+
+div.statusbar-organizer-row-hidden:not(div.statusbar-organizer-row-disabled) {
+    color: var(--text-faint);
+    opacity: 0.75;
+}
+
+div.statusbar-organizer-element-hidden {
+    height: 0;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+    visibility: hidden;
+    width: 0;
+    display: none;
+}
+
+/* MySnippets Styles */
+.ms-css-editor {
+    width: 100%;
+    height: 36vh;
+    margin-top: 12px;
+    text-align: left;
+    white-space: pre;
+    word-wrap: normal;
+    overflow-x: scroll;
+    padding: 6px 10px;
+    font-size: 0.875em;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    color: var(--text-muted);
+    font-family: var(--font-monospace);
+    background-color: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+}
+
+/*----------------------------------------------------------------
+STATUS BAR MENU
+----------------------------------------------------------------*/
+
+.MiniSettings-statusbar-button {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.MySnippets-statusbar-menu {
+    width: 290px;
+    max-height: calc(100% - 90px);
+}
+
+.MySnippets-statusbar-menu .menu-item-icon {
+    display: none;
+}
+
+.MySnippets-statusbar-menu .menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;
+}
+
+.MySnippets-statusbar-menu .menu-item.settings-item {
+    font-size: 12px;
+    text-align: center;
+    line-height: 1;
+    border-radius: 5px;
+    height: auto;
+    padding: 8px 5px 0px 5px;
+    margin: 0 auto;
+    width: fit-content;
+    color: var(--text-faint);
+}
+
+.MySnippets-statusbar-menu.menu-item:hover,
+.MySnippets-statusbar-menu.menu-item .selected:hover,
+.MySnippets-statusbar-menu .menu-item.selected:not(.is-disabled):not(.is-label) {
+    background-color: transparent;
+}
+
+.MySnippets-statusbar-menu .menu-item-title {
+    margin-right: 10px;
+    width: 60%;
+    line-height: initial;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+}
+
+.MS-OpenSnippet {
+    padding: 3px 10px;
+    border-radius: 6px;
+    margin-right: 0;
+    margin-left: 8px;
+    display: flex;
+    background-color: var(--interactive-accent);
+}
+
+.MS-OpenSnippet svg {
+    height: 1.35em;
+    width: 1.35em;
+}
+
+.MS-OpenSnippet:hover {
+    background-color: var(--interactive-accent);
+}
+
+.MySnippetsButton {
+    width: auto;
+    padding: 5px 14px;
+    margin-right: 0;
+    margin-top: 4px;
+    border-radius: 6px;
+    display: flex;
+    font-size: 12px !important;
+}
+
+.MySnippetsButton svg {
+    height: 1.35em;
+    margin: auto;
+    width: 1.35em;
+}
+
+.MySnippetsButton.MS-Reload,
+.MySnippetsButton.MS-Reload:hover,
+.MySnippetsButton.MS-Folder,
+.MySnippetsButton.MS-Folder:hover {
+    background-color: var(--interactive-accent);
+}
+
+.MySnippets-statusbar-menu .menu-item.buttonitem {
+    justify-self: space-between;
+}
+
+.menu.MySnippets-statusbar-menu {
+    overflow: auto;
+}
+
+/*----------------------------------------------------------------
+MYSNIPPETS SETTINGS
+----------------------------------------------------------------*/
+
+.ms-manage-snippets-container {
+    padding: 8px 16px;
+    background-color: var(--background-secondary-alt);
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+.ms-manage-snippets-container .setting-item {
+    border-top: 1px solid var(--background-modifier-border);
+    padding: 10px 0;
+}
+
+.ms-manage-snippets-container .setting-item:first-child {
+    border-top: none;
+}
+
+.ms-manage-snippets-container .setting-item-name {
+    font-weight: 500;
+    font-size: 0.95em;
+    color: var(--text-normal);
+}
+
+.ms-reload-container {
+    padding-top: 16px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+details summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 10px 0;
+    color: var(--text-accent);
+    transition: color 0.2s ease;
+}
+
+details summary:hover {
+    color: var(--text-accent-hover);
+}
+
+/*----------------------------------------------------------------
+MYSNIPPETS SUPPORT
+----------------------------------------------------------------*/

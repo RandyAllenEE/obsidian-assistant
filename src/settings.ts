@@ -1,0 +1,126 @@
+export interface MyFoldersSettings {
+    enabled: boolean;
+    areFoldersHidden: boolean;
+    matchCaseInsensitive: boolean;
+    addHiddenFoldersToObsidianIgnoreList: boolean;
+    hideBottomStatusBarIndicatorText: boolean;
+    enableCompatQuickExplorer: boolean;
+    attachmentFolderNames: string[];
+}
+
+export const DEFAULT_MY_FOLDERS_SETTINGS: MyFoldersSettings = {
+    enabled: true,
+    areFoldersHidden: true,
+    matchCaseInsensitive: true,
+    addHiddenFoldersToObsidianIgnoreList: false,
+    hideBottomStatusBarIndicatorText: false,
+    enableCompatQuickExplorer: false,
+    attachmentFolderNames: ["attachments"],
+};
+
+export enum LoadingMethod {
+    disabled = 'disabled',
+    instant = 'instant',
+    short = 'short',
+    long = 'long'
+}
+
+export interface PluginSettings {
+    startupType?: LoadingMethod;
+}
+
+export interface DeviceSettings {
+    shortDelaySeconds: number;
+    longDelaySeconds: number;
+    delayBetweenPlugins: number;
+    defaultStartupType: LoadingMethod | null;
+    showDescriptions: boolean;
+    enableDependencies: boolean;
+    plugins: { [pluginId: string]: PluginSettings };
+    [key: string]: any;
+}
+
+export const DEFAULT_DEVICE_SETTINGS: DeviceSettings = {
+    shortDelaySeconds: 5,
+    longDelaySeconds: 15,
+    delayBetweenPlugins: 40,
+    defaultStartupType: null,
+    showDescriptions: true,
+    enableDependencies: false,
+    plugins: {}
+}
+
+export interface MyPluginsSettings {
+    enabled: boolean; // Master switch
+    dualConfigs: boolean;
+    showConsoleLog: boolean;
+    desktop: DeviceSettings;
+    mobile?: DeviceSettings;
+}
+
+export const DEFAULT_MY_PLUGINS_SETTINGS: MyPluginsSettings = {
+    enabled: true,
+    dualConfigs: false,
+    showConsoleLog: false,
+    desktop: DEFAULT_DEVICE_SETTINGS
+};
+
+import { StatusBarElementStatus } from './statusbar/types';
+
+export interface StatusBarOrganizerSettings {
+    activePreset: string;
+    activeFullscreenPreset: string;
+    separateFullscreenPreset: boolean;
+    presets: { [key: string]: { [key: string]: StatusBarElementStatus } };
+    presetsOrder: string[];
+    version: string;
+}
+
+export interface MyStatusBarSettings extends StatusBarOrganizerSettings {
+    enabled: boolean;
+}
+
+export const DEFAULT_STATUS_BAR_SETTINGS: MyStatusBarSettings = {
+    enabled: true,
+    activePreset: "Default",
+    activeFullscreenPreset: "Default",
+    separateFullscreenPreset: false,
+    presets: { "Default": {} },
+    presetsOrder: ["Default"],
+    version: "0.0.1"
+};
+
+// MySnippets Settings
+export interface MySnippetsSettings {
+    aestheticStyle: boolean;
+    snippetViewPosition: string; // "right" | "left"
+    openSnippetFile: boolean;
+    stylingTemplate: string;
+    snippetEnabledStatus: boolean;
+    showStatusBarIcon: boolean; // [NEW] Toggle status bar icon
+    enabled: boolean; // Add enabled flag for module control
+}
+
+export const DEFAULT_MY_SNIPPETS_SETTINGS: MySnippetsSettings = {
+    aestheticStyle: false,
+    snippetViewPosition: "left",
+    openSnippetFile: true,
+    stylingTemplate: "",
+    snippetEnabledStatus: false,
+    showStatusBarIcon: true,
+    enabled: true
+};
+
+export interface AssistantSettings {
+    myFolders: MyFoldersSettings;
+    myPlugins: MyPluginsSettings;
+    myStatusBar: MyStatusBarSettings;
+    mySnippets: MySnippetsSettings;
+}
+
+export const DEFAULT_SETTINGS: AssistantSettings = {
+    myFolders: DEFAULT_MY_FOLDERS_SETTINGS,
+    myPlugins: DEFAULT_MY_PLUGINS_SETTINGS,
+    myStatusBar: DEFAULT_STATUS_BAR_SETTINGS,
+    mySnippets: DEFAULT_MY_SNIPPETS_SETTINGS,
+};
