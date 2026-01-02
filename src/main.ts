@@ -10,12 +10,21 @@ import { SnippetsManager } from './snippets/manager';
 import { renderSnippetsSettings } from './snippets/settings-ui';
 import { t } from './i18n/helpers';
 
+import { HeadingsManager } from './headings/manager';
+import { renderHeadingsSettings } from './headings/settings-ui';
+import { FormulasManager } from './formulas/manager';
+import { renderFormulasSettings } from './formulas/settings-ui';
+import { AutoNumberingController } from './utils/auto-numbering';
+
 export default class AssistantPlugin extends Plugin {
     settings: AssistantSettings;
     foldersManager: FoldersManager;
     pluginsManager: PluginsManager;
     statusBarManager: StatusBarManager;
     snippetsManager: SnippetsManager;
+    headingsManager: HeadingsManager;
+    formulasManager: FormulasManager;
+    autoNumberingController: AutoNumberingController;
 
     async onload() {
         console.log(t('Loading Obsidian Assistant...'));
@@ -27,12 +36,24 @@ export default class AssistantPlugin extends Plugin {
         this.pluginsManager = new PluginsManager(this.app, this);
         this.statusBarManager = new StatusBarManager(this.app, this);
         this.snippetsManager = new SnippetsManager(this.app, this);
+        this.headingsManager = new HeadingsManager(this.app, this);
+        this.formulasManager = new FormulasManager(this.app, this);
+
+        // Initialize Auto Controller
+        this.autoNumberingController = new AutoNumberingController(this.app, this, this.headingsManager, this.formulasManager);
 
         // Load modules if enabled
         if (this.settings.myFolders.enabled) await this.foldersManager.onload();
         if (this.settings.myPlugins.enabled) await this.pluginsManager.onload();
         if (this.settings.myStatusBar.enabled) await this.statusBarManager.onload();
         if (this.settings.mySnippets.enabled) await this.snippetsManager.onload();
+        if (this.settings.myHeadings.enabled) await this.headingsManager.onload();
+        if (this.settings.myFormulas.enabled) await this.formulasManager.onload();
+
+        // Load Auto Controller if either relevant module is enabled
+        if (this.settings.myHeadings.enabled || this.settings.myFormulas.enabled) {
+            this.autoNumberingController.onload();
+        }
 
         this.addSettingTab(new AssistantSettingsTab(this.app, this));
     }
@@ -43,6 +64,9 @@ export default class AssistantPlugin extends Plugin {
         this.pluginsManager?.onunload();
         this.statusBarManager?.onunload();
         this.snippetsManager?.onunload();
+        this.headingsManager?.onunload();
+        this.formulasManager?.onunload();
+        this.autoNumberingController?.onunload();
     }
 
     async loadSettings() {
@@ -67,6 +91,27 @@ class AssistantSettingsTab extends PluginSettingTab {
 
         containerEl.empty();
         containerEl.createEl('h2', { text: t('Obsidian Assistant Settings') });
+
+        // Global Settings Section
+        containerEl.createEl('h3', { text: t('Global Settings') });
+
+        new Setting(containerEl)
+            .setName(t('Auto-Numbering Refresh Interval'))
+            .setDesc(t('Time in milliseconds to wait before auto-numbering triggers (after losing focus)'))
+            .addText(text => text
+                .setPlaceholder('1000')
+                .setValue(String(this.plugin.settings.refreshInterval))
+                .onChange(async (value) => {
+                    const interval = parseInt(value);
+                    if (!isNaN(interval) && interval > 0) {
+                        this.plugin.settings.refreshInterval = interval;
+                        await this.plugin.saveSettings();
+                    }
+                }));
+
+        containerEl.createEl('br');
+        containerEl.createEl('h3', { text: t('Modules') });
+
 
         // MyFolders Section
         this.addPluginSection(
@@ -143,6 +188,68 @@ class AssistantSettingsTab extends PluginSettingTab {
                 renderSnippetsSettings(el, this.plugin.snippetsManager);
             }
         );
+
+        // MyHeadings Section
+        this.addPluginSection(
+            containerEl,
+            t('My Headings'),
+            this.plugin.settings.myHeadings.enabled,
+            async (value) => {
+                this.plugin.settings.myHeadings.enabled = value;
+                await this.plugin.saveSettings();
+
+                // Reload logic for Headings + Auto Controller
+                if (value) {
+                    await this.plugin.headingsManager.onload();
+                } else {
+                    this.plugin.headingsManager.onunload();
+                }
+
+                // Refresh controller: if any module is active, ensure it's loaded. If all inactive, unload.
+                const anyActive = value || this.plugin.settings.myFormulas.enabled;
+                if (anyActive) {
+                    // It's safe to call onload multiple times (idempotent setup usually preferred, but here simple re-register might duplicate listeners if not careful)
+                    // Controller implementation of onload calls 'registerEditorFocusEvents'.
+                    // We should probably unload first just to be safe or check state.
+                    this.plugin.autoNumberingController.onunload(); // Clear old listeners
+                    this.plugin.autoNumberingController.onload();   // Add new listeners
+                } else {
+                    this.plugin.autoNumberingController.onunload();
+                }
+            },
+            (el) => {
+                renderHeadingsSettings(el, this.plugin.headingsManager);
+            }
+        );
+
+        // MyFormulas Section
+        this.addPluginSection(
+            containerEl,
+            t('My Formulas'),
+            this.plugin.settings.myFormulas.enabled,
+            async (value) => {
+                this.plugin.settings.myFormulas.enabled = value;
+                await this.plugin.saveSettings();
+
+                if (value) {
+                    await this.plugin.formulasManager.onload();
+                } else {
+                    this.plugin.formulasManager.onunload();
+                }
+
+                // Refresh controller
+                const anyActive = this.plugin.settings.myHeadings.enabled || value;
+                if (anyActive) {
+                    this.plugin.autoNumberingController.onunload();
+                    this.plugin.autoNumberingController.onload();
+                } else {
+                    this.plugin.autoNumberingController.onunload();
+                }
+            },
+            (el) => {
+                renderFormulasSettings(el, this.plugin.formulasManager);
+            }
+        );
     }
 
     addPluginSection(
@@ -176,9 +283,7 @@ class AssistantSettingsTab extends PluginSettingTab {
 
         // Toggle Switch Container
         const toggleContainer = summary.createEl('div');
-        toggleContainer.onclick = (e) => e.preventDefault(); // Just stop propagation isn't enough for summary? 
-        // Actually, clicking a child of summary usually triggers toggle unless preventDefault/stopPropagation.
-        // But setting toggle uses specific event handling.
+        toggleContainer.onclick = (e) => e.preventDefault();
 
         const toggleSetting = new Setting(toggleContainer)
             .addToggle(toggle => toggle

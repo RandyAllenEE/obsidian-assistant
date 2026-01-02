@@ -101,6 +101,16 @@ export interface MySnippetsSettings {
     enabled: boolean; // Add enabled flag for module control
 }
 
+export interface MySnippetsSettings {
+    aestheticStyle: boolean;
+    snippetViewPosition: string; // "right" | "left"
+    openSnippetFile: boolean;
+    stylingTemplate: string;
+    snippetEnabledStatus: boolean;
+    showStatusBarIcon: boolean; // [NEW] Toggle status bar icon
+    enabled: boolean; // Add enabled flag for module control
+}
+
 export const DEFAULT_MY_SNIPPETS_SETTINGS: MySnippetsSettings = {
     aestheticStyle: false,
     snippetViewPosition: "left",
@@ -111,11 +121,52 @@ export const DEFAULT_MY_SNIPPETS_SETTINGS: MySnippetsSettings = {
     enabled: true
 };
 
+// MyHeadings Settings
+export interface MyHeadingsSettings {
+    enabled: boolean;
+    auto: boolean;
+    firstLevel: number;
+    maxLevel: number;
+    headingStyles: string[];
+    headingSeparators: string[];
+    headingStartValues: string[];
+    skipHeadings: string;
+}
+
+export const DEFAULT_MY_HEADINGS_SETTINGS: MyHeadingsSettings = {
+    enabled: true,
+    auto: false,
+    firstLevel: 1,
+    maxLevel: 6,
+    headingStyles: ['1', 'a', 'A', '一', '①', '1'],
+    headingSeparators: ['', '-', ':', '.', '—', '-'],
+    headingStartValues: ['0', '1', '1', '1', '1', '1'],
+    skipHeadings: ''
+};
+
+// MyFormulas Settings
+export interface MyFormulasSettings {
+    enabled: boolean;
+    auto: boolean;
+    mode: 'continuous' | 'heading-based';
+    maxDepth: number;
+}
+
+export const DEFAULT_MY_FORMULAS_SETTINGS: MyFormulasSettings = {
+    enabled: true,
+    auto: false,
+    mode: 'continuous',
+    maxDepth: 4
+};
+
 export interface AssistantSettings {
     myFolders: MyFoldersSettings;
     myPlugins: MyPluginsSettings;
     myStatusBar: MyStatusBarSettings;
     mySnippets: MySnippetsSettings;
+    myHeadings: MyHeadingsSettings;
+    myFormulas: MyFormulasSettings;
+    refreshInterval: number; // Global auto-numbering refresh interval in milliseconds
 }
 
 export const DEFAULT_SETTINGS: AssistantSettings = {
@@ -123,4 +174,7 @@ export const DEFAULT_SETTINGS: AssistantSettings = {
     myPlugins: DEFAULT_MY_PLUGINS_SETTINGS,
     myStatusBar: DEFAULT_STATUS_BAR_SETTINGS,
     mySnippets: DEFAULT_MY_SNIPPETS_SETTINGS,
+    myHeadings: DEFAULT_MY_HEADINGS_SETTINGS,
+    myFormulas: DEFAULT_MY_FORMULAS_SETTINGS,
+    refreshInterval: 1000, // Default 1 second (1000ms) as per source
 };

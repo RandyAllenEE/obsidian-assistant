@@ -2,6 +2,10 @@ export default {
     // General
     "Module is disabled.": "模块已禁用。",
     "Obsidian Assistant Settings": "Obsidian Assistant 设置",
+    "Global Settings": "全局设置",
+    "Auto-Numbering Refresh Interval": "自动编号刷新间隔",
+    "Time in milliseconds to wait before auto-numbering triggers (after losing focus)": "失焦后触发自动编号前的等待时间（毫秒）",
+    "Modules": "模块",
 
     // My Folders
     "My Folders": "我的文件夹",
@@ -129,4 +133,45 @@ export default {
     "\"{fileName}.css\" already exists.": "\"{fileName}.css\" 已存在。",
     "Missing name for file": "文件名缺失",
     "Create Snippet": "创建片段",
+
+    // MyHeadings
+    'My Headings': '我的标题',
+    'Number Headings': '标题编号',
+    'Remove Heading Numbering': '移除标题编号',
+    'Auto Number Headings': '自动标题编号',
+    'Create numbers automatically on blur': '自动创建编号（在失去焦点时触发）',
+    'First Level': '起始级别',
+    'Max Level': '最大级别',
+    'Heading Styles': '标题样式',
+    'Level': '级别',
+    'Style': '样式',
+    'Separator': '分隔符',
+    'Start At': '起始值',
+
+    // MyFormulas
+    'My Formulas': '我的公式',
+    'Number Formulas': '公式编号',
+    'Remove Formula Numbering': '移除公式编号',
+    'Auto Number Formulas': '自动公式编号',
+    'Automatically number formulas (triggers on blur if enabled)': '自动公式编号（启用时在失去焦点时触发）',
+    'Numbering Mode': '编号模式',
+    'Continuous (1, 2, 3) or Heading-based (1.1-1, 1.1-2)': '连续 (1, 2, 3) 或 基于标题 (1.1-1, 1.1-2)',
+    'Continuous': '连续',
+    'Heading-based': '基于标题',
+    'Max Heading Depth': '最大标题深度',
+    'For Heading-based mode: max depth of heading to use as prefix (e.g. 4 means use H4 at most)': '基于标题模式：用作前缀的最大标题深度（例如 4 表示最多使用 H4）',
+
+    // Commands & Modals
+    'Configure Headings': '配置标题',
+    'Configure Formulas': '配置公式',
+    'Apply Now': '立即应用',
+    'Apply numbering once without saving to frontmatter': '一次性应用编号，不保存到frontmatter',
+    'Save to Frontmatter': '保存到 Frontmatter',
+    'Save settings to frontmatter and apply': '保存设置到frontmatter并应用',
+    'Remove Numbering': '移除编号',
+    'Numbering applied (one-time)': '编号已应用（一次性）',
+    'Formula numbering applied (one-time)': '公式编号已应用（一次性）',
+    'Settings saved to frontmatter and applied': '设置已保存到frontmatter并应用',
+    'Heading numbering removed': '标题编号已移除',
+    'Formula numbering removed': '公式编号已移除',
 };

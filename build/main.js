@@ -27,7 +27,7 @@ __export(main_exports, {
   default: () => AssistantPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian14 = require("obsidian");
+var import_obsidian22 = require("obsidian");
 
 // src/settings.ts
 var DEFAULT_MY_FOLDERS_SETTINGS = {
@@ -79,11 +79,31 @@ var DEFAULT_MY_SNIPPETS_SETTINGS = {
   showStatusBarIcon: true,
   enabled: true
 };
+var DEFAULT_MY_HEADINGS_SETTINGS = {
+  enabled: true,
+  auto: false,
+  firstLevel: 1,
+  maxLevel: 6,
+  headingStyles: ["1", "a", "A", "\u4E00", "\u2460", "1"],
+  headingSeparators: ["", "-", ":", ".", "\u2014", "-"],
+  headingStartValues: ["0", "1", "1", "1", "1", "1"],
+  skipHeadings: ""
+};
+var DEFAULT_MY_FORMULAS_SETTINGS = {
+  enabled: true,
+  auto: false,
+  mode: "continuous",
+  maxDepth: 4
+};
 var DEFAULT_SETTINGS = {
   myFolders: DEFAULT_MY_FOLDERS_SETTINGS,
   myPlugins: DEFAULT_MY_PLUGINS_SETTINGS,
   myStatusBar: DEFAULT_STATUS_BAR_SETTINGS,
-  mySnippets: DEFAULT_MY_SNIPPETS_SETTINGS
+  mySnippets: DEFAULT_MY_SNIPPETS_SETTINGS,
+  myHeadings: DEFAULT_MY_HEADINGS_SETTINGS,
+  myFormulas: DEFAULT_MY_FORMULAS_SETTINGS,
+  refreshInterval: 1e3
+  // Default 1 second (1000ms) as per source
 };
 
 // src/folders/manager.ts
@@ -138,6 +158,10 @@ var en_default = {
   // General
   "Module is disabled.": "Module is disabled.",
   "Obsidian Assistant Settings": "Obsidian Assistant Settings",
+  "Global Settings": "Global Settings",
+  "Auto-Numbering Refresh Interval": "Auto-Numbering Refresh Interval",
+  "Time in milliseconds to wait before auto-numbering triggers (after losing focus)": "Time in milliseconds to wait before auto-numbering triggers (after losing focus)",
+  "Modules": "Modules",
   // My Folders
   "My Folders": "My Folders",
   "Toggle visibility of hidden folders": "Toggle visibility of hidden folders",
@@ -260,7 +284,56 @@ var en_default = {
   '"{fileName}.css" has been created!': '"{fileName}.css" has been created!',
   '"{fileName}.css" already exists.': '"{fileName}.css" already exists.',
   "Missing name for file": "Missing name for file",
-  "Create Snippet": "Create Snippet"
+  "Create Snippet": "Create Snippet",
+  // MyHeadings
+  "My Headings": "My Headings",
+  "Number Headings": "Number Headings",
+  "Remove Heading Numbering": "Remove Heading Numbering",
+  "Auto Number Headings": "Auto Number Headings",
+  "Automatically number headings on blur": "Automatically number headings on blur",
+  "Create numbers automatically on blur": "Create numbers automatically on blur (triggers when you click away)",
+  "First Level": "First Level",
+  "Starting heading level for numbering": "Starting heading level for numbering",
+  "Max Level": "Max Level",
+  "Maximum heading level for numbering": "Maximum heading level for numbering",
+  "Heading Styles": "Heading Styles",
+  "Numbering style for each level (1-6)": "Numbering style for each level (1-6)",
+  "Heading Separators": "Heading Separators",
+  "Separator after each level (empty for H1, then 2-6)": "Separator after each level (empty for H1, then 2-6)",
+  "Start Values": "Start Values",
+  "Starting number for each level": "Starting number for each level",
+  "Level": "Level",
+  "Style": "Style",
+  "Separator": "Separator",
+  "Start At": "Start At",
+  // MyFormulas
+  "My Formulas": "My Formulas",
+  "Number Formulas": "Number Formulas",
+  "Remove Formula Numbering": "Remove Formula Numbering",
+  "Auto Number Formulas": "Auto Number Formulas",
+  "Automatically number formulas on blur": "Automatically number formulas on blur",
+  "Automatically number formulas (triggers on blur if enabled)": "Automatically number formulas (triggers on blur if enabled)",
+  "Numbering Mode": "Numbering Mode",
+  "Continuous: 1,2,3... | Heading-based: 1.1-1, 1.1-2...": "Continuous: 1,2,3... | Heading-based: 1.1-1, 1.1-2...",
+  "Continuous (1, 2, 3) or Heading-based (1.1-1, 1.1-2)": "Continuous (1, 2, 3) or Heading-based (1.1-1, 1.1-2)",
+  "Continuous": "Continuous",
+  "Heading-based": "Heading-based",
+  "Max Heading Depth": "Max Heading Depth",
+  "Maximum heading level to use for formula numbering": "Maximum heading level to use for formula numbering",
+  "For Heading-based mode: max depth of heading to use as prefix (e.g. 4 means use H4 at most)": "For Heading-based mode: max depth of heading to use as prefix (e.g. 4 means use H4 at most)",
+  // Commands & Modals
+  "Configure Headings": "Configure Headings",
+  "Configure Formulas": "Configure Formulas",
+  "Apply Now": "Apply Now",
+  "Apply numbering once without saving to frontmatter": "Apply numbering once without saving to frontmatter",
+  "Save to Frontmatter": "Save to Frontmatter",
+  "Save settings to frontmatter and apply": "Save settings to frontmatter and apply",
+  "Remove Numbering": "Remove Numbering",
+  "Numbering applied (one-time)": "Numbering applied (one-time)",
+  "Formula numbering applied (one-time)": "Formula numbering applied (one-time)",
+  "Settings saved to frontmatter and applied": "Settings saved to frontmatter and applied",
+  "Heading numbering removed": "Heading numbering removed",
+  "Formula numbering removed": "Formula numbering removed"
 };
 
 // src/i18n/locales/zh.ts
@@ -268,6 +341,10 @@ var zh_default = {
   // General
   "Module is disabled.": "\u6A21\u5757\u5DF2\u7981\u7528\u3002",
   "Obsidian Assistant Settings": "Obsidian Assistant \u8BBE\u7F6E",
+  "Global Settings": "\u5168\u5C40\u8BBE\u7F6E",
+  "Auto-Numbering Refresh Interval": "\u81EA\u52A8\u7F16\u53F7\u5237\u65B0\u95F4\u9694",
+  "Time in milliseconds to wait before auto-numbering triggers (after losing focus)": "\u5931\u7126\u540E\u89E6\u53D1\u81EA\u52A8\u7F16\u53F7\u524D\u7684\u7B49\u5F85\u65F6\u95F4\uFF08\u6BEB\u79D2\uFF09",
+  "Modules": "\u6A21\u5757",
   // My Folders
   "My Folders": "\u6211\u7684\u6587\u4EF6\u5939",
   "Toggle visibility of hidden folders": "\u5207\u6362\u9690\u85CF\u6587\u4EF6\u5939\u7684\u53EF\u89C1\u6027",
@@ -390,7 +467,45 @@ var zh_default = {
   '"{fileName}.css" has been created!': '"{fileName}.css" \u5DF2\u521B\u5EFA\uFF01',
   '"{fileName}.css" already exists.': '"{fileName}.css" \u5DF2\u5B58\u5728\u3002',
   "Missing name for file": "\u6587\u4EF6\u540D\u7F3A\u5931",
-  "Create Snippet": "\u521B\u5EFA\u7247\u6BB5"
+  "Create Snippet": "\u521B\u5EFA\u7247\u6BB5",
+  // MyHeadings
+  "My Headings": "\u6211\u7684\u6807\u9898",
+  "Number Headings": "\u6807\u9898\u7F16\u53F7",
+  "Remove Heading Numbering": "\u79FB\u9664\u6807\u9898\u7F16\u53F7",
+  "Auto Number Headings": "\u81EA\u52A8\u6807\u9898\u7F16\u53F7",
+  "Create numbers automatically on blur": "\u81EA\u52A8\u521B\u5EFA\u7F16\u53F7\uFF08\u5728\u5931\u53BB\u7126\u70B9\u65F6\u89E6\u53D1\uFF09",
+  "First Level": "\u8D77\u59CB\u7EA7\u522B",
+  "Max Level": "\u6700\u5927\u7EA7\u522B",
+  "Heading Styles": "\u6807\u9898\u6837\u5F0F",
+  "Level": "\u7EA7\u522B",
+  "Style": "\u6837\u5F0F",
+  "Separator": "\u5206\u9694\u7B26",
+  "Start At": "\u8D77\u59CB\u503C",
+  // MyFormulas
+  "My Formulas": "\u6211\u7684\u516C\u5F0F",
+  "Number Formulas": "\u516C\u5F0F\u7F16\u53F7",
+  "Remove Formula Numbering": "\u79FB\u9664\u516C\u5F0F\u7F16\u53F7",
+  "Auto Number Formulas": "\u81EA\u52A8\u516C\u5F0F\u7F16\u53F7",
+  "Automatically number formulas (triggers on blur if enabled)": "\u81EA\u52A8\u516C\u5F0F\u7F16\u53F7\uFF08\u542F\u7528\u65F6\u5728\u5931\u53BB\u7126\u70B9\u65F6\u89E6\u53D1\uFF09",
+  "Numbering Mode": "\u7F16\u53F7\u6A21\u5F0F",
+  "Continuous (1, 2, 3) or Heading-based (1.1-1, 1.1-2)": "\u8FDE\u7EED (1, 2, 3) \u6216 \u57FA\u4E8E\u6807\u9898 (1.1-1, 1.1-2)",
+  "Continuous": "\u8FDE\u7EED",
+  "Heading-based": "\u57FA\u4E8E\u6807\u9898",
+  "Max Heading Depth": "\u6700\u5927\u6807\u9898\u6DF1\u5EA6",
+  "For Heading-based mode: max depth of heading to use as prefix (e.g. 4 means use H4 at most)": "\u57FA\u4E8E\u6807\u9898\u6A21\u5F0F\uFF1A\u7528\u4F5C\u524D\u7F00\u7684\u6700\u5927\u6807\u9898\u6DF1\u5EA6\uFF08\u4F8B\u5982 4 \u8868\u793A\u6700\u591A\u4F7F\u7528 H4\uFF09",
+  // Commands & Modals
+  "Configure Headings": "\u914D\u7F6E\u6807\u9898",
+  "Configure Formulas": "\u914D\u7F6E\u516C\u5F0F",
+  "Apply Now": "\u7ACB\u5373\u5E94\u7528",
+  "Apply numbering once without saving to frontmatter": "\u4E00\u6B21\u6027\u5E94\u7528\u7F16\u53F7\uFF0C\u4E0D\u4FDD\u5B58\u5230frontmatter",
+  "Save to Frontmatter": "\u4FDD\u5B58\u5230 Frontmatter",
+  "Save settings to frontmatter and apply": "\u4FDD\u5B58\u8BBE\u7F6E\u5230frontmatter\u5E76\u5E94\u7528",
+  "Remove Numbering": "\u79FB\u9664\u7F16\u53F7",
+  "Numbering applied (one-time)": "\u7F16\u53F7\u5DF2\u5E94\u7528\uFF08\u4E00\u6B21\u6027\uFF09",
+  "Formula numbering applied (one-time)": "\u516C\u5F0F\u7F16\u53F7\u5DF2\u5E94\u7528\uFF08\u4E00\u6B21\u6027\uFF09",
+  "Settings saved to frontmatter and applied": "\u8BBE\u7F6E\u5DF2\u4FDD\u5B58\u5230frontmatter\u5E76\u5E94\u7528",
+  "Heading numbering removed": "\u6807\u9898\u7F16\u53F7\u5DF2\u79FB\u9664",
+  "Formula numbering removed": "\u516C\u5F0F\u7F16\u53F7\u5DF2\u79FB\u9664"
 };
 
 // src/i18n/helpers.ts
@@ -1836,8 +1951,1027 @@ function renderSnippetsList(containerEl, manager) {
   }));
 }
 
+// src/headings/manager.ts
+var import_obsidian16 = require("obsidian");
+
+// src/utils/numbering-tokens.ts
+var chineseNumbers = ["\u96F6", "\u4E00", "\u4E8C", "\u4E09", "\u56DB", "\u4E94", "\u516D", "\u4E03", "\u516B", "\u4E5D", "\u5341"];
+var circledNumbers = ["\u24EA", "\u2460", "\u2461", "\u2462", "\u2463", "\u2464", "\u2465", "\u2466", "\u2467", "\u2468", "\u2469", "\u246A", "\u246B", "\u246C", "\u246D", "\u246E", "\u246F", "\u2470", "\u2471", "\u2472", "\u2473"];
+function firstNumberingTokenInStyle(style, startValue) {
+  const startNum = parseInt(startValue);
+  const isNumericStart = !isNaN(startNum);
+  switch (style) {
+    case "1":
+      return { style: "1", value: startNum };
+    case "A":
+      if (isNumericStart) {
+        if (startNum === 0)
+          return { style: "A", value: "&" };
+        if (startNum > 0)
+          return { style: "A", value: String.fromCharCode("A".charCodeAt(0) + startNum - 1) };
+        return { style: "A", value: "A" };
+      }
+      return { style: "A", value: startValue || "A" };
+    case "a":
+      if (isNumericStart) {
+        if (startNum === 0)
+          return { style: "a", value: "&" };
+        if (startNum > 0)
+          return { style: "a", value: String.fromCharCode("a".charCodeAt(0) + startNum - 1) };
+        return { style: "a", value: "a" };
+      }
+      return { style: "a", value: startValue || "a" };
+    case "\u4E00":
+      if (isNumericStart) {
+        if (startNum >= 0 && startNum < chineseNumbers.length) {
+          return { style: "\u4E00", value: chineseNumbers[startNum] };
+        }
+        if (startNum >= chineseNumbers.length) {
+          return { style: "\u4E00", value: String(startNum) };
+        }
+      }
+      return { style: "\u4E00", value: startValue || "\u4E00" };
+    case "\u2460":
+      if (isNumericStart) {
+        if (startNum >= 0 && startNum < circledNumbers.length) {
+          return { style: "\u2460", value: circledNumbers[startNum] };
+        }
+        if (startNum >= circledNumbers.length) {
+          return { style: "\u2460", value: String(startNum) };
+        }
+      }
+      return { style: "\u2460", value: startValue || "\u2460" };
+  }
+  return { style: "1", value: 1 };
+}
+function nextNumberingToken(t2) {
+  switch (t2.style) {
+    case "1":
+      return { style: "1", value: t2.value + 1 };
+    case "A":
+      if (t2.value === "&")
+        return { style: "A", value: "A" };
+      if (t2.value === "Z")
+        return { style: "A", value: "A" };
+      return { style: "A", value: String.fromCharCode(t2.value.charCodeAt(0) + 1) };
+    case "a":
+      if (t2.value === "&")
+        return { style: "a", value: "a" };
+      if (t2.value === "z")
+        return { style: "a", value: "a" };
+      return { style: "a", value: String.fromCharCode(t2.value.charCodeAt(0) + 1) };
+    case "\u4E00":
+      const cnIndex = chineseNumbers.indexOf(t2.value);
+      if (cnIndex > -1 && cnIndex < chineseNumbers.length - 1) {
+        return { style: "\u4E00", value: chineseNumbers[cnIndex + 1] };
+      }
+      if (cnIndex === chineseNumbers.length - 1)
+        return { style: "\u4E00", value: "11" };
+      const cnNum = parseInt(t2.value);
+      if (!isNaN(cnNum))
+        return { style: "\u4E00", value: String(cnNum + 1) };
+      return { style: "\u4E00", value: "\u4E00" };
+    case "\u2460":
+      const cIndex = circledNumbers.indexOf(t2.value);
+      if (cIndex > -1 && cIndex < circledNumbers.length - 1) {
+        return { style: "\u2460", value: circledNumbers[cIndex + 1] };
+      }
+      if (cIndex === circledNumbers.length - 1)
+        return { style: "\u2460", value: "21" };
+      const cNum = parseInt(t2.value);
+      if (!isNaN(cNum))
+        return { style: "\u2460", value: String(cNum + 1) };
+      return { style: "\u2460", value: "\u2460" };
+  }
+  return { style: "1", value: t2.value + 1 };
+}
+function printableNumberingToken(t2) {
+  if (t2.style === "1")
+    return t2.value.toString();
+  return t2.value;
+}
+function makeNumberingString(numberingStack, separators) {
+  let numberingString = "";
+  for (let i = 0; i < numberingStack.length; i++) {
+    if (i === 0) {
+      numberingString += " ";
+    } else {
+      numberingString += separators[i] || "";
+    }
+    numberingString += printableNumberingToken(numberingStack[i]);
+  }
+  return numberingString;
+}
+
+// src/utils/text-processing.ts
+function getRegexForHeaderString(flags) {
+  return /^\s{0,3}#+( )?([0-9a-zA-Z\u4e00-\u9fa5\u2460-\u2473&⓪]+[.:—\-]+( )?)*([0-9a-zA-Z\u4e00-\u9fa5\u2460-\u2473&⓪]+)?( )?[.:—\-]?( )+/g;
+}
+function findRangeInHeaderString(lineText, lineNumber) {
+  const regex = getRegexForHeaderString();
+  if (!lineText)
+    return void 0;
+  const matches = lineText.match(regex);
+  if (matches && matches.length !== 1) {
+    return void 0;
+  }
+  const match = matches ? matches[0] : "";
+  return {
+    from: { line: lineNumber, ch: 0 },
+    to: { line: lineNumber, ch: match.length }
+  };
+}
+function findHeadingPrefixRange(editor, heading) {
+  const lineNumber = heading.position.start.line;
+  const lineText = editor.getLine(lineNumber);
+  return findRangeInHeaderString(lineText, lineNumber);
+}
+function makeHeadingHashString(editor, heading) {
+  const regex = /^\s{0,4}#+/g;
+  const headingLineString = editor.getLine(heading.position.start.line);
+  if (!headingLineString)
+    return void 0;
+  const matches = headingLineString.match(regex);
+  if (!matches || matches.length !== 1)
+    return void 0;
+  return matches[0].trimLeft();
+}
+function replaceRangeEconomically(editor, changes, range, text) {
+  const previousText = editor.getRange(range.from, range.to);
+  if (previousText !== text) {
+    changes.push({
+      from: range.from,
+      to: range.to,
+      text
+    });
+  }
+}
+function restoreCursor(editor, cursor) {
+  const lineCount = editor.lineCount();
+  if (cursor.line < lineCount) {
+    const lineLength = editor.getLine(cursor.line).length;
+    if (cursor.ch <= lineLength) {
+      editor.setCursor(cursor);
+    } else {
+      editor.setCursor(cursor.line, lineLength);
+    }
+  }
+}
+function getCodeBlockRanges(data) {
+  if (!data || !data.sections)
+    return [];
+  return data.sections.filter((section) => section.type === "code").map((section) => ({
+    start: section.position.start.line,
+    end: section.position.end.line
+  }));
+}
+function isLineIgnored(lineNum, lineText, codeRanges) {
+  for (const range of codeRanges) {
+    if (lineNum >= range.start && lineNum <= range.end)
+      return true;
+  }
+  if (/^\s*\|/.test(lineText))
+    return true;
+  return false;
+}
+
+// src/utils/frontmatter.ts
+var import_obsidian14 = require("obsidian");
+function parseHeadingsFrontMatter(fm, defaultSettings) {
+  const settings = Object.assign({}, defaultSettings);
+  if (!fm)
+    return settings;
+  const entry = (0, import_obsidian14.parseFrontMatterEntry)(fm, "number headings");
+  if (entry) {
+    const parts = String(entry).split(",").map((p) => p.trim()).filter((p) => p.length > 0);
+    const rangeRegex = /^\d-\d$/;
+    const stylesRegex = /^[0-9a-zA-Z\u4e00-\u9fa5\u2460-\u2473&⓪]{6}$/;
+    const startValuesRegex = /^\d{6}$/;
+    const separatorsRegex = /^[-:.—]{5}$/;
+    let rangeFound = false;
+    let stylesFound = false;
+    let separatorsFound = false;
+    let startValuesFound = false;
+    for (const part of parts) {
+      if (part === "auto")
+        settings.auto = true;
+      else if (part === "off")
+        settings.enabled = false;
+      else if (part.startsWith("first-level")) {
+        const n = parseInt(part.substring("first-level".length + 1));
+        if (!isNaN(n) && n >= 1 && n <= 6)
+          settings.firstLevel = n;
+      } else if (part.startsWith("max")) {
+        const n = parseInt(part.substring("max".length + 1));
+        if (!isNaN(n) && n >= 1 && n <= 6)
+          settings.maxLevel = n;
+      } else if (!rangeFound && rangeRegex.test(part)) {
+        const [min, max] = part.split("-").map(Number);
+        if (!isNaN(min) && !isNaN(max)) {
+          settings.firstLevel = min;
+          settings.maxLevel = max;
+          rangeFound = true;
+        }
+      } else if (!stylesFound && stylesRegex.test(part)) {
+        settings.headingStyles = part.split("");
+        stylesFound = true;
+      } else if (!startValuesFound && startValuesRegex.test(part)) {
+        settings.headingStartValues = part.split("");
+        startValuesFound = true;
+      } else if (!separatorsFound && separatorsRegex.test(part)) {
+        const seps = part.split("");
+        settings.headingSeparators = ["", seps[0], seps[1], seps[2], seps[3], seps[4]];
+        separatorsFound = true;
+      } else if (part.startsWith("skip")) {
+      }
+    }
+  }
+  return settings;
+}
+function serializeHeadingsFrontMatter(settings) {
+  if (!settings.enabled)
+    return "off";
+  const parts = [];
+  if (settings.auto)
+    parts.push("auto");
+  if (settings.firstLevel !== 1 || settings.maxLevel !== 6) {
+    parts.push(`${settings.firstLevel}-${settings.maxLevel}`);
+  } else {
+    parts.push("1-6");
+  }
+  if (settings.headingStyles && settings.headingStyles.length >= 6) {
+    parts.push(settings.headingStyles.join(""));
+  } else {
+    parts.push("1aA\u4E00\u24601");
+  }
+  if (settings.headingSeparators && settings.headingSeparators.length >= 6) {
+    parts.push(settings.headingSeparators.slice(1, 6).join(""));
+  } else {
+    parts.push(DEFAULT_MY_HEADINGS_SETTINGS.headingSeparators.slice(1, 6).join(""));
+  }
+  if (settings.headingStartValues && settings.headingStartValues.length >= 6) {
+    parts.push(settings.headingStartValues.join(""));
+  } else {
+    parts.push("011111");
+  }
+  return parts.join(", ");
+}
+function parseFormulasFrontMatter(fm, defaultSettings) {
+  const settings = Object.assign({}, defaultSettings);
+  if (!fm)
+    return settings;
+  const entry = (0, import_obsidian14.parseFrontMatterEntry)(fm, "number formulas");
+  if (entry) {
+    const parts = String(entry).split(",").map((p) => p.trim());
+    for (const part of parts) {
+      if (part === "auto")
+        settings.auto = true;
+      else if (part === "off")
+        settings.enabled = false;
+      else if (part === "continuous")
+        settings.mode = "continuous";
+      else if (part.startsWith("heading-based")) {
+        settings.mode = "heading-based";
+        const match = part.match(/heading-based\((\d+)\)/);
+        if (match && match[1]) {
+          const depth = parseInt(match[1]);
+          if (!isNaN(depth) && depth >= 1 && depth <= 6) {
+            settings.maxDepth = depth;
+          }
+        }
+      }
+    }
+  }
+  return settings;
+}
+function serializeFormulasFrontMatter(settings) {
+  if (!settings.enabled)
+    return "off";
+  const parts = [];
+  if (settings.auto)
+    parts.push("auto");
+  if (settings.mode === "heading-based") {
+    const depth = settings.maxDepth || 4;
+    parts.push(`heading-based(${depth})`);
+  } else {
+    parts.push("continuous");
+  }
+  return parts.join(", ");
+}
+async function saveSettingsToFrontMatter(app, file, headingsSettings, formulasSettings) {
+  await app.fileManager.processFrontMatter(file, (fm) => {
+    if (headingsSettings) {
+      fm["number headings"] = serializeHeadingsFrontMatter(headingsSettings);
+    }
+    if (formulasSettings) {
+      fm["number formulas"] = serializeFormulasFrontMatter(formulasSettings);
+    }
+  });
+}
+
+// src/headings/modal.ts
+var import_obsidian15 = require("obsidian");
+var HeadingsControlModal = class extends import_obsidian15.Modal {
+  constructor(app, plugin, file) {
+    super(app);
+    this.plugin = plugin;
+    this.file = file;
+    const cache = app.metadataCache.getFileCache(file);
+    const fm = cache ? cache.frontmatter : void 0;
+    this.settings = JSON.parse(JSON.stringify(parseHeadingsFrontMatter(fm, this.plugin.settings.myHeadings)));
+  }
+  onOpen() {
+    var _a, _b, _c;
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl("h2", { text: t("Configure Headings") });
+    new import_obsidian15.Setting(contentEl).setName(t("Auto Number Headings")).setDesc(t("Automatically number headings on blur")).addToggle((toggle) => toggle.setValue(this.settings.auto).onChange((v) => this.settings.auto = v));
+    new import_obsidian15.Setting(contentEl).setName(t("First Level")).setDesc(t("Starting heading level for numbering")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(this.settings.firstLevel).setDynamicTooltip().onChange((v) => this.settings.firstLevel = v));
+    new import_obsidian15.Setting(contentEl).setName(t("Max Level")).setDesc(t("Maximum heading level for numbering")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(this.settings.maxLevel).setDynamicTooltip().onChange((v) => this.settings.maxLevel = v));
+    const stylesSetting = new import_obsidian15.Setting(contentEl).setName(t("Heading Styles")).setDesc(t("Numbering style for each level (1-6)")).setClass("heading-styles-setting");
+    const stylesContainer = createDiv({ cls: "heading-styles-container" });
+    stylesSetting.settingEl.appendChild(stylesContainer);
+    const styleOptions = ["1", "a", "A", "\u4E00", "\u2460"];
+    for (let i = 0; i < 6; i++) {
+      const wrapper = stylesContainer.createDiv({ cls: "style-item" });
+      wrapper.createEl("label", { text: `H${i + 1}: ` });
+      const select = wrapper.createEl("select");
+      styleOptions.forEach((option) => {
+        select.createEl("option", { text: option, value: option });
+      });
+      select.value = ((_a = this.settings.headingStyles) == null ? void 0 : _a[i]) || DEFAULT_HEADING_STYLES[i];
+      select.onchange = () => {
+        if (!this.settings.headingStyles)
+          this.settings.headingStyles = [...DEFAULT_HEADING_STYLES];
+        this.settings.headingStyles[i] = select.value;
+      };
+    }
+    const separatorsSetting = new import_obsidian15.Setting(contentEl).setName(t("Heading Separators")).setDesc(t("Separator after each level (empty for H1, then 2-6)")).setClass("heading-separators-setting");
+    const separatorsContainer = createDiv({ cls: "heading-separators-container" });
+    separatorsSetting.settingEl.appendChild(separatorsContainer);
+    for (let i = 1; i < 6; i++) {
+      const wrapper = separatorsContainer.createDiv({ cls: "separator-item" });
+      wrapper.createEl("label", { text: `H${i + 1}: ` });
+      const input = wrapper.createEl("input", { type: "text" });
+      input.value = ((_b = this.settings.headingSeparators) == null ? void 0 : _b[i]) || DEFAULT_HEADING_SEPARATORS[i];
+      input.maxLength = 1;
+      input.style.width = "2em";
+      input.oninput = () => {
+        if (!this.settings.headingSeparators)
+          this.settings.headingSeparators = [...DEFAULT_HEADING_SEPARATORS];
+        this.settings.headingSeparators[i] = input.value || "";
+      };
+    }
+    const startValuesSetting = new import_obsidian15.Setting(contentEl).setName(t("Start Values")).setDesc(t("Starting number for each level")).setClass("heading-start-values-setting");
+    const startValuesContainer = createDiv({ cls: "heading-start-values-container" });
+    startValuesSetting.settingEl.appendChild(startValuesContainer);
+    for (let i = 0; i < 6; i++) {
+      const wrapper = startValuesContainer.createDiv({ cls: "start-value-item" });
+      wrapper.createEl("label", { text: `H${i + 1}: ` });
+      const input = wrapper.createEl("input", { type: "text" });
+      input.value = ((_c = this.settings.headingStartValues) == null ? void 0 : _c[i]) || DEFAULT_HEADING_START_VALUES[i];
+      input.maxLength = 1;
+      input.style.width = "2em";
+      input.oninput = () => {
+        if (!this.settings.headingStartValues)
+          this.settings.headingStartValues = [...DEFAULT_HEADING_START_VALUES];
+        this.settings.headingStartValues[i] = input.value || "1";
+      };
+    }
+    const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
+    new import_obsidian15.Setting(buttonContainer).addButton((btn) => btn.setButtonText(t("Apply Now")).setTooltip(t("Apply numbering once without saving to frontmatter")).onClick(() => {
+      this.applyNumbering();
+      this.close();
+    })).addButton((btn) => btn.setButtonText(t("Save to Frontmatter")).setTooltip(t("Save settings to frontmatter and apply")).setCta().onClick(async () => {
+      await this.saveAndApply();
+      this.close();
+    })).addButton((btn) => btn.setButtonText(t("Remove Numbering")).setWarning().onClick(() => {
+      this.plugin.headingsManager.removeNumbering();
+      new import_obsidian15.Notice(t("Heading numbering removed"));
+      this.close();
+    }));
+  }
+  applyNumbering() {
+    const info = this.plugin.headingsManager.getActiveViewInfo();
+    if (!info)
+      return;
+    const { data, editor } = info;
+    const originalSettings = this.plugin.settings.myHeadings;
+    this.plugin.settings.myHeadings = this.settings;
+    this.plugin.headingsManager.updateNumbering(true, true);
+    this.plugin.settings.myHeadings = originalSettings;
+    new import_obsidian15.Notice(t("Numbering applied (one-time)"));
+  }
+  async saveAndApply() {
+    await saveSettingsToFrontMatter(this.app, this.file, this.settings);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    this.plugin.headingsManager.updateNumbering(true, true);
+    new import_obsidian15.Notice(t("Settings saved to frontmatter and applied"));
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+};
+
+// src/headings/manager.ts
+var DEFAULT_HEADING_STYLES = ["1", "a", "A", "\u4E00", "\u2460", "1"];
+var DEFAULT_HEADING_SEPARATORS = ["", "-", ":", ".", "\u2014", "-"];
+var DEFAULT_HEADING_START_VALUES = ["0", "1", "1", "1", "1", "1"];
+var HeadingsManager = class {
+  constructor(app, plugin) {
+    this.app = app;
+    this.plugin = plugin;
+  }
+  async onload() {
+    this.plugin.addCommand({
+      id: "configure-headings",
+      name: t("Configure Headings"),
+      callback: () => {
+        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+        if (activeView && activeView.file) {
+          new HeadingsControlModal(this.app, this.plugin, activeView.file).open();
+        }
+      }
+    });
+  }
+  onunload() {
+  }
+  getActiveViewInfo() {
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+    if (activeView && activeView.file) {
+      const data = this.app.metadataCache.getFileCache(activeView.file);
+      const editor = activeView.editor;
+      if (data && editor) {
+        return { activeView, data, editor };
+      }
+    }
+    return void 0;
+  }
+  getEffectiveSettings(fm) {
+    return parseHeadingsFrontMatter(fm, this.plugin.settings.myHeadings);
+  }
+  // Returns true if changes were made
+  updateNumbering(force = false, performRestore = true) {
+    var _a;
+    const info = this.getActiveViewInfo();
+    if (!info)
+      return false;
+    const { data, editor } = info;
+    const settings = this.getEffectiveSettings(data.frontmatter);
+    if (!settings.enabled && !force)
+      return false;
+    const cursorBefore = editor.getCursor();
+    const scrollBefore = editor.getScrollInfo();
+    const headings = (_a = data.headings) != null ? _a : [];
+    const codeRanges = getCodeBlockRanges(data);
+    const headingStyles = settings.headingStyles || DEFAULT_HEADING_STYLES;
+    const headingSeparators = settings.headingSeparators || DEFAULT_HEADING_SEPARATORS;
+    const headingStartValues = settings.headingStartValues || DEFAULT_HEADING_START_VALUES;
+    let previousLevel = settings.firstLevel - 1;
+    let numberingStack = [];
+    const changes = [];
+    for (const heading of headings) {
+      const level = heading.level;
+      const lineNum = heading.position.start.line;
+      const lineText = editor.getLine(lineNum);
+      if (isLineIgnored(lineNum, lineText, codeRanges))
+        continue;
+      if (settings.firstLevel > level) {
+        previousLevel = settings.firstLevel - 1;
+        numberingStack = [];
+        continue;
+      }
+      if (settings.skipHeadings && settings.skipHeadings.length > 0) {
+        if (heading.heading.endsWith(settings.skipHeadings))
+          continue;
+      }
+      if (level === previousLevel) {
+        const x = numberingStack.pop();
+        if (x)
+          numberingStack.push(nextNumberingToken(x));
+      } else if (level < previousLevel) {
+        for (let i = previousLevel; i > level; i--)
+          numberingStack.pop();
+        const x = numberingStack.pop();
+        if (x)
+          numberingStack.push(nextNumberingToken(x));
+      } else if (level > previousLevel) {
+        for (let i = previousLevel; i < level; i++) {
+          const styleIndex = Math.min(i, headingStyles.length - 1);
+          const startVal = headingStartValues[styleIndex] !== void 0 ? headingStartValues[styleIndex] : "1";
+          numberingStack.push(firstNumberingTokenInStyle(headingStyles[styleIndex], startVal));
+        }
+      }
+      previousLevel = level;
+      if (level > settings.maxLevel)
+        continue;
+      const prefixRange = findHeadingPrefixRange(editor, heading);
+      if (!prefixRange)
+        continue;
+      const headingHashString = makeHeadingHashString(editor, heading);
+      if (!headingHashString)
+        continue;
+      const prefixString = makeNumberingString(numberingStack, headingSeparators);
+      const separator = headingSeparators[0] || "";
+      replaceRangeEconomically(editor, changes, prefixRange, headingHashString + prefixString + separator + " ");
+    }
+    if (changes.length > 0) {
+      editor.transaction({ changes });
+      if (performRestore) {
+        restoreCursor(editor, cursorBefore);
+        editor.scrollTo(scrollBefore.left, scrollBefore.top);
+      }
+      return true;
+    }
+    return false;
+  }
+  removeNumbering() {
+    var _a;
+    const info = this.getActiveViewInfo();
+    if (!info)
+      return;
+    const { data, editor } = info;
+    const changes = [];
+    const headings = (_a = data.headings) != null ? _a : [];
+    for (const heading of headings) {
+      const prefixRange = findHeadingPrefixRange(editor, heading);
+      if (!prefixRange)
+        continue;
+      const headingHashString = makeHeadingHashString(editor, heading);
+      if (!headingHashString)
+        continue;
+      replaceRangeEconomically(editor, changes, prefixRange, headingHashString + " ");
+    }
+    if (changes.length > 0) {
+      editor.transaction({ changes });
+    }
+  }
+};
+
+// src/headings/settings-ui.ts
+var import_obsidian17 = require("obsidian");
+function renderHeadingsSettings(containerEl, manager) {
+  const settings = manager.plugin.settings.myHeadings;
+  new import_obsidian17.Setting(containerEl).setName(t("Auto Number Headings")).setDesc(t("Create numbers automatically on blur")).addToggle((toggle) => toggle.setValue(settings.auto).onChange(async (value) => {
+    settings.auto = value;
+    await manager.plugin.saveSettings();
+    if (value)
+      manager.registerAutoUpdate();
+    else
+      manager.clearAutoUpdateTimer();
+  }));
+  new import_obsidian17.Setting(containerEl).setName(t("First Level")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(settings.firstLevel).setDynamicTooltip().onChange(async (value) => {
+    settings.firstLevel = value;
+    await manager.plugin.saveSettings();
+  }));
+  new import_obsidian17.Setting(containerEl).setName(t("Max Level")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(settings.maxLevel).setDynamicTooltip().onChange(async (value) => {
+    settings.maxLevel = value;
+    await manager.plugin.saveSettings();
+  }));
+  containerEl.createEl("h3", { text: t("Heading Styles") });
+  const stylesContainer = containerEl.createEl("div");
+  stylesContainer.style.display = "grid";
+  stylesContainer.style.gridTemplateColumns = "0.5fr 1fr 1fr 1fr";
+  stylesContainer.style.gap = "10px";
+  stylesContainer.style.marginBottom = "20px";
+  stylesContainer.createEl("div", { text: t("Level"), style: "font-weight: bold;" });
+  stylesContainer.createEl("div", { text: t("Style"), style: "font-weight: bold;" });
+  stylesContainer.createEl("div", { text: t("Separator"), style: "font-weight: bold;" });
+  stylesContainer.createEl("div", { text: t("Start At"), style: "font-weight: bold;" });
+  const styleOptions = { "1": "1, 2, 3", "a": "a, b, c", "A": "A, B, C", "I": "I, II, III", "\u4E00": "\u4E00, \u4E8C, \u4E09", "\u2460": "\u2460, \u2461, \u2462" };
+  const separatorOptions = { "": "None", ".": ".", "-": "-", ":": ":", "\u2014": "\u2014" };
+  for (let i = 0; i < 6; i++) {
+    stylesContainer.createEl("div", { text: `H${i + 1}`, style: "align-self: center;" });
+    const styleSelect = stylesContainer.createEl("select");
+    Object.entries(styleOptions).forEach(([key, label]) => {
+      styleSelect.createEl("option", { value: key, text: label });
+    });
+    styleSelect.value = settings.headingStyles[i];
+    styleSelect.onchange = async () => {
+      settings.headingStyles[i] = styleSelect.value;
+      await manager.plugin.saveSettings();
+    };
+    const sepSelect = stylesContainer.createEl("select");
+    Object.entries(separatorOptions).forEach(([key, label]) => {
+      sepSelect.createEl("option", { value: key, text: label });
+    });
+    sepSelect.value = settings.headingSeparators[i];
+    sepSelect.onchange = async () => {
+      settings.headingSeparators[i] = sepSelect.value;
+      await manager.plugin.saveSettings();
+    };
+    const startInput = stylesContainer.createEl("input", { type: "text" });
+    startInput.style.width = "100%";
+    startInput.value = settings.headingStartValues[i];
+    startInput.onchange = async () => {
+      settings.headingStartValues[i] = startInput.value;
+      await manager.plugin.saveSettings();
+    };
+  }
+}
+
+// src/formulas/manager.ts
+var import_obsidian19 = require("obsidian");
+
+// src/formulas/modal.ts
+var import_obsidian18 = require("obsidian");
+var FormulasControlModal = class extends import_obsidian18.Modal {
+  constructor(app, plugin, file) {
+    super(app);
+    this.plugin = plugin;
+    this.file = file;
+    const cache = app.metadataCache.getFileCache(file);
+    const fm = cache ? cache.frontmatter : void 0;
+    this.settings = JSON.parse(JSON.stringify(parseFormulasFrontMatter(fm, this.plugin.settings.myFormulas)));
+  }
+  onOpen() {
+    this.display();
+  }
+  display() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl("h2", { text: t("Configure Formulas") });
+    new import_obsidian18.Setting(contentEl).setName(t("Auto Number Formulas")).setDesc(t("Automatically number formulas on blur")).addToggle((toggle) => toggle.setValue(this.settings.auto).onChange((v) => this.settings.auto = v));
+    new import_obsidian18.Setting(contentEl).setName(t("Numbering Mode")).setDesc(t("Continuous: 1,2,3... | Heading-based: 1.1-1, 1.1-2...")).addDropdown((dropdown) => dropdown.addOption("continuous", t("Continuous")).addOption("heading-based", t("Heading-based")).setValue(this.settings.mode).onChange((v) => {
+      this.settings.mode = v;
+      this.display();
+    }));
+    if (this.settings.mode === "heading-based") {
+      new import_obsidian18.Setting(contentEl).setName(t("Max Heading Depth")).setDesc(t("Maximum heading level to use for formula numbering")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(this.settings.maxDepth).setDynamicTooltip().onChange((v) => this.settings.maxDepth = v));
+    }
+    const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
+    new import_obsidian18.Setting(buttonContainer).addButton((btn) => btn.setButtonText(t("Apply Now")).setTooltip(t("Apply numbering once without saving to frontmatter")).onClick(() => {
+      this.applyNumbering();
+      this.close();
+    })).addButton((btn) => btn.setButtonText(t("Save to Frontmatter")).setTooltip(t("Save settings to frontmatter and apply")).setCta().onClick(async () => {
+      await this.saveAndApply();
+      this.close();
+    })).addButton((btn) => btn.setButtonText(t("Remove Numbering")).setWarning().onClick(() => {
+      this.plugin.formulasManager.removeNumbering();
+      new import_obsidian18.Notice(t("Formula numbering removed"));
+      this.close();
+    }));
+  }
+  applyNumbering() {
+    const info = this.plugin.formulasManager.getActiveViewInfo();
+    if (!info)
+      return;
+    const originalSettings = this.plugin.settings.myFormulas;
+    this.plugin.settings.myFormulas = this.settings;
+    this.plugin.formulasManager.updateNumbering(true, true);
+    this.plugin.settings.myFormulas = originalSettings;
+    new import_obsidian18.Notice(t("Formula numbering applied (one-time)"));
+  }
+  async saveAndApply() {
+    await saveSettingsToFrontMatter(this.app, this.file, void 0, this.settings);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    this.plugin.formulasManager.updateNumbering(true, true);
+    new import_obsidian18.Notice(t("Settings saved to frontmatter and applied"));
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+};
+
+// src/formulas/manager.ts
+var FormulasManager = class {
+  constructor(app, plugin) {
+    this.app = app;
+    this.plugin = plugin;
+  }
+  async onload() {
+    this.plugin.addCommand({
+      id: "configure-formulas",
+      name: t("Configure Formulas"),
+      callback: () => {
+        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian19.MarkdownView);
+        if (activeView && activeView.file) {
+          new FormulasControlModal(this.app, this.plugin, activeView.file).open();
+        }
+      }
+    });
+  }
+  onunload() {
+  }
+  getActiveViewInfo() {
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian19.MarkdownView);
+    if (activeView && activeView.file) {
+      const data = this.app.metadataCache.getFileCache(activeView.file);
+      const editor = activeView.editor;
+      if (data && editor) {
+        return { activeView, data, editor };
+      }
+    }
+    return void 0;
+  }
+  getEffectiveSettings(fm) {
+    return parseFormulasFrontMatter(fm, this.plugin.settings.myFormulas);
+  }
+  updateNumbering(force = false, performRestore = true) {
+    const info = this.getActiveViewInfo();
+    if (!info)
+      return false;
+    const { data, editor } = info;
+    const settings = this.getEffectiveSettings(data.frontmatter);
+    if (!settings.enabled && !force)
+      return false;
+    const cursorBefore = editor.getCursor();
+    const scrollBefore = editor.getScrollInfo();
+    const lineCount = editor.lineCount();
+    const codeRanges = getCodeBlockRanges(data);
+    const changes = [];
+    let equationCounter = 1;
+    const headingFormulaCounters = {};
+    const dollarPositions = [];
+    for (let i = 0; i < lineCount; i++) {
+      const line = editor.getLine(i);
+      if (isLineIgnored(i, line, codeRanges))
+        continue;
+      let pos = -1;
+      while ((pos = line.indexOf("$$", pos + 1)) !== -1) {
+        dollarPositions.push({ line: i, ch: pos });
+      }
+    }
+    for (let i = 0; i < dollarPositions.length - 1; i += 2) {
+      const start = dollarPositions[i];
+      const end = dollarPositions[i + 1];
+      if (start.line > end.line || start.line === end.line && start.ch >= end.ch)
+        continue;
+      let formulaContent = "";
+      if (start.line === end.line) {
+        const line = editor.getLine(start.line);
+        formulaContent = line.substring(start.ch, end.ch + 2);
+      } else {
+        const startLine = editor.getLine(start.line);
+        formulaContent += startLine.substring(start.ch) + "\n";
+        for (let lineNum = start.line + 1; lineNum < end.line; lineNum++) {
+          formulaContent += editor.getLine(lineNum) + "\n";
+        }
+        const endLine = editor.getLine(end.line);
+        formulaContent += endLine.substring(0, end.ch + 2);
+      }
+      const tagRegex = /\\tag\{([^}]+)\}/;
+      const hasTag = formulaContent.match(tagRegex);
+      let equationNumber = "";
+      if (settings.mode === "heading-based") {
+        let currentHeadingNumber = "";
+        const headings = data.headings || [];
+        const maxDepth = settings.maxDepth || 4;
+        let searchIndex = -1;
+        for (let j = headings.length - 1; j >= 0; j--) {
+          if (headings[j].position.start.line <= start.line) {
+            searchIndex = j;
+            break;
+          }
+        }
+        let targetHeading = null;
+        if (searchIndex !== -1) {
+          for (let k = searchIndex; k >= 0; k--) {
+            if (headings[k].level <= maxDepth) {
+              targetHeading = headings[k];
+              break;
+            }
+          }
+        }
+        if (targetHeading) {
+          const headingLine = editor.getLine(targetHeading.position.start.line);
+          const numberExtractRegex = /^\s{0,4}#+\s*([0-9a-zA-Z\u4e00-\u9fa5\u2460-\u2473&⓪].*?)(\s|$)/;
+          const match = headingLine.match(numberExtractRegex);
+          if (match && match[1]) {
+            currentHeadingNumber = match[1].trim();
+            if ([".", ":", "\u2014", "-"].some((c) => currentHeadingNumber.endsWith(c))) {
+              currentHeadingNumber = currentHeadingNumber.slice(0, -1);
+            }
+          }
+        }
+        if (currentHeadingNumber) {
+          if (!headingFormulaCounters[currentHeadingNumber])
+            headingFormulaCounters[currentHeadingNumber] = 1;
+          equationNumber = `${currentHeadingNumber}-${headingFormulaCounters[currentHeadingNumber]}`;
+          headingFormulaCounters[currentHeadingNumber]++;
+        } else {
+          equationNumber = `${equationCounter}`;
+          equationCounter++;
+        }
+      } else {
+        equationNumber = `${equationCounter}`;
+        equationCounter++;
+      }
+      if (!hasTag) {
+        const endLine = editor.getLine(end.line);
+        const beforeDollars = endLine.substring(0, end.ch);
+        const afterDollars = endLine.substring(end.ch);
+        const newLine = beforeDollars + ` \\tag{${equationNumber}}` + afterDollars;
+        changes.push({
+          from: { line: end.line, ch: 0 },
+          to: { line: end.line, ch: endLine.length },
+          text: newLine
+        });
+      } else {
+        const updatedContent = formulaContent.replace(tagRegex, `\\tag{${equationNumber}}`);
+        if (updatedContent !== formulaContent) {
+          if (start.line === end.line) {
+            const line = editor.getLine(start.line);
+            changes.push({
+              from: { line: start.line, ch: 0 },
+              to: { line: start.line, ch: line.length },
+              text: line.substring(0, start.ch) + updatedContent + line.substring(end.ch + 2)
+            });
+          } else {
+            changes.push({
+              from: { line: start.line, ch: start.ch },
+              to: { line: end.line, ch: end.ch + 2 },
+              text: updatedContent
+            });
+          }
+        }
+      }
+    }
+    if (changes.length > 0) {
+      editor.transaction({ changes });
+      if (performRestore) {
+        restoreCursor(editor, cursorBefore);
+        editor.scrollTo(scrollBefore.left, scrollBefore.top);
+      }
+      return true;
+    }
+    return false;
+  }
+  removeNumbering() {
+    const info = this.getActiveViewInfo();
+    if (!info)
+      return;
+    const { editor } = info;
+    const changes = [];
+    const lineCount = editor.lineCount();
+    const tagRegex = /\s*\\tag\{[^}]*\}/;
+    const dollarPositions = [];
+    for (let i = 0; i < lineCount; i++) {
+      const line = editor.getLine(i);
+      let pos = -1;
+      while ((pos = line.indexOf("$$", pos + 1)) !== -1) {
+        dollarPositions.push({ line: i, ch: pos });
+      }
+    }
+    for (let i = 0; i < dollarPositions.length - 1; i += 2) {
+      const start = dollarPositions[i];
+      const end = dollarPositions[i + 1];
+      if (start.line === end.line) {
+        const line = editor.getLine(start.line);
+        const content = line.substring(start.ch + 2, end.ch);
+        if (tagRegex.test(content)) {
+          const newContent = content.replace(tagRegex, "");
+          changes.push({
+            from: { line: start.line, ch: start.ch + 2 },
+            to: { line: end.line, ch: end.ch },
+            text: newContent
+          });
+        }
+      } else {
+        for (let j = start.line; j <= end.line; j++) {
+          const line = editor.getLine(j);
+          let s = 0, e = line.length;
+          if (j === start.line)
+            s = start.ch + 2;
+          if (j === end.line)
+            e = end.ch;
+          const c = line.substring(s, e);
+          if (tagRegex.test(c)) {
+            const n = c.replace(tagRegex, "");
+            changes.push({
+              from: { line: j, ch: s },
+              to: { line: j, ch: e },
+              text: n
+            });
+          }
+        }
+      }
+    }
+    if (changes.length > 0) {
+      editor.transaction({ changes });
+    }
+  }
+};
+
+// src/formulas/settings-ui.ts
+var import_obsidian20 = require("obsidian");
+function renderFormulasSettings(containerEl, manager) {
+  const settings = manager.plugin.settings.myFormulas;
+  new import_obsidian20.Setting(containerEl).setName(t("Auto Number Formulas")).setDesc(t("Automatically number formulas (triggers on blur if enabled)")).addToggle((toggle) => toggle.setValue(settings.auto).onChange(async (value) => {
+    settings.auto = value;
+    await manager.plugin.saveSettings();
+  }));
+  new import_obsidian20.Setting(containerEl).setName(t("Numbering Mode")).setDesc(t("Continuous (1, 2, 3) or Heading-based (1.1-1, 1.1-2)")).addDropdown((dropdown) => dropdown.addOption("continuous", t("Continuous")).addOption("heading-based", t("Heading-based")).setValue(settings.mode).onChange(async (value) => {
+    settings.mode = value;
+    await manager.plugin.saveSettings();
+    const nextSetting = containerEl.lastElementChild;
+  }));
+  const depthSetting = new import_obsidian20.Setting(containerEl).setName(t("Max Heading Depth")).setDesc(t("For Heading-based mode: max depth of heading to use as prefix (e.g. 4 means use H4 at most)")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(settings.maxDepth).setDynamicTooltip().onChange(async (value) => {
+    settings.maxDepth = value;
+    await manager.plugin.saveSettings();
+  }));
+  const updateVisibility = () => {
+    if (settings.mode === "heading-based") {
+      depthSetting.settingEl.style.display = "";
+    } else {
+      depthSetting.settingEl.style.display = "none";
+    }
+  };
+  updateVisibility();
+  const modeSetting = containerEl.children[containerEl.children.length - 2];
+}
+
+// src/utils/auto-numbering.ts
+var import_obsidian21 = require("obsidian");
+var AutoNumberingController = class {
+  constructor(app, plugin, headingsManager, formulasManager) {
+    this.autoUpdateTimeout = null;
+    // Default refresh interval matching source
+    this.REFRESH_INTERVAL = 5e3;
+    this.app = app;
+    this.plugin = plugin;
+    this.headingsManager = headingsManager;
+    this.formulasManager = formulasManager;
+  }
+  onload() {
+    this.registerEditorFocusEvents();
+  }
+  onunload() {
+    this.clearAutoUpdateTimer();
+  }
+  registerEditorFocusEvents() {
+    this.plugin.registerDomEvent(window, "blur", () => this.handleBlur());
+    this.plugin.registerDomEvent(window, "focus", () => this.handleFocus());
+  }
+  handleBlur() {
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian21.MarkdownView);
+    if (!activeView || !activeView.file)
+      return;
+    const data = this.app.metadataCache.getFileCache(activeView.file);
+    if (!data)
+      return;
+    const headingSettings = parseHeadingsFrontMatter(data.frontmatter, this.plugin.settings.myHeadings);
+    const formulaSettings = parseFormulasFrontMatter(data.frontmatter, this.plugin.settings.myFormulas);
+    const headingsAuto = headingSettings.enabled && headingSettings.auto;
+    const formulasAuto = formulaSettings.enabled && formulaSettings.auto;
+    if (!headingsAuto && !formulasAuto)
+      return;
+    this.clearAutoUpdateTimer();
+    const delay = this.plugin.settings.refreshInterval || 1e3;
+    this.autoUpdateTimeout = window.setTimeout(() => {
+      this.performAutoUpdate(activeView, headingSettings, formulaSettings);
+    }, delay);
+  }
+  handleFocus() {
+    if (this.autoUpdateTimeout) {
+      this.clearAutoUpdateTimer();
+    }
+  }
+  clearAutoUpdateTimer() {
+    if (this.autoUpdateTimeout) {
+      window.clearTimeout(this.autoUpdateTimeout);
+      this.autoUpdateTimeout = null;
+    }
+  }
+  performAutoUpdate(view, headingSettings, formulaSettings) {
+    if (!view.editor)
+      return;
+    const editor = view.editor;
+    const headingsAuto = headingSettings.enabled && headingSettings.auto;
+    const formulasAuto = formulaSettings.enabled && formulaSettings.auto;
+    if (!headingsAuto && !formulasAuto)
+      return;
+    const cursorBefore = editor.getCursor();
+    const scrollBefore = editor.getScrollInfo();
+    let isChanged = false;
+    try {
+      if (headingsAuto) {
+        if (this.headingsManager.updateNumbering(false, false)) {
+          isChanged = true;
+        }
+      }
+      if (formulasAuto) {
+        if (this.formulasManager.updateNumbering(false, false)) {
+          isChanged = true;
+        }
+      }
+    } catch (e) {
+      console.error("AutoNumbering: Error during update logic", e);
+      this.autoUpdateTimeout = null;
+      return;
+    }
+    if (isChanged) {
+      restoreCursor(editor, cursorBefore);
+      editor.scrollTo(scrollBefore.left, scrollBefore.top);
+    }
+    this.autoUpdateTimeout = null;
+  }
+};
+
 // src/main.ts
-var AssistantPlugin = class extends import_obsidian14.Plugin {
+var AssistantPlugin = class extends import_obsidian22.Plugin {
   async onload() {
     console.log(t("Loading Obsidian Assistant..."));
     console.log(t("Loading Settings..."));
@@ -1846,6 +2980,9 @@ var AssistantPlugin = class extends import_obsidian14.Plugin {
     this.pluginsManager = new PluginsManager(this.app, this);
     this.statusBarManager = new StatusBarManager(this.app, this);
     this.snippetsManager = new SnippetsManager(this.app, this);
+    this.headingsManager = new HeadingsManager(this.app, this);
+    this.formulasManager = new FormulasManager(this.app, this);
+    this.autoNumberingController = new AutoNumberingController(this.app, this, this.headingsManager, this.formulasManager);
     if (this.settings.myFolders.enabled)
       await this.foldersManager.onload();
     if (this.settings.myPlugins.enabled)
@@ -1854,15 +2991,25 @@ var AssistantPlugin = class extends import_obsidian14.Plugin {
       await this.statusBarManager.onload();
     if (this.settings.mySnippets.enabled)
       await this.snippetsManager.onload();
+    if (this.settings.myHeadings.enabled)
+      await this.headingsManager.onload();
+    if (this.settings.myFormulas.enabled)
+      await this.formulasManager.onload();
+    if (this.settings.myHeadings.enabled || this.settings.myFormulas.enabled) {
+      this.autoNumberingController.onload();
+    }
     this.addSettingTab(new AssistantSettingsTab(this.app, this));
   }
   onunload() {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e, _f, _g;
     console.log(t("Unloading Obsidian Assistant..."));
     (_a = this.foldersManager) == null ? void 0 : _a.onunload();
     (_b = this.pluginsManager) == null ? void 0 : _b.onunload();
     (_c = this.statusBarManager) == null ? void 0 : _c.onunload();
     (_d = this.snippetsManager) == null ? void 0 : _d.onunload();
+    (_e = this.headingsManager) == null ? void 0 : _e.onunload();
+    (_f = this.formulasManager) == null ? void 0 : _f.onunload();
+    (_g = this.autoNumberingController) == null ? void 0 : _g.onunload();
   }
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -1871,7 +3018,7 @@ var AssistantPlugin = class extends import_obsidian14.Plugin {
     await this.saveData(this.settings);
   }
 };
-var AssistantSettingsTab = class extends import_obsidian14.PluginSettingTab {
+var AssistantSettingsTab = class extends import_obsidian22.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -1880,6 +3027,16 @@ var AssistantSettingsTab = class extends import_obsidian14.PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
     containerEl.createEl("h2", { text: t("Obsidian Assistant Settings") });
+    containerEl.createEl("h3", { text: t("Global Settings") });
+    new import_obsidian22.Setting(containerEl).setName(t("Auto-Numbering Refresh Interval")).setDesc(t("Time in milliseconds to wait before auto-numbering triggers (after losing focus)")).addText((text) => text.setPlaceholder("1000").setValue(String(this.plugin.settings.refreshInterval)).onChange(async (value) => {
+      const interval = parseInt(value);
+      if (!isNaN(interval) && interval > 0) {
+        this.plugin.settings.refreshInterval = interval;
+        await this.plugin.saveSettings();
+      }
+    }));
+    containerEl.createEl("br");
+    containerEl.createEl("h3", { text: t("Modules") });
     this.addPluginSection(
       containerEl,
       t("My Folders"),
@@ -1948,6 +3105,54 @@ var AssistantSettingsTab = class extends import_obsidian14.PluginSettingTab {
         renderSnippetsSettings(el, this.plugin.snippetsManager);
       }
     );
+    this.addPluginSection(
+      containerEl,
+      t("My Headings"),
+      this.plugin.settings.myHeadings.enabled,
+      async (value) => {
+        this.plugin.settings.myHeadings.enabled = value;
+        await this.plugin.saveSettings();
+        if (value) {
+          await this.plugin.headingsManager.onload();
+        } else {
+          this.plugin.headingsManager.onunload();
+        }
+        const anyActive = value || this.plugin.settings.myFormulas.enabled;
+        if (anyActive) {
+          this.plugin.autoNumberingController.onunload();
+          this.plugin.autoNumberingController.onload();
+        } else {
+          this.plugin.autoNumberingController.onunload();
+        }
+      },
+      (el) => {
+        renderHeadingsSettings(el, this.plugin.headingsManager);
+      }
+    );
+    this.addPluginSection(
+      containerEl,
+      t("My Formulas"),
+      this.plugin.settings.myFormulas.enabled,
+      async (value) => {
+        this.plugin.settings.myFormulas.enabled = value;
+        await this.plugin.saveSettings();
+        if (value) {
+          await this.plugin.formulasManager.onload();
+        } else {
+          this.plugin.formulasManager.onunload();
+        }
+        const anyActive = this.plugin.settings.myHeadings.enabled || value;
+        if (anyActive) {
+          this.plugin.autoNumberingController.onunload();
+          this.plugin.autoNumberingController.onload();
+        } else {
+          this.plugin.autoNumberingController.onunload();
+        }
+      },
+      (el) => {
+        renderFormulasSettings(el, this.plugin.formulasManager);
+      }
+    );
   }
   addPluginSection(containerEl, title, isEnabled, onToggle, renderBody) {
     const details = containerEl.createEl("details");
@@ -1971,7 +3176,7 @@ var AssistantSettingsTab = class extends import_obsidian14.PluginSettingTab {
     titleContainer.createEl("strong", { text: title });
     const toggleContainer = summary.createEl("div");
     toggleContainer.onclick = (e) => e.preventDefault();
-    const toggleSetting = new import_obsidian14.Setting(toggleContainer).addToggle((toggle) => toggle.setValue(isEnabled).onChange(onToggle));
+    const toggleSetting = new import_obsidian22.Setting(toggleContainer).addToggle((toggle) => toggle.setValue(isEnabled).onChange(onToggle));
     toggleSetting.settingEl.style.border = "none";
     toggleSetting.settingEl.style.padding = "0";
     toggleSetting.infoEl.remove();

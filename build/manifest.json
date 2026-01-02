@@ -3,8 +3,8 @@
 	"name": "Obsidian Assistant",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "An all-in-one assistant plugin for Obsidian.",
-	"author": "Antigravity",
-	"authorUrl": "",
+	"description": "An all-in-one assistant plugin integrating CSS snippets, folder management, lazy loading, status bar customization, and automatic numbering.",
+	"author": "Randy Allen",
+	"authorUrl": "https://github.com/RandyAllenEEE",
 	"isDesktopOnly": false
 }
