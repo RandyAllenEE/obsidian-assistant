@@ -27,7 +27,7 @@ __export(main_exports, {
   default: () => AssistantPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian22 = require("obsidian");
+var import_obsidian25 = require("obsidian");
 
 // src/settings.ts
 var DEFAULT_MY_FOLDERS_SETTINGS = {
@@ -80,6 +80,7 @@ var DEFAULT_MY_SNIPPETS_SETTINGS = {
   enabled: true
 };
 var DEFAULT_MY_HEADINGS_SETTINGS = {
+  // Auto Numbering
   enabled: true,
   auto: false,
   firstLevel: 1,
@@ -87,7 +88,28 @@ var DEFAULT_MY_HEADINGS_SETTINGS = {
   headingStyles: ["1", "a", "A", "\u4E00", "\u2460", "1"],
   headingSeparators: ["", "-", ":", ".", "\u2014", "-"],
   headingStartValues: ["0", "1", "1", "1", "1", "1"],
-  skipHeadings: ""
+  skipHeadings: "",
+  // Heading Shifter
+  limitHeadingFrom: 1,
+  overrideTab: false,
+  styleToRemove: {
+    beginning: {
+      ul: true,
+      ol: true,
+      userDefined: []
+    },
+    surrounding: {
+      bold: true,
+      italic: true,
+      userDefined: []
+    }
+  },
+  list: {
+    childrenBehavior: "outdent to zero"
+  },
+  editor: {
+    tabSize: 4
+  }
 };
 var DEFAULT_MY_FORMULAS_SETTINGS = {
   enabled: true,
@@ -318,12 +340,45 @@ var en_default = {
   "Continuous (1, 2, 3) or Heading-based (1.1-1, 1.1-2)": "Continuous (1, 2, 3) or Heading-based (1.1-1, 1.1-2)",
   "Continuous": "Continuous",
   "Heading-based": "Heading-based",
+  "Configure Formulas": "Configure Formulas",
+  "Heading-Based": "Heading-Based",
   "Max Heading Depth": "Max Heading Depth",
+  "Depth of headings to include in equation number": "Depth of headings to include in equation number",
+  // Heading Shifter
+  "Auto Numbering": "Auto Numbering",
+  "Heading Shifter": "Heading Shifter",
+  "Lower limit of Heading": "Lower limit of Heading",
+  "The lower Heading Size that will be decreased by the Heading Shift": "The lower Heading Size that will be decreased by the Heading Shift",
+  "Enable override tab behavior": "Enable override tab behavior",
+  'Tab execute "Increase Headings" and Shift-Tab execute "Decrease Headings"': 'Tab execute "Increase Headings" and Shift-Tab execute "Decrease Headings"',
+  "Style to remove": "Style to remove",
+  "If this style is at the position of a line, remove it": "If this style is at the position of a line, remove it",
+  "Beginning": "Beginning",
+  "Unordered list": "Unordered list",
+  "Ordered list": "Ordered list",
+  "User defined": "User defined",
+  "Arbitrary string (regular expression)": "Arbitrary string (regular expression)",
+  "Surrounding": "Surrounding",
+  "Bold": "Bold",
+  "Italic": "Italic",
+  "Children behavior": "Children behavior",
+  "Outdent to 0": "Outdent to 0",
+  "Sync with headings": "Sync with headings",
+  "Noting": "Noting",
+  "Tab size": "Tab size",
   "Maximum heading level to use for formula numbering": "Maximum heading level to use for formula numbering",
   "For Heading-based mode: max depth of heading to use as prefix (e.g. 4 means use H4 at most)": "For Heading-based mode: max depth of heading to use as prefix (e.g. 4 means use H4 at most)",
+  // Shifter Commands
+  "Increase Headings": "Increase Headings",
+  "Increase Headings (forced)": "Increase Headings (forced)",
+  "Decrease Headings": "Decrease Headings",
+  "Apply Heading": "Apply Heading",
+  "Insert Heading at current level": "Insert Heading at current level",
+  "Insert Heading at one level deeper": "Insert Heading at one level deeper",
+  "Insert Heading at one level higher": "Insert Heading at one level higher",
   // Commands & Modals
   "Configure Headings": "Configure Headings",
-  "Configure Formulas": "Configure Formulas",
+  // 'Configure Formulas': 'Configure Formulas', // Duplicate
   "Apply Now": "Apply Now",
   "Apply numbering once without saving to frontmatter": "Apply numbering once without saving to frontmatter",
   "Save to Frontmatter": "Save to Frontmatter",
@@ -493,6 +548,36 @@ var zh_default = {
   "Heading-based": "\u57FA\u4E8E\u6807\u9898",
   "Max Heading Depth": "\u6700\u5927\u6807\u9898\u6DF1\u5EA6",
   "For Heading-based mode: max depth of heading to use as prefix (e.g. 4 means use H4 at most)": "\u57FA\u4E8E\u6807\u9898\u6A21\u5F0F\uFF1A\u7528\u4F5C\u524D\u7F00\u7684\u6700\u5927\u6807\u9898\u6DF1\u5EA6\uFF08\u4F8B\u5982 4 \u8868\u793A\u6700\u591A\u4F7F\u7528 H4\uFF09",
+  // Heading Shifter
+  "Auto Numbering": "\u81EA\u52A8\u7F16\u53F7",
+  "Heading Shifter": "\u6807\u9898\u79FB\u52A8 (Heading Shifter)",
+  "Lower limit of Heading": "\u6807\u9898\u7EA7\u522B\u4E0B\u9650",
+  "The lower Heading Size that will be decreased by the Heading Shift": "\u6807\u9898\u79FB\u52A8\u529F\u80FD\u53EF\u4EE5\u964D\u4F4E\u7684\u6700\u5C0F\u6807\u9898\u7EA7\u522B",
+  "Enable override tab behavior": "\u542F\u7528\u8986\u76D6 Tab \u952E\u884C\u4E3A",
+  'Tab execute "Increase Headings" and Shift-Tab execute "Decrease Headings"': "Tab \u952E\u6267\u884C\u201C\u589E\u52A0\u6807\u9898\u7EA7\u522B\u201D\uFF0CShift-Tab \u6267\u884C\u201C\u51CF\u5C11\u6807\u9898\u7EA7\u522B\u201D",
+  "Style to remove": "\u8981\u79FB\u9664\u7684\u6837\u5F0F",
+  "If this style is at the position of a line, remove it": "\u5982\u679C\u884C\u4E2D\u6307\u5B9A\u4F4D\u7F6E\u5B58\u5728\u6B64\u6837\u5F0F\uFF0C\u5219\u79FB\u9664\u5B83",
+  "Beginning": "\u5F00\u5934",
+  "Unordered list": "\u65E0\u5E8F\u5217\u8868",
+  "Ordered list": "\u6709\u5E8F\u5217\u8868",
+  "User defined": "\u7528\u6237\u81EA\u5B9A\u4E49",
+  "Arbitrary string (regular expression)": "\u4EFB\u610F\u5B57\u7B26\u4E32 (\u6B63\u5219\u8868\u8FBE\u5F0F)",
+  "Surrounding": "\u5305\u56F4",
+  "Bold": "\u7C97\u4F53",
+  "Italic": "\u659C\u4F53",
+  "Children behavior": "\u5B50\u5143\u7D20\u884C\u4E3A",
+  "Outdent to 0": "\u7F29\u8FDB\u81F3 0",
+  "Sync with headings": "\u4E0E\u6807\u9898\u540C\u6B65",
+  "Noting": "\u65E0\u64CD\u4F5C",
+  "Tab size": "\u5236\u8868\u7B26\u5BBD\u5EA6 (Tab Size)",
+  // Shifter Commands
+  "Increase Headings": "\u589E\u52A0\u6807\u9898\u7EA7\u522B",
+  "Increase Headings (forced)": "\u589E\u52A0\u6807\u9898\u7EA7\u522B (\u5F3A\u5236)",
+  "Decrease Headings": "\u51CF\u5C11\u6807\u9898\u7EA7\u522B",
+  "Apply Heading": "\u5E94\u7528\u6807\u9898\u7EA7\u522B",
+  "Insert Heading at current level": "\u5728\u5F53\u524D\u7EA7\u522B\u63D2\u5165\u6807\u9898",
+  "Insert Heading at one level deeper": "\u5728\u66F4\u6DF1\u4E00\u7EA7\u63D2\u5165\u6807\u9898",
+  "Insert Heading at one level higher": "\u5728\u66F4\u6D45\u4E00\u7EA7\u63D2\u5165\u6807\u9898",
   // Commands & Modals
   "Configure Headings": "\u914D\u7F6E\u6807\u9898",
   "Configure Formulas": "\u914D\u7F6E\u516C\u5F0F",
@@ -1952,7 +2037,7 @@ function renderSnippetsList(containerEl, manager) {
 }
 
 // src/headings/manager.ts
-var import_obsidian16 = require("obsidian");
+var import_obsidian19 = require("obsidian");
 
 // src/utils/numbering-tokens.ts
 var chineseNumbers = ["\u96F6", "\u4E00", "\u4E8C", "\u4E09", "\u56DB", "\u4E94", "\u516D", "\u4E03", "\u516B", "\u4E5D", "\u5341"];
@@ -2374,6 +2459,651 @@ var HeadingsControlModal = class extends import_obsidian15.Modal {
   }
 };
 
+// src/headings/shifter/manager.ts
+var import_obsidian18 = require("obsidian");
+var import_state = require("@codemirror/state");
+var import_view = require("@codemirror/view");
+
+// src/headings/shifter/features/shift.ts
+var import_obsidian16 = require("obsidian");
+
+// src/headings/shifter/utils/constants.ts
+var TABSIZE = 4;
+
+// src/headings/shifter/utils/range.ts
+var setMin = (prev, cur) => {
+  if (prev === void 0 || prev !== void 0 && cur < prev) {
+    return cur;
+  }
+  return prev;
+};
+var setMax = (prev, cur) => {
+  if (prev === void 0 || prev !== void 0 && cur > prev) {
+    return cur;
+  }
+  return prev;
+};
+var createRange = (start, num) => Array.from(Array(num), (v, k) => k + start);
+
+// src/headings/shifter/utils/markdown.ts
+var checkHeading = (content) => {
+  const match = content.match(/^(#+) /);
+  if (!match || !match[1])
+    return 0;
+  return match[1].length;
+};
+var checkFence = (content) => {
+  const backticks = content.match(/^(`{3,})/);
+  if (backticks == null ? void 0 : backticks[1])
+    return { fenceType: "`", fenceNum: backticks[1].length };
+  const tildes = content.match(/^(~{3,})/);
+  if (tildes == null ? void 0 : tildes[1])
+    return { fenceType: "~", fenceNum: tildes[1].length };
+  return null;
+};
+var getFenceStatus = (prev, current) => {
+  if (!current)
+    return prev;
+  if (!prev)
+    return current;
+  if (current.fenceType === prev.fenceType && current.fenceNum >= prev.fenceNum) {
+    return null;
+  }
+  return prev;
+};
+var getHeadingLines = (editor, from, to, options) => {
+  const headingLines = [];
+  let minHeading;
+  let maxHeading;
+  let fence = null;
+  for (let line = Math.min(from, to); line <= Math.max(from, to); line++) {
+    fence = getFenceStatus(fence, checkFence(editor.getLine(line)));
+    if (fence)
+      continue;
+    const heading = checkHeading(editor.getLine(line));
+    if ((options == null ? void 0 : options.includesNoHeadingsLine) || heading > 0) {
+      headingLines.push(line);
+      minHeading = setMin(minHeading, heading);
+      maxHeading = setMax(maxHeading, heading);
+    }
+  }
+  return { headingLines, minHeading, maxHeading };
+};
+var getPreviousHeading = (editor, from) => {
+  let fence = null;
+  const start = from > 0 ? from - 1 : 0;
+  for (let line = start; line >= 0; line--) {
+    fence = getFenceStatus(fence, checkFence(editor.getLine(line)));
+    if (fence)
+      continue;
+    if (checkHeading(editor.getLine(line)) > 0) {
+      return line;
+    }
+  }
+  return void 0;
+};
+var replaceFunc = (str, regExp) => {
+  try {
+    const replaced = str.replace(regExp, "$1");
+    if (replaced !== str) {
+      return replaced;
+    }
+  } catch (error) {
+    console.error(error);
+  }
+  return void 0;
+};
+var removeUsingRegexpStrings = (str, regExpStrings) => {
+  var _a, _b;
+  let removed = str;
+  for (const regExpStr of (_a = regExpStrings.beginning) != null ? _a : []) {
+    const regExp = new RegExp(`^\\s*${regExpStr}(.*)`);
+    const result = replaceFunc(removed, regExp);
+    if (result !== void 0) {
+      removed = result;
+      break;
+    }
+  }
+  for (const regExpStr of (_b = regExpStrings.surrounding) != null ? _b : []) {
+    const regExp = new RegExp(`${regExpStr}(.*)${regExpStr}`);
+    const result = replaceFunc(removed, regExp);
+    if (result !== void 0) {
+      removed = result;
+      break;
+    }
+  }
+  return removed;
+};
+var countIndentLevel = (line, tabSize = TABSIZE) => {
+  var _a;
+  const leadingContent = (_a = line.match(/^(\s*)/)) == null ? void 0 : _a[0];
+  if (!leadingContent)
+    return 0;
+  const tabCount = (leadingContent.match(/\t/g) || []).length;
+  const spaceCount = (leadingContent.match(/ /g) || []).length;
+  return tabCount + Math.floor(spaceCount / tabSize);
+};
+var getListChildrenLines = (editor, {
+  parentLineNumber,
+  tabSize
+}) => {
+  const lineNumbers = [];
+  const startLine = editor.getLine(parentLineNumber);
+  const prevParentIndentLevel = countIndentLevel(startLine, tabSize);
+  for (let lineN = parentLineNumber + 1; lineN < editor.lineCount(); lineN++) {
+    const line = editor.getLine(lineN);
+    const indentLevel = countIndentLevel(line, tabSize);
+    const isBulleted = /^\s*[-*]\s+/.test(line);
+    const isNumbered = /^\s*\d+\.\s+/.test(line);
+    if (!isBulleted && !isNumbered)
+      break;
+    if (indentLevel <= prevParentIndentLevel)
+      break;
+    lineNumbers.push(lineN);
+  }
+  return lineNumbers;
+};
+
+// src/headings/shifter/utils/editorChange.ts
+var composeLineChanges = (editor, lineNumbers, changeCallback, settings) => {
+  const editorChange = [];
+  for (const line of lineNumbers) {
+    const shifted = changeCallback(editor.getLine(line), settings);
+    editorChange.push({
+      text: shifted,
+      from: { line, ch: 0 },
+      to: {
+        line,
+        ch: editor.getLine(line).length
+      }
+    });
+  }
+  return editorChange;
+};
+var createListIndentChanges = (editor, {
+  parentLineNumber,
+  parentIndentLevel,
+  tabSize = TABSIZE
+}) => {
+  const parentLine = editor.getLine(parentLineNumber);
+  const prevParentIndentLevel = countIndentLevel(parentLine, tabSize);
+  const childrenNumbers = getListChildrenLines(editor, {
+    parentLineNumber,
+    tabSize
+  });
+  const indentDelta = parentIndentLevel - prevParentIndentLevel;
+  const changes = [];
+  childrenNumbers.forEach((lineNumber) => {
+    var _a, _b, _c, _d;
+    const line = editor.getLine(lineNumber);
+    const newIndentLevel = Math.max(
+      countIndentLevel(line, tabSize) + indentDelta,
+      0
+    );
+    const match = line.match(
+      /^(?<whitespace>\s*)(?<bullet>[-*]\s*|(?<numbered>\d+\.\s*))(?<heading>#+\s*)?(?<content>.*)$/
+    );
+    const tabsMarkers = "	".repeat(newIndentLevel);
+    const bulletMarkers = ((_a = match == null ? void 0 : match.groups) == null ? void 0 : _a.bullet) || "";
+    const numberedMarkers = ((_b = match == null ? void 0 : match.groups) == null ? void 0 : _b.numbered) || "";
+    const listMarker = bulletMarkers || numberedMarkers;
+    const headingMarkers = ((_c = match == null ? void 0 : match.groups) == null ? void 0 : _c.heading) ? "#".repeat(Math.min(newIndentLevel + 1, 6)) + " " : "";
+    const content = ((_d = match == null ? void 0 : match.groups) == null ? void 0 : _d.content) || "";
+    const newLine = `${tabsMarkers}${listMarker}${headingMarkers}${content}`;
+    changes.push({
+      text: newLine,
+      from: { line: lineNumber, ch: 0 },
+      to: { line: lineNumber, ch: line.length }
+    });
+  });
+  return changes;
+};
+
+// src/headings/shifter/utils/regExp.ts
+var RegExpExample = {
+  beginning: {
+    ol: String.raw`\d+\. `,
+    ul: String.raw`(?:\-|\*) `
+  },
+  surrounding: {
+    // Only one match
+    italic: String.raw`(?:(?<!\*)\*(?!\*)|(?<!_)_(?!_))`,
+    // Same
+    // bold: String.raw`(?:\*\*|__)`,
+    bold: String.raw`(?:(?<!\*)\*\*(?!\*)|(?<!_)__(?!_))`
+  }
+};
+
+// src/headings/shifter/features/apply.ts
+var applyHeading = (chunk, headingSize, settings) => {
+  var _a;
+  const extractRegExp = (settingObj, regExpObj) => {
+    return Object.entries(settingObj != null ? settingObj : {}).flatMap(([k, v]) => {
+      var _a2;
+      if (Array.isArray(v)) {
+        return v;
+      }
+      if (k in regExpObj && v === true) {
+        return [(_a2 = regExpObj[k]) != null ? _a2 : []];
+      }
+      return [];
+    });
+  };
+  const bulletRegExp = /\s*(- \[.+\]|-|\*|[0-9]+)\s+/;
+  const headingRegExp = /#+\s+/;
+  const isBullet = ((_a = settings == null ? void 0 : settings.list) == null ? void 0 : _a.childrenBehavior) === "sync with headings" && bulletRegExp.test(chunk);
+  let removed = chunk;
+  if (!checkHeading(chunk)) {
+    removed = (settings == null ? void 0 : settings.styleToRemove) ? removeUsingRegexpStrings(chunk, {
+      beginning: extractRegExp(
+        {
+          ...settings.styleToRemove.beginning,
+          ul: !isBullet && settings.styleToRemove.beginning.ul
+        },
+        RegExpExample.beginning
+      ),
+      surrounding: extractRegExp(
+        settings.styleToRemove.surrounding,
+        RegExpExample.surrounding
+      )
+    }) : chunk;
+  }
+  const leadingMarkersRegExp = isBullet ? new RegExp(
+    `^(?:${bulletRegExp.source}${headingRegExp.source}|${bulletRegExp.source})`
+  ) : new RegExp(`^${headingRegExp.source}`);
+  let capturedBullet = "-";
+  const principleText = removed.replace(leadingMarkersRegExp, (match, p1) => {
+    if (isBullet && p1) {
+      capturedBullet = p1;
+      const m = match.match(bulletRegExp);
+      if (m && m[1])
+        capturedBullet = m[1];
+    }
+    return "";
+  });
+  const bulletMarkers = `${"	".repeat(Math.max(headingSize - 1, 0))}${capturedBullet} `;
+  const headingMarkers = "#".repeat(Math.max(headingSize, 0)) + (headingSize > 0 ? " " : "");
+  const leadingMarkers = isBullet ? `${bulletMarkers}${headingMarkers}` : headingMarkers;
+  return leadingMarkers + principleText;
+};
+var createListIndentChangesByListBehavior = (editor, {
+  listBehavior,
+  tabSize = TABSIZE,
+  parentIndentLevel,
+  parentLineNumber
+}) => {
+  if (listBehavior !== "outdent to zero" && listBehavior !== "sync with headings") {
+    return [];
+  }
+  const parentIndentLevelByBehavior = listBehavior === "sync with headings" ? (
+    // follow parent
+    Math.max(0, parentIndentLevel)
+  ) : (
+    // Force the next line of parent to be 0
+    -countIndentLevel(editor.getLine(parentLineNumber + 1), tabSize) + countIndentLevel(editor.getLine(parentLineNumber), tabSize)
+  );
+  const indentChanges = createListIndentChanges(editor, {
+    parentLineNumber,
+    parentIndentLevel: parentIndentLevelByBehavior,
+    tabSize
+  });
+  return indentChanges;
+};
+var ApplyHeading = class {
+  constructor(settings, headingSize) {
+    this.editorCallback = (editor) => {
+      var _a;
+      const lines = createRange(
+        editor.getCursor("from").line,
+        editor.getCursor("to").line - editor.getCursor("from").line + 1
+      );
+      const isOneLine = editor.getCursor("from").line === editor.getCursor("to").line;
+      const lastHeaderLineNumber = (_a = lines[lines.length - 1]) != null ? _a : 0;
+      const headingsChanges = composeLineChanges(
+        editor,
+        lines,
+        (chunk) => applyHeading(chunk, this.headingSize, this.settings)
+      );
+      const indentChanges = createListIndentChangesByListBehavior(editor, {
+        parentIndentLevel: this.headingSize - 1,
+        tabSize: this.settings.editor.tabSize,
+        listBehavior: this.settings.list.childrenBehavior,
+        parentLineNumber: lastHeaderLineNumber
+      });
+      editor.transaction({
+        changes: [...headingsChanges, ...indentChanges]
+      });
+      if (isOneLine) {
+        editor.setCursor(editor.getCursor("anchor").line);
+      }
+      return true;
+    };
+    this.createCommand = () => {
+      return {
+        id: `apply-heading-${this.headingSize}`,
+        name: `${t("Apply Heading")} ${this.headingSize}`,
+        icon: `headingShifter_heading${this.headingSize}`,
+        editorCallback: this.editorCallback
+      };
+    };
+    this.settings = settings;
+    this.headingSize = headingSize;
+  }
+};
+
+// src/headings/shifter/features/shift.ts
+var shiftHeading = (chunk, dir, settings) => {
+  const heading = checkHeading(chunk);
+  return applyHeading(chunk, heading + dir, settings);
+};
+var increaseHeading = (chunk, settings) => {
+  return shiftHeading(chunk, 1, settings);
+};
+var decreaseHeading = (chunk, settings) => {
+  return shiftHeading(chunk, -1, settings);
+};
+var IncreaseHeading = class {
+  constructor(settings, includesNoHeadingsLine) {
+    this.editorCallback = (editor) => {
+      const { headingLines, maxHeading } = getHeadingLines(
+        editor,
+        editor.getCursor("from").line,
+        editor.getCursor("to").line,
+        {
+          includesNoHeadingsLine: this.includesNoHeadingsLine
+        }
+      );
+      if (maxHeading !== void 0 && maxHeading >= 6) {
+        new import_obsidian16.Notice("Cannot Increase (contains more than Heading 6)");
+        return true;
+      }
+      const isOneLine = editor.getCursor("from").line === editor.getCursor("to").line;
+      const editorChange = composeLineChanges(
+        editor,
+        headingLines,
+        increaseHeading,
+        this.settings
+      );
+      editor.transaction({
+        changes: editorChange
+      });
+      if (isOneLine) {
+        editor.setCursor(editor.getCursor("anchor").line);
+      }
+      return editorChange.length ? true : false;
+    };
+    this.createCommand = () => {
+      return {
+        id: `increase-heading${this.includesNoHeadingsLine ? "-forced" : ""}`,
+        name: this.includesNoHeadingsLine ? t("Increase Headings (forced)") : t("Increase Headings"),
+        icon: "headingShifter_increaseIcon",
+        // Should check if icon exists or use default
+        editorCallback: this.editorCallback
+      };
+    };
+    this.check = (editor) => {
+      const { maxHeading } = getHeadingLines(
+        editor,
+        editor.getCursor("from").line,
+        editor.getCursor("to").line
+      );
+      if (maxHeading === void 0)
+        return false;
+      return this.settings.overrideTab;
+    };
+    this.settings = settings;
+    this.includesNoHeadingsLine = includesNoHeadingsLine;
+  }
+};
+var DecreaseHeading = class {
+  constructor(settings) {
+    this.editorCallback = (editor) => {
+      const { headingLines, minHeading } = getHeadingLines(
+        editor,
+        editor.getCursor("from").line,
+        editor.getCursor("to").line
+      );
+      if (minHeading !== void 0 && minHeading <= Number(this.settings.limitHeadingFrom)) {
+        new import_obsidian16.Notice(
+          `Cannot Decrease (contains less than Heading${Number(
+            this.settings.limitHeadingFrom
+          )})`
+        );
+        return true;
+      }
+      const isOneLine = editor.getCursor("from").line === editor.getCursor("to").line;
+      const editorChange = composeLineChanges(
+        editor,
+        headingLines,
+        decreaseHeading,
+        this.settings
+      );
+      editor.transaction({
+        changes: editorChange
+      });
+      if (isOneLine) {
+        editor.setCursor(editor.getCursor("anchor").line);
+      }
+      return editorChange.length ? true : false;
+    };
+    this.createCommand = () => {
+      return {
+        id: "decrease-heading",
+        name: t("Decrease Headings"),
+        icon: "headingShifter_decreaseIcon",
+        editorCallback: this.editorCallback
+      };
+    };
+    this.check = (editor) => {
+      const { maxHeading } = getHeadingLines(
+        editor,
+        editor.getCursor("from").line,
+        editor.getCursor("to").line
+      );
+      if (maxHeading === void 0)
+        return false;
+      return this.settings.overrideTab;
+    };
+    this.settings = settings;
+  }
+};
+
+// src/headings/shifter/features/insert.ts
+var import_obsidian17 = require("obsidian");
+var InsertHeadingAtCurrentLevel = class {
+  constructor(settings) {
+    this.editorCallback = (editor) => {
+      const cursorLine = editor.getCursor("from").line;
+      const lastHeadingLine = getPreviousHeading(editor, cursorLine);
+      const headingLevel = lastHeadingLine !== void 0 ? checkHeading(editor.getLine(lastHeadingLine)) : 0;
+      const targetHeadingLevel = headingLevel;
+      const headingChanges = composeLineChanges(
+        editor,
+        [cursorLine],
+        (chunk) => applyHeading(chunk, targetHeadingLevel, this.settings)
+      );
+      const indentChanges = createListIndentChangesByListBehavior(editor, {
+        parentIndentLevel: targetHeadingLevel - 1,
+        tabSize: this.settings.editor.tabSize,
+        listBehavior: this.settings.list.childrenBehavior,
+        parentLineNumber: cursorLine
+      });
+      editor.transaction({
+        changes: [...headingChanges, ...indentChanges]
+      });
+      editor.setCursor(editor.getCursor().line);
+      return true;
+    };
+    this.createCommand = () => {
+      return {
+        id: `insert-heading-current`,
+        name: t("Insert Heading at current level"),
+        icon: `headingShifter_heading`,
+        editorCallback: this.editorCallback
+      };
+    };
+    this.settings = settings;
+  }
+};
+var InsertHeadingAtDeeperLevel = class {
+  constructor(settings) {
+    this.editorCallback = (editor) => {
+      const cursorLine = editor.getCursor("from").line;
+      const lastHeadingLine = getPreviousHeading(editor, cursorLine);
+      const headingLevel = lastHeadingLine ? checkHeading(editor.getLine(lastHeadingLine)) : 0;
+      if (headingLevel + 1 > 6) {
+        new import_obsidian17.Notice("Cannot Increase (contains more than Heading 6)");
+        return true;
+      }
+      const targetHeadingLevel = headingLevel + 1;
+      const headingChanges = composeLineChanges(
+        editor,
+        [cursorLine],
+        (chunk) => applyHeading(chunk, targetHeadingLevel, this.settings)
+      );
+      const indentChanges = createListIndentChangesByListBehavior(editor, {
+        parentIndentLevel: targetHeadingLevel - 1,
+        tabSize: this.settings.editor.tabSize,
+        listBehavior: this.settings.list.childrenBehavior,
+        parentLineNumber: cursorLine
+      });
+      editor.transaction({
+        changes: [...headingChanges, ...indentChanges]
+      });
+      editor.setCursor(editor.getCursor().line);
+      return true;
+    };
+    this.createCommand = () => {
+      return {
+        id: `insert-heading-deeper`,
+        name: t("Insert Heading at one level deeper"),
+        icon: `headingShifter_heading`,
+        editorCallback: this.editorCallback
+      };
+    };
+    this.settings = settings;
+  }
+};
+var InsertHeadingAtHigherLevel = class {
+  constructor(settings) {
+    this.editorCallback = (editor) => {
+      const cursorLine = editor.getCursor("from").line;
+      const lastHeadingLine = getPreviousHeading(editor, cursorLine);
+      const headingLevel = lastHeadingLine ? checkHeading(editor.getLine(lastHeadingLine)) : 0;
+      const targetHeadingLevel = headingLevel - 1;
+      const headingChanges = composeLineChanges(
+        editor,
+        [cursorLine],
+        (chunk) => applyHeading(chunk, targetHeadingLevel, this.settings)
+      );
+      const indentChanges = createListIndentChangesByListBehavior(editor, {
+        parentIndentLevel: targetHeadingLevel,
+        tabSize: this.settings.editor.tabSize,
+        listBehavior: this.settings.list.childrenBehavior,
+        parentLineNumber: cursorLine
+      });
+      editor.transaction({
+        changes: [...headingChanges, ...indentChanges]
+      });
+      editor.setCursor(editor.getCursor().line);
+      return true;
+    };
+    this.createCommand = () => {
+      return {
+        id: `insert-heading-higher`,
+        name: t("Insert Heading at one level higher"),
+        icon: `headingShifter_heading`,
+        editorCallback: this.editorCallback
+      };
+    };
+    this.settings = settings;
+  }
+};
+
+// src/headings/shifter/manager.ts
+var HEADINGS = [0, 1, 2, 3, 4, 5, 6];
+var ShifterManager = class {
+  constructor(app, plugin) {
+    this.app = app;
+    this.plugin = plugin;
+  }
+  onload() {
+    this.addCommands();
+  }
+  addCommands() {
+    const settings = this.plugin.settings.myHeadings;
+    const increaseHeading2 = new IncreaseHeading(settings, false);
+    const increaseHeadingForced = new IncreaseHeading(settings, true);
+    const decreaseHeading2 = new DecreaseHeading(settings);
+    const insertHeadingAtCurrentLabel = new InsertHeadingAtCurrentLevel(settings);
+    const insertHeadingAtDeeperLevel = new InsertHeadingAtDeeperLevel(settings);
+    const insertHeadingAtHigherLevel = new InsertHeadingAtHigherLevel(settings);
+    HEADINGS.forEach((heading) => {
+      const applyHeadingCmd = new ApplyHeading(settings, heading);
+      this.plugin.addCommand({
+        ...applyHeadingCmd.createCommand(),
+        id: `heading-shifter-${applyHeadingCmd.createCommand().id}`
+        // Prefix to avoid conflict? Or use as derived.
+        // The createCommand in classes returned generic IDs e.g. 'increase-heading'.
+        // obsidian-assistant will prefix with 'obsidian-assistant:'.
+        // I should probably ensure unique IDs within my plugin if I have other heading commands.
+        // But previously I removed 'number-headings' command.
+        // Let's keep IDs simple: 'increase-heading' -> 'obsidian-assistant:increase-heading'.
+      });
+    });
+    this.plugin.addCommand(increaseHeading2.createCommand());
+    this.plugin.addCommand(increaseHeadingForced.createCommand());
+    this.plugin.addCommand(decreaseHeading2.createCommand());
+    this.plugin.addCommand(insertHeadingAtCurrentLabel.createCommand());
+    this.plugin.addCommand(insertHeadingAtDeeperLevel.createCommand());
+    this.plugin.addCommand(insertHeadingAtHigherLevel.createCommand());
+    this.plugin.registerEditorExtension(
+      import_state.Prec.highest(
+        import_view.keymap.of([
+          {
+            key: "Tab",
+            run: this.createKeyMapRunCallback({
+              check: increaseHeading2.check,
+              run: increaseHeading2.editorCallback
+            })
+          }
+        ])
+      )
+    );
+    this.plugin.registerEditorExtension(
+      import_state.Prec.highest(
+        import_view.keymap.of([
+          {
+            key: "s-Tab",
+            run: this.createKeyMapRunCallback({
+              check: decreaseHeading2.check,
+              run: decreaseHeading2.editorCallback
+            })
+          }
+        ])
+      )
+    );
+  }
+  // Helper from ObsidianService
+  getEditorFromState(state) {
+    return state.field(import_obsidian18.editorInfoField).editor;
+  }
+  createKeyMapRunCallback(config) {
+    const check = config.check || (() => true);
+    const { run } = config;
+    return (view) => {
+      const editor = this.getEditorFromState(view.state);
+      if (!editor) {
+        return false;
+      }
+      if (!check(editor)) {
+        return false;
+      }
+      return run(editor);
+    };
+  }
+};
+
 // src/headings/manager.ts
 var DEFAULT_HEADING_STYLES = ["1", "a", "A", "\u4E00", "\u2460", "1"];
 var DEFAULT_HEADING_SEPARATORS = ["", "-", ":", ".", "\u2014", "-"];
@@ -2382,13 +3112,15 @@ var HeadingsManager = class {
   constructor(app, plugin) {
     this.app = app;
     this.plugin = plugin;
+    this.shifterManager = new ShifterManager(app, plugin);
   }
   async onload() {
+    this.shifterManager.onload();
     this.plugin.addCommand({
       id: "configure-headings",
       name: t("Configure Headings"),
       callback: () => {
-        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian19.MarkdownView);
         if (activeView && activeView.file) {
           new HeadingsControlModal(this.app, this.plugin, activeView.file).open();
         }
@@ -2398,7 +3130,7 @@ var HeadingsManager = class {
   onunload() {
   }
   getActiveViewInfo() {
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian16.MarkdownView);
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian19.MarkdownView);
     if (activeView && activeView.file) {
       const data = this.app.metadataCache.getFileCache(activeView.file);
       const editor = activeView.editor;
@@ -2510,27 +3242,34 @@ var HeadingsManager = class {
 };
 
 // src/headings/settings-ui.ts
-var import_obsidian17 = require("obsidian");
+var import_obsidian20 = require("obsidian");
 function renderHeadingsSettings(containerEl, manager) {
   const settings = manager.plugin.settings.myHeadings;
-  new import_obsidian17.Setting(containerEl).setName(t("Auto Number Headings")).setDesc(t("Create numbers automatically on blur")).addToggle((toggle) => toggle.setValue(settings.auto).onChange(async (value) => {
+  const autoNumberingDetails = containerEl.createEl("details");
+  autoNumberingDetails.open = true;
+  const autoNumberingSummary = autoNumberingDetails.createEl("summary");
+  autoNumberingSummary.setText(t("Auto Numbering"));
+  autoNumberingSummary.style.fontSize = "1.2em";
+  autoNumberingSummary.style.fontWeight = "bold";
+  autoNumberingSummary.style.cursor = "pointer";
+  autoNumberingSummary.style.marginBottom = "10px";
+  const autoNumberingContent = autoNumberingDetails.createEl("div");
+  autoNumberingContent.style.paddingLeft = "10px";
+  autoNumberingContent.style.borderLeft = "2px solid var(--background-modifier-border)";
+  new import_obsidian20.Setting(autoNumberingContent).setName(t("Auto Number Headings")).setDesc(t("Create numbers automatically on blur")).addToggle((toggle) => toggle.setValue(settings.auto).onChange(async (value) => {
     settings.auto = value;
     await manager.plugin.saveSettings();
-    if (value)
-      manager.registerAutoUpdate();
-    else
-      manager.clearAutoUpdateTimer();
   }));
-  new import_obsidian17.Setting(containerEl).setName(t("First Level")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(settings.firstLevel).setDynamicTooltip().onChange(async (value) => {
+  new import_obsidian20.Setting(autoNumberingContent).setName(t("First Level")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(settings.firstLevel).setDynamicTooltip().onChange(async (value) => {
     settings.firstLevel = value;
     await manager.plugin.saveSettings();
   }));
-  new import_obsidian17.Setting(containerEl).setName(t("Max Level")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(settings.maxLevel).setDynamicTooltip().onChange(async (value) => {
+  new import_obsidian20.Setting(autoNumberingContent).setName(t("Max Level")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(settings.maxLevel).setDynamicTooltip().onChange(async (value) => {
     settings.maxLevel = value;
     await manager.plugin.saveSettings();
   }));
-  containerEl.createEl("h3", { text: t("Heading Styles") });
-  const stylesContainer = containerEl.createEl("div");
+  autoNumberingContent.createEl("h3", { text: t("Heading Styles") });
+  const stylesContainer = autoNumberingContent.createEl("div");
   stylesContainer.style.display = "grid";
   stylesContainer.style.gridTemplateColumns = "0.5fr 1fr 1fr 1fr";
   stylesContainer.style.gap = "10px";
@@ -2569,14 +3308,108 @@ function renderHeadingsSettings(containerEl, manager) {
       await manager.plugin.saveSettings();
     };
   }
+  containerEl.createEl("br");
+  const shifterDetails = containerEl.createEl("details");
+  shifterDetails.open = false;
+  const shifterSummary = shifterDetails.createEl("summary");
+  shifterSummary.setText(t("Heading Shifter"));
+  shifterSummary.style.fontSize = "1.2em";
+  shifterSummary.style.fontWeight = "bold";
+  shifterSummary.style.cursor = "pointer";
+  shifterSummary.style.marginBottom = "10px";
+  const shifterContent = shifterDetails.createEl("div");
+  shifterContent.style.paddingLeft = "10px";
+  shifterContent.style.borderLeft = "2px solid var(--background-modifier-border)";
+  new import_obsidian20.Setting(shifterContent).setName(t("Lower limit of Heading")).setDesc(t("The lower Heading Size that will be decreased by the Heading Shift")).addDropdown((dropdown) => {
+    const headingOptions = {};
+    [0, 1, 2, 3, 4, 5, 6].forEach((h) => headingOptions[String(h)] = String(h));
+    dropdown.addOptions(headingOptions).setValue(String(settings.limitHeadingFrom)).onChange(async (value) => {
+      settings.limitHeadingFrom = Number(value);
+      await manager.plugin.saveSettings();
+    });
+  });
+  new import_obsidian20.Setting(shifterContent).setName(t("Enable override tab behavior")).setDesc(t('Tab execute "Increase Headings" and Shift-Tab execute "Decrease Headings"')).addToggle(
+    (toggle) => toggle.setValue(settings.overrideTab).onChange(async (value) => {
+      settings.overrideTab = value;
+      await manager.plugin.saveSettings();
+    })
+  );
+  shifterContent.createEl("h3", { text: t("Style to remove") });
+  shifterContent.createEl("p", { text: t("If this style is at the position of a line, remove it") });
+  shifterContent.createEl("b", { text: t("Beginning") });
+  new import_obsidian20.Setting(shifterContent).setName(t("Unordered list")).setDesc("-").addToggle(
+    (toggle) => {
+      var _a, _b;
+      return toggle.setValue((_b = (_a = settings.styleToRemove) == null ? void 0 : _a.beginning) == null ? void 0 : _b.ul).onChange(async (value) => {
+        settings.styleToRemove.beginning.ul = value;
+        await manager.plugin.saveSettings();
+      });
+    }
+  );
+  new import_obsidian20.Setting(shifterContent).setName(t("Ordered list")).setDesc("1., 2. ,3. ,...").addToggle(
+    (toggle) => {
+      var _a, _b;
+      return toggle.setValue((_b = (_a = settings.styleToRemove) == null ? void 0 : _a.beginning) == null ? void 0 : _b.ol).onChange(async (value) => {
+        settings.styleToRemove.beginning.ol = value;
+        await manager.plugin.saveSettings();
+      });
+    }
+  );
+  new import_obsidian20.Setting(shifterContent).setName(t("User defined")).setDesc(t("Arbitrary string (regular expression)")).addTextArea((str) => {
+    var _a, _b;
+    str.setValue((_b = (_a = settings.styleToRemove.beginning) == null ? void 0 : _a.userDefined) == null ? void 0 : _b.join("\n")).onChange(async (str2) => {
+      settings.styleToRemove.beginning.userDefined = str2.split("\n");
+      await manager.plugin.saveSettings();
+    });
+  });
+  shifterContent.createEl("b", { text: t("Surrounding") });
+  new import_obsidian20.Setting(shifterContent).setName(t("Bold")).setDesc("**|__").addToggle(
+    (toggle) => {
+      var _a, _b;
+      return toggle.setValue((_b = (_a = settings.styleToRemove) == null ? void 0 : _a.surrounding) == null ? void 0 : _b.bold).onChange(async (value) => {
+        settings.styleToRemove.surrounding.bold = value;
+        await manager.plugin.saveSettings();
+      });
+    }
+  );
+  new import_obsidian20.Setting(shifterContent).setName(t("Italic")).setDesc("*|_").addToggle(
+    (toggle) => {
+      var _a, _b;
+      return toggle.setValue((_b = (_a = settings.styleToRemove) == null ? void 0 : _a.surrounding) == null ? void 0 : _b.italic).onChange(async (value) => {
+        settings.styleToRemove.surrounding.italic = value;
+        await manager.plugin.saveSettings();
+      });
+    }
+  );
+  new import_obsidian20.Setting(shifterContent).setName(t("User defined")).setDesc(t("Arbitrary string (regular expression)")).addTextArea((str) => {
+    var _a, _b, _c;
+    str.setValue((_c = (_b = (_a = settings.styleToRemove) == null ? void 0 : _a.surrounding) == null ? void 0 : _b.userDefined) == null ? void 0 : _c.join("\n")).onChange(async (str2) => {
+      settings.styleToRemove.surrounding.userDefined = str2.split("\n");
+      await manager.plugin.saveSettings();
+    });
+  });
+  shifterContent.createEl("h3", { text: t("List") });
+  new import_obsidian20.Setting(shifterContent).setName(t("Children behavior")).addDropdown((dropdown) => {
+    dropdown.addOption("outdent to zero", t("Outdent to 0")).addOption("sync with headings", t("Sync with headings")).addOption("noting", t("Noting")).setValue(settings.list.childrenBehavior).onChange((v) => {
+      settings.list.childrenBehavior = v;
+      manager.plugin.saveSettings();
+    });
+  });
+  shifterContent.createEl("h3", { text: t("Editor") });
+  new import_obsidian20.Setting(shifterContent).setName(t("Tab size")).addSlider((cb) => {
+    cb.setDynamicTooltip().setLimits(2, 8, 2).setValue(settings.editor.tabSize).onChange((v) => {
+      settings.editor.tabSize = v;
+      manager.plugin.saveSettings();
+    });
+  });
 }
 
 // src/formulas/manager.ts
-var import_obsidian19 = require("obsidian");
+var import_obsidian22 = require("obsidian");
 
 // src/formulas/modal.ts
-var import_obsidian18 = require("obsidian");
-var FormulasControlModal = class extends import_obsidian18.Modal {
+var import_obsidian21 = require("obsidian");
+var FormulasControlModal = class extends import_obsidian21.Modal {
   constructor(app, plugin, file) {
     super(app);
     this.plugin = plugin;
@@ -2592,16 +3425,16 @@ var FormulasControlModal = class extends import_obsidian18.Modal {
     const { contentEl } = this;
     contentEl.empty();
     contentEl.createEl("h2", { text: t("Configure Formulas") });
-    new import_obsidian18.Setting(contentEl).setName(t("Auto Number Formulas")).setDesc(t("Automatically number formulas on blur")).addToggle((toggle) => toggle.setValue(this.settings.auto).onChange((v) => this.settings.auto = v));
-    new import_obsidian18.Setting(contentEl).setName(t("Numbering Mode")).setDesc(t("Continuous: 1,2,3... | Heading-based: 1.1-1, 1.1-2...")).addDropdown((dropdown) => dropdown.addOption("continuous", t("Continuous")).addOption("heading-based", t("Heading-based")).setValue(this.settings.mode).onChange((v) => {
+    new import_obsidian21.Setting(contentEl).setName(t("Auto Number Formulas")).setDesc(t("Automatically number formulas on blur")).addToggle((toggle) => toggle.setValue(this.settings.auto).onChange((v) => this.settings.auto = v));
+    new import_obsidian21.Setting(contentEl).setName(t("Numbering Mode")).setDesc(t("Continuous: 1,2,3... | Heading-based: 1.1-1, 1.1-2...")).addDropdown((dropdown) => dropdown.addOption("continuous", t("Continuous")).addOption("heading-based", t("Heading-based")).setValue(this.settings.mode).onChange((v) => {
       this.settings.mode = v;
       this.display();
     }));
     if (this.settings.mode === "heading-based") {
-      new import_obsidian18.Setting(contentEl).setName(t("Max Heading Depth")).setDesc(t("Maximum heading level to use for formula numbering")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(this.settings.maxDepth).setDynamicTooltip().onChange((v) => this.settings.maxDepth = v));
+      new import_obsidian21.Setting(contentEl).setName(t("Max Heading Depth")).setDesc(t("Maximum heading level to use for formula numbering")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(this.settings.maxDepth).setDynamicTooltip().onChange((v) => this.settings.maxDepth = v));
     }
     const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
-    new import_obsidian18.Setting(buttonContainer).addButton((btn) => btn.setButtonText(t("Apply Now")).setTooltip(t("Apply numbering once without saving to frontmatter")).onClick(() => {
+    new import_obsidian21.Setting(buttonContainer).addButton((btn) => btn.setButtonText(t("Apply Now")).setTooltip(t("Apply numbering once without saving to frontmatter")).onClick(() => {
       this.applyNumbering();
       this.close();
     })).addButton((btn) => btn.setButtonText(t("Save to Frontmatter")).setTooltip(t("Save settings to frontmatter and apply")).setCta().onClick(async () => {
@@ -2609,7 +3442,7 @@ var FormulasControlModal = class extends import_obsidian18.Modal {
       this.close();
     })).addButton((btn) => btn.setButtonText(t("Remove Numbering")).setWarning().onClick(() => {
       this.plugin.formulasManager.removeNumbering();
-      new import_obsidian18.Notice(t("Formula numbering removed"));
+      new import_obsidian21.Notice(t("Formula numbering removed"));
       this.close();
     }));
   }
@@ -2621,13 +3454,13 @@ var FormulasControlModal = class extends import_obsidian18.Modal {
     this.plugin.settings.myFormulas = this.settings;
     this.plugin.formulasManager.updateNumbering(true, true);
     this.plugin.settings.myFormulas = originalSettings;
-    new import_obsidian18.Notice(t("Formula numbering applied (one-time)"));
+    new import_obsidian21.Notice(t("Formula numbering applied (one-time)"));
   }
   async saveAndApply() {
     await saveSettingsToFrontMatter(this.app, this.file, void 0, this.settings);
     await new Promise((resolve) => setTimeout(resolve, 100));
     this.plugin.formulasManager.updateNumbering(true, true);
-    new import_obsidian18.Notice(t("Settings saved to frontmatter and applied"));
+    new import_obsidian21.Notice(t("Settings saved to frontmatter and applied"));
   }
   onClose() {
     const { contentEl } = this;
@@ -2646,7 +3479,7 @@ var FormulasManager = class {
       id: "configure-formulas",
       name: t("Configure Formulas"),
       callback: () => {
-        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian19.MarkdownView);
+        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian22.MarkdownView);
         if (activeView && activeView.file) {
           new FormulasControlModal(this.app, this.plugin, activeView.file).open();
         }
@@ -2656,7 +3489,7 @@ var FormulasManager = class {
   onunload() {
   }
   getActiveViewInfo() {
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian19.MarkdownView);
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian22.MarkdownView);
     if (activeView && activeView.file) {
       const data = this.app.metadataCache.getFileCache(activeView.file);
       const editor = activeView.editor;
@@ -2856,19 +3689,19 @@ var FormulasManager = class {
 };
 
 // src/formulas/settings-ui.ts
-var import_obsidian20 = require("obsidian");
+var import_obsidian23 = require("obsidian");
 function renderFormulasSettings(containerEl, manager) {
   const settings = manager.plugin.settings.myFormulas;
-  new import_obsidian20.Setting(containerEl).setName(t("Auto Number Formulas")).setDesc(t("Automatically number formulas (triggers on blur if enabled)")).addToggle((toggle) => toggle.setValue(settings.auto).onChange(async (value) => {
+  new import_obsidian23.Setting(containerEl).setName(t("Auto Number Formulas")).setDesc(t("Automatically number formulas (triggers on blur if enabled)")).addToggle((toggle) => toggle.setValue(settings.auto).onChange(async (value) => {
     settings.auto = value;
     await manager.plugin.saveSettings();
   }));
-  new import_obsidian20.Setting(containerEl).setName(t("Numbering Mode")).setDesc(t("Continuous (1, 2, 3) or Heading-based (1.1-1, 1.1-2)")).addDropdown((dropdown) => dropdown.addOption("continuous", t("Continuous")).addOption("heading-based", t("Heading-based")).setValue(settings.mode).onChange(async (value) => {
+  new import_obsidian23.Setting(containerEl).setName(t("Numbering Mode")).setDesc(t("Continuous (1, 2, 3) or Heading-based (1.1-1, 1.1-2)")).addDropdown((dropdown) => dropdown.addOption("continuous", t("Continuous")).addOption("heading-based", t("Heading-based")).setValue(settings.mode).onChange(async (value) => {
     settings.mode = value;
     await manager.plugin.saveSettings();
     const nextSetting = containerEl.lastElementChild;
   }));
-  const depthSetting = new import_obsidian20.Setting(containerEl).setName(t("Max Heading Depth")).setDesc(t("For Heading-based mode: max depth of heading to use as prefix (e.g. 4 means use H4 at most)")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(settings.maxDepth).setDynamicTooltip().onChange(async (value) => {
+  const depthSetting = new import_obsidian23.Setting(containerEl).setName(t("Max Heading Depth")).setDesc(t("For Heading-based mode: max depth of heading to use as prefix (e.g. 4 means use H4 at most)")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(settings.maxDepth).setDynamicTooltip().onChange(async (value) => {
     settings.maxDepth = value;
     await manager.plugin.saveSettings();
   }));
@@ -2884,7 +3717,7 @@ function renderFormulasSettings(containerEl, manager) {
 }
 
 // src/utils/auto-numbering.ts
-var import_obsidian21 = require("obsidian");
+var import_obsidian24 = require("obsidian");
 var AutoNumberingController = class {
   constructor(app, plugin, headingsManager, formulasManager) {
     this.autoUpdateTimeout = null;
@@ -2906,7 +3739,7 @@ var AutoNumberingController = class {
     this.plugin.registerDomEvent(window, "focus", () => this.handleFocus());
   }
   handleBlur() {
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian21.MarkdownView);
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian24.MarkdownView);
     if (!activeView || !activeView.file)
       return;
     const data = this.app.metadataCache.getFileCache(activeView.file);
@@ -2971,7 +3804,7 @@ var AutoNumberingController = class {
 };
 
 // src/main.ts
-var AssistantPlugin = class extends import_obsidian22.Plugin {
+var AssistantPlugin = class extends import_obsidian25.Plugin {
   async onload() {
     console.log(t("Loading Obsidian Assistant..."));
     console.log(t("Loading Settings..."));
@@ -3012,13 +3845,23 @@ var AssistantPlugin = class extends import_obsidian22.Plugin {
     (_g = this.autoNumberingController) == null ? void 0 : _g.onunload();
   }
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const loadedData = await this.loadData();
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, loadedData);
+    if (loadedData == null ? void 0 : loadedData.myHeadings) {
+      this.settings.myHeadings = Object.assign({}, DEFAULT_SETTINGS.myHeadings, loadedData.myHeadings);
+    }
+    if (loadedData == null ? void 0 : loadedData.myFormulas) {
+      this.settings.myFormulas = Object.assign({}, DEFAULT_SETTINGS.myFormulas, loadedData.myFormulas);
+    }
+    if (loadedData == null ? void 0 : loadedData.mySnippets) {
+      this.settings.mySnippets = Object.assign({}, DEFAULT_SETTINGS.mySnippets, loadedData.mySnippets);
+    }
   }
   async saveSettings() {
     await this.saveData(this.settings);
   }
 };
-var AssistantSettingsTab = class extends import_obsidian22.PluginSettingTab {
+var AssistantSettingsTab = class extends import_obsidian25.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -3028,7 +3871,7 @@ var AssistantSettingsTab = class extends import_obsidian22.PluginSettingTab {
     containerEl.empty();
     containerEl.createEl("h2", { text: t("Obsidian Assistant Settings") });
     containerEl.createEl("h3", { text: t("Global Settings") });
-    new import_obsidian22.Setting(containerEl).setName(t("Auto-Numbering Refresh Interval")).setDesc(t("Time in milliseconds to wait before auto-numbering triggers (after losing focus)")).addText((text) => text.setPlaceholder("1000").setValue(String(this.plugin.settings.refreshInterval)).onChange(async (value) => {
+    new import_obsidian25.Setting(containerEl).setName(t("Auto-Numbering Refresh Interval")).setDesc(t("Time in milliseconds to wait before auto-numbering triggers (after losing focus)")).addText((text) => text.setPlaceholder("1000").setValue(String(this.plugin.settings.refreshInterval)).onChange(async (value) => {
       const interval = parseInt(value);
       if (!isNaN(interval) && interval > 0) {
         this.plugin.settings.refreshInterval = interval;
@@ -3176,7 +4019,7 @@ var AssistantSettingsTab = class extends import_obsidian22.PluginSettingTab {
     titleContainer.createEl("strong", { text: title });
     const toggleContainer = summary.createEl("div");
     toggleContainer.onclick = (e) => e.preventDefault();
-    const toggleSetting = new import_obsidian22.Setting(toggleContainer).addToggle((toggle) => toggle.setValue(isEnabled).onChange(onToggle));
+    const toggleSetting = new import_obsidian25.Setting(toggleContainer).addToggle((toggle) => toggle.setValue(isEnabled).onChange(onToggle));
     toggleSetting.settingEl.style.border = "none";
     toggleSetting.settingEl.style.padding = "0";
     toggleSetting.infoEl.remove();

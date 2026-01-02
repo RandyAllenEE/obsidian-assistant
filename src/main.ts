@@ -70,7 +70,35 @@ export default class AssistantPlugin extends Plugin {
     }
 
     async loadSettings() {
-        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+        const loadedData = await this.loadData();
+        this.settings = Object.assign({}, DEFAULT_SETTINGS, loadedData);
+
+        // Deep merge for nested settings objects to ensure new defaults (like Heading Shifter) are present
+        // even if the user has pre-existing settings for the module.
+        if (loadedData?.myHeadings) {
+            this.settings.myHeadings = Object.assign({}, DEFAULT_SETTINGS.myHeadings, loadedData.myHeadings);
+
+            // Deep merge stylesToRemove if it exists partially or not at all in loadedData
+            // Note: If loadedData.myHeadings.styleToRemove exists, it overwrites. But we want to ensure keys exist.
+            // But since styleToRemove is ALL NEW, if it exists in loadedData it's from this session? 
+            // If it doesn't exist, Object.assign({}, DEFAULT, loaded) handles it because loaded won't have it.
+            // Wait, Object.assign is shallow.
+            // DEFAULT.myHeadings has styleToRemove. loadedData.myHeadings does NOT.
+            // Object.assign(target, default, loaded) -> target gets default.styleToRemove. loaded lacks it, so it keeps default.
+            // So one level deep merge for myHeadings is enough to get styleToRemove.
+
+            // However, styleToRemove itself is nested. If in future we add keys to styleToRemove, we might need deeper.
+            // For now, migrating from "No Shifter" to "Shifter", 1-level deep for myHeadings is sufficient
+            // because strict "undefined" in loadedData means default value prevails.
+        }
+
+        if (loadedData?.myFormulas) {
+            this.settings.myFormulas = Object.assign({}, DEFAULT_SETTINGS.myFormulas, loadedData.myFormulas);
+        }
+
+        if (loadedData?.mySnippets) {
+            this.settings.mySnippets = Object.assign({}, DEFAULT_SETTINGS.mySnippets, loadedData.mySnippets);
+        }
     }
 
     async saveSettings() {

@@ -1,10 +1,10 @@
 # Obsidian Assistant
 
-An all-in-one assistant plugin that integrates multiple powerful Obsidian plugins into a unified, modular system. Obsidian Assistant combines the functionality of five popular plugins while adding improvements in architecture, internationalization, and user experience.
+An all-in-one assistant plugin that integrates multiple powerful Obsidian plugins into a unified, modular system. Obsidian Assistant combines the functionality of six popular plugins while adding improvements in architecture, internationalization, and user experience.
 
 ## 🌟 Features
 
-Obsidian Assistant provides **five independent modules**, each can be enabled or disabled separately:
+Obsidian Assistant provides **six independent modules**, each can be enabled or disabled separately:
 
 ### 📝 MySnippets - CSS Snippet Manager
 Manage your CSS snippets with ease through a convenient status bar menu.
@@ -58,6 +58,32 @@ Automatically number headings and mathematical formulas in your documents.
 - Heading-based mode: `(1.1-1)`, `(1.1-2)`...
 - Adjustable depth control for heading-based mode
 - Code block and table protection
+
+### 🔄 Heading Shifter - Smart Heading Management
+Easily shift and manipulate markdown headings with powerful commands.
+
+**Apply Headings:**
+- Apply Heading 0-6 commands (remove or set specific heading levels)
+- Quick conversion of plain text to headings
+- Configurable hotkeys (e.g., Ctrl+0~6)
+
+**Shift Headings:**
+- Increase/Decrease heading levels in batch
+- Forced increase mode (apply to non-heading lines)
+- Configurable lower limit
+- Optional Tab/Shift-Tab override for quick shifting
+
+**Insert Headings:**
+- Insert at current level (match previous heading)
+- Insert at one level deeper (for sub-sections)
+- Insert at one level higher (for parent sections)
+- Smart detection of context heading level
+
+**Advanced Features:**
+- Style removal (lists, bold, italic, custom patterns)
+- Children list behavior control (3 modes)
+- RegExp-based custom style handling
+- Seamless CodeMirror 6 integration
 
 ---
 
@@ -128,6 +154,13 @@ Each module can be independently enabled or disabled in the plugin settings:
 - Enable auto-numbering in settings or control panel
 - Use command: "Configure Formulas" to open control panel
 
+#### Heading Shifter
+- Use "Apply Heading 0-6" commands to set heading levels (useful with hotkeys Ctrl+0~6)
+- Use "Increase/Decrease Headings" to shift heading levels in batch
+- Use "Insert Heading" commands for smart heading insertion at current/deeper/higher levels
+- Enable Tab override in settings to use Tab/Shift-Tab for quick heading shifts
+- Configure style removal and list behavior in settings
+
 ---
 
 ## 🌐 Internationalization
@@ -160,6 +193,9 @@ Obsidian Assistant integrates and enhances the work of several amazing plugin de
 
 5. **[Kevin Albrecht (onlyafly)](https://www.kevinalbrecht.com)** - Creator of [Number Headings](https://github.com/onlyafly/number-headings-obsidian)
    - Original heading numbering algorithm and core logic foundation for the Number Adder enhanced version
+
+6. **[kasahala (k4a-l)](https://github.com/k4a-l)** - Creator of [Heading Shifter](https://github.com/k4a-dev/obsidian-heading-shifter)
+   - Original smart heading manipulation system with apply, shift, and insert features
 
 ### Enhanced Version Contributors
 

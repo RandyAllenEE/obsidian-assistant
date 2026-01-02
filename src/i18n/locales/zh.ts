@@ -161,6 +161,38 @@ export default {
     'Max Heading Depth': '最大标题深度',
     'For Heading-based mode: max depth of heading to use as prefix (e.g. 4 means use H4 at most)': '基于标题模式：用作前缀的最大标题深度（例如 4 表示最多使用 H4）',
 
+    // Heading Shifter
+    "Auto Numbering": "自动编号",
+    "Heading Shifter": "标题移动 (Heading Shifter)",
+    "Lower limit of Heading": "标题级别下限",
+    "The lower Heading Size that will be decreased by the Heading Shift": "标题移动功能可以降低的最小标题级别",
+    "Enable override tab behavior": "启用覆盖 Tab 键行为",
+    "Tab execute \"Increase Headings\" and Shift-Tab execute \"Decrease Headings\"": "Tab 键执行“增加标题级别”，Shift-Tab 执行“减少标题级别”",
+    "Style to remove": "要移除的样式",
+    "If this style is at the position of a line, remove it": "如果行中指定位置存在此样式，则移除它",
+    "Beginning": "开头",
+    "Unordered list": "无序列表",
+    "Ordered list": "有序列表",
+    "User defined": "用户自定义",
+    "Arbitrary string (regular expression)": "任意字符串 (正则表达式)",
+    "Surrounding": "包围",
+    "Bold": "粗体",
+    "Italic": "斜体",
+    "Children behavior": "子元素行为",
+    "Outdent to 0": "缩进至 0",
+    "Sync with headings": "与标题同步",
+    "Noting": "无操作",
+    "Tab size": "制表符宽度 (Tab Size)",
+
+    // Shifter Commands
+    'Increase Headings': '增加标题级别',
+    'Increase Headings (forced)': '增加标题级别 (强制)',
+    'Decrease Headings': '减少标题级别',
+    'Apply Heading': '应用标题级别',
+    'Insert Heading at current level': '在当前级别插入标题',
+    'Insert Heading at one level deeper': '在更深一级插入标题',
+    'Insert Heading at one level higher': '在更浅一级插入标题',
+
     // Commands & Modals
     'Configure Headings': '配置标题',
     'Configure Formulas': '配置公式',

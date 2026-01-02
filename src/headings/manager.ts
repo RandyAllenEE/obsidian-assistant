@@ -17,6 +17,7 @@ import {
 import { parseHeadingsFrontMatter } from '../utils/frontmatter';
 import { HeadingsControlModal } from './modal';
 import { t } from '../i18n/helpers';
+import { ShifterManager } from './shifter/manager';
 
 export const DEFAULT_HEADING_STYLES = ['1', 'a', 'A', '一', '①', '1'];
 export const DEFAULT_HEADING_SEPARATORS = ['', '-', ':', '.', '—', '-'];
@@ -25,13 +26,18 @@ export const DEFAULT_HEADING_START_VALUES = ['0', '1', '1', '1', '1', '1'];
 export class HeadingsManager {
     app: App;
     plugin: AssistantPlugin;
+    shifterManager: ShifterManager;
 
     constructor(app: App, plugin: AssistantPlugin) {
         this.app = app;
         this.plugin = plugin;
+        this.shifterManager = new ShifterManager(app, plugin);
     }
 
     async onload() {
+        // Initialize Shifter Manager
+        this.shifterManager.onload();
+
         // Only register the control modal command
         this.plugin.addCommand({
             id: 'configure-headings',
