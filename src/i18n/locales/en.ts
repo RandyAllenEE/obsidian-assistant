@@ -249,5 +249,20 @@ export default {
     'Specify the maximum width in pixels for the left sidebar when expanded': 'Specify the maximum width in pixels for the left sidebar when expanded',
     'Right sidebar maximum width': 'Right sidebar maximum width',
     'Specify the maximum width in pixels for the right sidebar when expanded': 'Specify the maximum width in pixels for the right sidebar when expanded',
+
+
     'Ribbon Buttons': 'Ribbon Buttons',
+    'Sidebar Tabs': 'Sidebar Tabs',
+    'Manage placement of sidebar tabs (like File Explorer, Search).': 'Manage placement of sidebar tabs (like File Explorer, Search).',
+    'Scan Current Layout': 'Scan Current Layout',
+    'Scan and apply': 'Scan and save current sidebar layout',
+
+    'Hidden': 'Hidden',
+    'Default': 'Default',
+    'Move to Left Sidebar': 'Move to Left Sidebar',
+    'Move to Right Sidebar': 'Move to Right Sidebar',
+    'Hide Tab': 'Hide Tab',
+    'Show Tab': 'Show Tab',
+
+    'Unknown Tab': 'Unknown Tab',
 };

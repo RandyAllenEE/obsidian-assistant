@@ -236,5 +236,20 @@ export default {
     'Specify the maximum width in pixels for the left sidebar when expanded': '指定左侧边栏展开时的最大宽度（像素）',
     'Right sidebar maximum width': '右侧边栏最大宽度',
     'Specify the maximum width in pixels for the right sidebar when expanded': '指定右侧边栏展开时的最大宽度（像素）',
+
+
     'Ribbon Buttons': '功能区按钮',
+    'Sidebar Tabs': '侧边栏标签页',
+    'Manage placement of sidebar tabs (like File Explorer, Search).': '管理侧边栏标签页（如文件资源管理器、搜索）的放置位置。',
+    'Scan Current Layout': '扫描当前布局',
+    'Scan and apply': '扫描并保存当前侧边栏布局',
+
+    'Hidden': '隐藏',
+    'Default': '默认',
+    'Move to Left Sidebar': '移动到左侧边栏',
+    'Move to Right Sidebar': '移动到右侧边栏',
+    'Hide Tab': '隐藏标签页',
+    'Show Tab': '显示标签页',
+
+    'Unknown Tab': '未知标签页',
 };

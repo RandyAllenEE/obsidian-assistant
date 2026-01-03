@@ -199,6 +199,7 @@ export const DEFAULT_MY_FORMULAS_SETTINGS: MyFormulasSettings = {
 
 // MySideBar Settings
 export interface AutoHideSettings {
+    enabled: boolean;
     leftSidebar: boolean;
     rightSidebar: boolean;
     syncLeftRight: boolean;
@@ -213,15 +214,29 @@ export interface AutoHideSettings {
     rightSidebarMaxWidth: number;
 }
 
+export interface SidebarTabElement {
+    id: string;
+    side: 'left' | 'right';
+    visible: boolean;
+    order: number;
+}
+
+export interface SidebarTabsSettings {
+    enabled: boolean;
+    elements: { [viewType: string]: SidebarTabElement };
+}
+
 export interface MySideBarSettings {
     enabled: boolean;
     autoHide: AutoHideSettings;
-    ribbon: { elements: { [key: string]: any } };
+    ribbon: { enabled: boolean; elements: { [key: string]: any } };
+    tabs: SidebarTabsSettings;
 }
 
 export const DEFAULT_MY_SIDEBAR_SETTINGS: MySideBarSettings = {
     enabled: true,
     autoHide: {
+        enabled: true,
         leftSidebar: true,
         rightSidebar: true,
         syncLeftRight: false,
@@ -235,7 +250,8 @@ export const DEFAULT_MY_SIDEBAR_SETTINGS: MySideBarSettings = {
         leftSidebarMaxWidth: 325,
         rightSidebarMaxWidth: 325,
     },
-    ribbon: { elements: {} }
+    ribbon: { enabled: true, elements: {} },
+    tabs: { enabled: true, elements: {} }
 };
 
 export interface AssistantSettings {

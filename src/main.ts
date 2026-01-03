@@ -122,6 +122,23 @@ export default class AssistantPlugin extends Plugin {
             this.settings.mySnippets = Object.assign({}, DEFAULT_SETTINGS.mySnippets, loadedData.mySnippets);
         }
 
+        if (loadedData?.mySideBar) {
+            this.settings.mySideBar = Object.assign({}, DEFAULT_SETTINGS.mySideBar, loadedData.mySideBar);
+
+            // Deep merge for nested objects to ensure 'enabled' flags are present
+            if (loadedData.mySideBar.autoHide) {
+                this.settings.mySideBar.autoHide = Object.assign({}, DEFAULT_SETTINGS.mySideBar.autoHide, loadedData.mySideBar.autoHide);
+            }
+            if (loadedData.mySideBar.ribbon) {
+                this.settings.mySideBar.ribbon = Object.assign({}, DEFAULT_SETTINGS.mySideBar.ribbon, loadedData.mySideBar.ribbon);
+            }
+            // tabs is likely new, so the shallow merge of mySideBar handles it if loadedData.mySideBar.tabs is undefined.
+            // But if it exists partially, merge it.
+            if (loadedData.mySideBar.tabs) {
+                this.settings.mySideBar.tabs = Object.assign({}, DEFAULT_SETTINGS.mySideBar.tabs, loadedData.mySideBar.tabs);
+            }
+        }
+
 
 
         // Save cleaned settings to disk immediately
