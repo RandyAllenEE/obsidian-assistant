@@ -241,6 +241,7 @@ export interface SidebarBinding {
     slaveId: string;
     groupSvg?: string;
     groupName?: string;
+    splitRatio?: number;
 }
 
 export interface SidebarTabsSettings {

@@ -21,11 +21,15 @@ export class ContextualSplitFeature {
             this.applyAllMasquerades();
         });
 
-        // Re-apply masquerade on layout changes (e.g. drag & drop might reset tab title)
+        // Re-apply masquerade and check validity on layout changes
         this.app.workspace.on('layout-change', debounce(() => {
             this.applyAllMasquerades();
             this.checkActiveBindingValidity();
         }, 200));
+
+        this.app.workspace.on('resize', debounce(() => {
+            this.saveSplitState();
+        }, 500));
 
         this.app.workspace.on('active-leaf-change', debounce((leaf) => {
             if (leaf) this.handleActiveLeaf(leaf);
@@ -109,7 +113,6 @@ export class ContextualSplitFeature {
         // 1. Check if any Master is visible
         for (const binding of bindings) {
             if (this.isMasterVisible(binding.masterId)) {
-                // If found visible master, ensure it is active
                 if (this.activeBinding !== binding) {
                     if (this.activeBinding) this.cleanupSplit(this.activeBinding);
 
@@ -118,7 +121,6 @@ export class ContextualSplitFeature {
                     const visibleLeaf = leaves.find(l => l.view.containerEl.isShown());
                     if (visibleLeaf) this.activateSplit(visibleLeaf, binding);
                 }
-                // If it was already active, we are good.
                 return;
             }
         }
@@ -135,6 +137,21 @@ export class ContextualSplitFeature {
         return leaves.some(l => l.view.containerEl.isShown());
     }
 
+    saveSplitState() {
+        if (!this.activeBinding) return;
+        const slaveLeaf = this.findUniqueSlaveLeaf(this.activeBinding.slaveId);
+        if (slaveLeaf) {
+            const parent = (slaveLeaf as any).parent;
+            // Check if parent has dimension property
+            if (parent && typeof parent.dimension === 'number') {
+                if (this.activeBinding.splitRatio !== parent.dimension) {
+                    this.activeBinding.splitRatio = parent.dimension;
+                    this.plugin.saveSettings();
+                }
+            }
+        }
+    }
+
     async activateSplit(masterLeaf: WorkspaceLeaf, binding: SidebarBinding) {
         // Only handles the split logic now, visual is handled globally
         let slaveLeaf = this.findUniqueSlaveLeaf(binding.slaveId);
@@ -148,6 +165,11 @@ export class ContextualSplitFeature {
         const parent = (slaveLeaf as any).parent;
         if (parent && parent.containerEl) {
             parent.containerEl.addClass('contextual-split-hidden-header');
+
+            // Restore Dimension if exists
+            if (binding.splitRatio !== undefined && typeof (parent as any).setDimension === 'function') {
+                (parent as any).setDimension(binding.splitRatio);
+            }
         }
     }
 

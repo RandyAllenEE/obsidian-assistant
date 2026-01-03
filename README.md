@@ -82,15 +82,25 @@ Easily shift and manipulate markdown headings with powerful commands.
 - RegExp-based custom style handling
 - Seamless CodeMirror 6 integration
 
-### 📏 MySideBar - Sidebar Control & Auto Hide
-Precise control over your Obsidian sidebars with auto-hide functionality.
+### 📏 MySideBar - Advanced Sidebar Manager
+Complete control over your Obsidian sidebars, tabs, and ribbons.
 
-- **Auto Hide**: Automatically collapse and expand sidebars on hover
-- **Trigger Control**: Customize the hover trigger area width
-- **Timing Control**: Adjust expansion/collapse delays and animation speeds
-- **Overlay Mode**: Sidebars slide over content without resizing the editor
-- **Sync Mode**: Expand both sidebars simultaneously
-- **Width Control**: Set custom widths for expanded sidebars
+**Core Features:**
+- **Auto Hide**: Automatically collapse and expand sidebars on hover.
+  - **Smart Pinning**: Manually expanding the sidebar "pins" it open, overriding auto-hide.
+  - **Trigger Control**: Customize hover trigger area.
+  - **Overlay Mode**: Sidebars slide over content without resizing the editor.
+- **Contextual Groups**: Combine two sidebar tabs (Master & Slave) into a single functional unit.
+  - **Masquerade**: Display custom Name and Icon (SVG support) for the group.
+  - **Split View**: Automatically open the Slave view below the Master view when activated.
+  - **Persistent Split**: Remembers the split ratio between Master and Slave.
+  - **Auto-Sort**: Slave tab automatically follows the Master tab when reordered.
+- **Sidebar Tab Manager**:
+  - Drag-and-drop to reorder all sidebar tabs.
+  - Move tabs between Left/Right sidebars or Hide them.
+- **Ribbon Manager**:
+  - Reorder ribbon icons via drag-and-drop.
+  - Hide/Show specific ribbon icons.
 
 ---
 
@@ -167,10 +177,14 @@ Each module can be independently enabled or disabled in the plugin settings:
 - Configure style removal and list behavior in settings
 
 #### MySideBar
-- Enable "Auto Hide" to make sidebars expand on mouse hover
-- Adjust "Trigger Width" if you have multiple monitors or find it hard to trigger
-- Enable "Overlay Mode" for a cleaner, floating sidebar experience
-- Use "Sync left and right" to peek at both sidebars at once
+- **Auto Hide**: Enable "Auto Hide" for hover expansion. Manual click pins the sidebar open.
+- **Ribbon Organizer**: Drag icons in settings to reorder or click the eye icon to hide.
+- **Tab Organizer**: Drag items in the sidebar list to reorder.
+- **Contextual Groups**: 
+  - Click "Add Group" to bind two views (e.g. Explorer + Outline).
+  - The group acts as a single tab; clicking it opens both views split horizontally.
+  - Use "Unbind" to restore original tabs.
+- **Layout Scan**: Click "Scan Current Layout" to capture new plugins or tabs.
 
 ---
 

@@ -42,6 +42,9 @@ export class SidebarTabsFeature {
             // Iterate all leaves within this sidebar split
             this.app.workspace.iterateLeaves((leaf) => {
                 const viewType = leaf.view.getViewType();
+                // Ignore Contextual Slaves
+                if (leaf.view.containerEl.dataset.assistantContextualSlave === "true") return;
+
                 // Only manage if not already managed
                 if (!settings.elements[viewType]) {
                     // For scan, we append to end
@@ -82,6 +85,7 @@ export class SidebarTabsFeature {
             if (!split) return [];
             const ids: string[] = [];
             this.app.workspace.iterateLeaves((leaf) => {
+                if (leaf.view.containerEl.dataset.assistantContextualSlave === "true") return;
                 ids.push(leaf.view.getViewType());
             }, split);
             return ids;

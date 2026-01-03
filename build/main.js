@@ -3687,55 +3687,66 @@ var AutoHideFeature = class {
     // State
     this.isHoveringLeft = false;
     this.isHoveringRight = false;
-    // New State for Manual Override
+    // Manual Override State
     this.isAutoExpandedLeft = false;
     this.isAutoExpandedRight = false;
+    // Timers for Debounce
+    this.expandTimerLeft = null;
+    this.expandTimerRight = null;
     // -- Non-Obsidian API --------------------------
     this.getEditorWidth = () => this.app.workspace.containerEl.clientWidth;
     // Event handlers
     this.mouseMoveHandler = (event) => {
       const mouseX = event.clientX;
-      if (this.settings.rightSidebar) {
-        if (!this.isHoveringRight && this.rightSplit.collapsed) {
-          const editorWidth = this.getEditorWidth();
-          this.isHoveringRight = mouseX >= editorWidth - this.settings.rightSideBarPixelTrigger;
-          if (this.isHoveringRight && this.rightSplit.collapsed) {
-            setTimeout(() => {
-              if (this.isHoveringRight) {
-                if (this.settings.syncLeftRight) {
-                  this.expandBoth();
-                } else {
-                  this.expandRight();
-                }
-              }
+      if (this.settings.rightSidebar && this.rightSplit.collapsed) {
+        const editorWidth = this.getEditorWidth();
+        const inTriggerZone = mouseX >= editorWidth - this.settings.rightSideBarPixelTrigger;
+        if (inTriggerZone) {
+          if (!this.isHoveringRight) {
+            this.isHoveringRight = true;
+            if (this.expandTimerRight)
+              clearTimeout(this.expandTimerRight);
+            this.expandTimerRight = window.setTimeout(() => {
+              if (this.settings.syncLeftRight)
+                this.expandBoth();
+              else
+                this.expandRight();
+              this.expandTimerRight = null;
             }, this.settings.sidebarExpandDelay);
           }
-          setTimeout(() => {
-            if (!this.isHoveringRight) {
-              this.collapseRight();
+        } else {
+          if (this.isHoveringRight) {
+            this.isHoveringRight = false;
+            if (this.expandTimerRight) {
+              clearTimeout(this.expandTimerRight);
+              this.expandTimerRight = null;
             }
-          }, this.settings.sidebarDelay);
+          }
         }
       }
-      if (this.settings.leftSidebar) {
-        if (!this.isHoveringLeft && this.leftSplit.collapsed) {
-          this.isHoveringLeft = mouseX <= this.settings.leftSideBarPixelTrigger;
-          if (this.isHoveringLeft && this.leftSplit.collapsed) {
-            setTimeout(() => {
-              if (this.isHoveringLeft) {
-                if (this.settings.syncLeftRight) {
-                  this.expandBoth();
-                } else {
-                  this.expandLeft();
-                }
-              }
+      if (this.settings.leftSidebar && this.leftSplit.collapsed) {
+        const inTriggerZone = mouseX <= this.settings.leftSideBarPixelTrigger;
+        if (inTriggerZone) {
+          if (!this.isHoveringLeft) {
+            this.isHoveringLeft = true;
+            if (this.expandTimerLeft)
+              clearTimeout(this.expandTimerLeft);
+            this.expandTimerLeft = window.setTimeout(() => {
+              if (this.settings.syncLeftRight)
+                this.expandBoth();
+              else
+                this.expandLeft();
+              this.expandTimerLeft = null;
             }, this.settings.sidebarExpandDelay);
           }
-          setTimeout(() => {
-            if (!this.isHoveringLeft) {
-              this.collapseLeft();
+        } else {
+          if (this.isHoveringLeft) {
+            this.isHoveringLeft = false;
+            if (this.expandTimerLeft) {
+              clearTimeout(this.expandTimerLeft);
+              this.expandTimerLeft = null;
             }
-          }, this.settings.sidebarDelay);
+          }
         }
       }
     };
@@ -3761,6 +3772,7 @@ var AutoHideFeature = class {
     this.leftRibbon = this.app.workspace.leftRibbon;
     this.initializeHandlers();
     document.addEventListener("mousemove", this.mouseMoveHandler);
+    document.addEventListener("mouseleave", this.documentMouseLeaveHandler);
     this.rightSplit.containerEl.addEventListener(
       "mousemove",
       this.rightSplitMouseMoveHandler
@@ -3802,6 +3814,14 @@ var AutoHideFeature = class {
     );
   }
   unload() {
+    if (this.expandTimerLeft) {
+      clearTimeout(this.expandTimerLeft);
+      this.expandTimerLeft = null;
+    }
+    if (this.expandTimerRight) {
+      clearTimeout(this.expandTimerRight);
+      this.expandTimerRight = null;
+    }
     document.body.classList.remove("sidebar-overlay-mode");
     document.body.classList.remove("open-sidebar-hover-plugin");
     if (this.mouseMoveHandler) {
@@ -3809,6 +3829,9 @@ var AutoHideFeature = class {
     }
     if (this.documentClickHandler) {
       document.removeEventListener("click", this.documentClickHandler);
+    }
+    if (this.documentMouseLeaveHandler) {
+      document.removeEventListener("mouseleave", this.documentMouseLeaveHandler);
     }
     if (this.rightSplit && this.rightSplit.containerEl) {
       this.rightSplit.containerEl.removeEventListener(
@@ -3865,20 +3888,42 @@ var AutoHideFeature = class {
         }
       }
     };
+    this.documentMouseLeaveHandler = (e) => {
+      if (this.expandTimerLeft) {
+        clearTimeout(this.expandTimerLeft);
+        this.expandTimerLeft = null;
+        this.isHoveringLeft = false;
+      }
+      if (this.expandTimerRight) {
+        clearTimeout(this.expandTimerRight);
+        this.expandTimerRight = null;
+        this.isHoveringRight = false;
+      }
+    };
     this.rightSplitMouseMoveHandler = () => this.rightSplit.containerEl.addClass("hovered");
     this.rightSplitMouseEnterHandler = () => {
       this.isHoveringRight = true;
       this.rightSplit.containerEl.addClass("hovered");
+      if (this.expandTimerRight) {
+        clearTimeout(this.expandTimerRight);
+        this.expandTimerRight = null;
+      }
     };
     this.leftSplitMouseMoveHandler = () => this.leftSplit.containerEl.addClass("hovered");
     this.leftSplitMouseEnterHandler = () => {
       this.isHoveringLeft = true;
       this.leftSplit.containerEl.addClass("hovered");
+      if (this.expandTimerLeft) {
+        clearTimeout(this.expandTimerLeft);
+        this.expandTimerLeft = null;
+      }
     };
     this.leftRibbonMouseEnterHandler = () => {
       if (this.settings.leftSidebar) {
         this.isHoveringLeft = true;
-        setTimeout(() => {
+        if (this.expandTimerLeft)
+          clearTimeout(this.expandTimerLeft);
+        this.expandTimerLeft = window.setTimeout(() => {
           if (this.isHoveringLeft) {
             if (this.settings.syncLeftRight && this.settings.rightSidebar) {
               this.expandBoth();
@@ -3886,6 +3931,7 @@ var AutoHideFeature = class {
               this.expandLeft();
             }
           }
+          this.expandTimerLeft = null;
         }, this.settings.sidebarExpandDelay);
       }
     };
@@ -4185,6 +4231,8 @@ var SidebarTabsFeature = class {
         return;
       this.app.workspace.iterateLeaves((leaf) => {
         const viewType = leaf.view.getViewType();
+        if (leaf.view.containerEl.dataset.assistantContextualSlave === "true")
+          return;
         if (!settings.elements[viewType]) {
           const maxOrder = Object.values(settings.elements).reduce((max, el) => Math.max(max, el.order), -1);
           settings.elements[viewType] = {
@@ -4216,6 +4264,8 @@ var SidebarTabsFeature = class {
         return [];
       const ids = [];
       this.app.workspace.iterateLeaves((leaf) => {
+        if (leaf.view.containerEl.dataset.assistantContextualSlave === "true")
+          return;
         ids.push(leaf.view.getViewType());
       }, split);
       return ids;
@@ -4317,6 +4367,9 @@ var ContextualSplitFeature = class {
       this.applyAllMasquerades();
       this.checkActiveBindingValidity();
     }, 200));
+    this.app.workspace.on("resize", (0, import_obsidian23.debounce)(() => {
+      this.saveSplitState();
+    }, 500));
     this.app.workspace.on("active-leaf-change", (0, import_obsidian23.debounce)((leaf) => {
       if (leaf)
         this.handleActiveLeaf(leaf);
@@ -4407,6 +4460,20 @@ var ContextualSplitFeature = class {
     const leaves = this.findLeavesByType(masterId);
     return leaves.some((l) => l.view.containerEl.isShown());
   }
+  saveSplitState() {
+    if (!this.activeBinding)
+      return;
+    const slaveLeaf = this.findUniqueSlaveLeaf(this.activeBinding.slaveId);
+    if (slaveLeaf) {
+      const parent = slaveLeaf.parent;
+      if (parent && typeof parent.dimension === "number") {
+        if (this.activeBinding.splitRatio !== parent.dimension) {
+          this.activeBinding.splitRatio = parent.dimension;
+          this.plugin.saveSettings();
+        }
+      }
+    }
+  }
   async activateSplit(masterLeaf, binding) {
     let slaveLeaf = this.findUniqueSlaveLeaf(binding.slaveId);
     if (!slaveLeaf) {
@@ -4417,6 +4484,9 @@ var ContextualSplitFeature = class {
     const parent = slaveLeaf.parent;
     if (parent && parent.containerEl) {
       parent.containerEl.addClass("contextual-split-hidden-header");
+      if (binding.splitRatio !== void 0 && typeof parent.setDimension === "function") {
+        parent.setDimension(binding.splitRatio);
+      }
     }
   }
   async cleanupSplit(binding) {

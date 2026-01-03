@@ -10,9 +10,13 @@ export class AutoHideFeature {
     isHoveringLeft = false;
     isHoveringRight = false;
 
-    // New State for Manual Override
+    // Manual Override State
     isAutoExpandedLeft = false;
     isAutoExpandedRight = false;
+
+    // Timers for Debounce
+    private expandTimerLeft: number | null = null;
+    private expandTimerRight: number | null = null;
 
     leftSplit: ExtendedWorkspaceSplit;
     rightSplit: ExtendedWorkspaceSplit;
@@ -27,6 +31,7 @@ export class AutoHideFeature {
     rightSplitMouseLeaveHandler: (event: MouseEvent) => void;
     leftRibbonMouseEnterHandler: () => void;
     documentClickHandler: (e: MouseEvent) => void;
+    documentMouseLeaveHandler: (e: MouseEvent) => void;
 
     constructor(app: App, plugin: AssistantPlugin) {
         this.app = app;
@@ -65,6 +70,7 @@ export class AutoHideFeature {
 
         // add event listeners
         document.addEventListener("mousemove", this.mouseMoveHandler);
+        document.addEventListener("mouseleave", this.documentMouseLeaveHandler); // Handle window exit
 
         // Enhanced implementation with hover class for right split
         this.rightSplit.containerEl.addEventListener(
@@ -114,6 +120,10 @@ export class AutoHideFeature {
     }
 
     unload() {
+        // Clear timers
+        if (this.expandTimerLeft) { clearTimeout(this.expandTimerLeft); this.expandTimerLeft = null; }
+        if (this.expandTimerRight) { clearTimeout(this.expandTimerRight); this.expandTimerRight = null; }
+
         // Remove overlay mode class if it was added
         document.body.classList.remove("sidebar-overlay-mode");
 
@@ -126,6 +136,9 @@ export class AutoHideFeature {
         }
         if (this.documentClickHandler) {
             document.removeEventListener("click", this.documentClickHandler);
+        }
+        if (this.documentMouseLeaveHandler) {
+            document.removeEventListener("mouseleave", this.documentMouseLeaveHandler);
         }
 
         // Clean up right split event listeners
@@ -196,11 +209,19 @@ export class AutoHideFeature {
             }
         };
 
+        this.documentMouseLeaveHandler = (e: MouseEvent) => {
+            // If cursor leaves the window, cancel pending expansions
+            if (this.expandTimerLeft) { clearTimeout(this.expandTimerLeft); this.expandTimerLeft = null; this.isHoveringLeft = false; }
+            if (this.expandTimerRight) { clearTimeout(this.expandTimerRight); this.expandTimerRight = null; this.isHoveringRight = false; }
+        };
+
         this.rightSplitMouseMoveHandler = () => this.rightSplit.containerEl.addClass('hovered');
 
         this.rightSplitMouseEnterHandler = () => {
             this.isHoveringRight = true;
             this.rightSplit.containerEl.addClass('hovered');
+            // Ensure timer is cleared if we entered the split itself (success)
+            if (this.expandTimerRight) { clearTimeout(this.expandTimerRight); this.expandTimerRight = null; }
         };
 
         this.leftSplitMouseMoveHandler = () => this.leftSplit.containerEl.addClass('hovered');
@@ -208,13 +229,18 @@ export class AutoHideFeature {
         this.leftSplitMouseEnterHandler = () => {
             this.isHoveringLeft = true;
             this.leftSplit.containerEl.addClass('hovered');
+            // Ensure timer is cleared if we entered the split itself (success)
+            if (this.expandTimerLeft) { clearTimeout(this.expandTimerLeft); this.expandTimerLeft = null; }
         };
 
         this.leftRibbonMouseEnterHandler = () => {
             if (this.settings.leftSidebar) {
+                // Ribbons trigger expansion too
+                // We treat ribbon hover same as trigger zone hover
                 this.isHoveringLeft = true;
-                setTimeout(() => {
-                    // Check if still hovering
+
+                if (this.expandTimerLeft) clearTimeout(this.expandTimerLeft);
+                this.expandTimerLeft = window.setTimeout(() => {
                     if (this.isHoveringLeft) {
                         if (this.settings.syncLeftRight && this.settings.rightSidebar) {
                             this.expandBoth();
@@ -222,12 +248,12 @@ export class AutoHideFeature {
                             this.expandLeft();
                         }
                     }
+                    this.expandTimerLeft = null;
                 }, this.settings.sidebarExpandDelay);
             }
         };
 
         this.rightSplitMouseLeaveHandler = (event: MouseEvent) => {
-            // Don't process if we're leaving to the tab header container or a menu
             const target = event.relatedTarget as HTMLElement;
             if (target && (target.closest('.workspace-tab-header-container-inner') ||
                 (target.hasClass && target.hasClass('menu')) ||
@@ -238,7 +264,6 @@ export class AutoHideFeature {
 
             if (this.settings.rightSidebar) {
                 this.isHoveringRight = false;
-                // Remove the hovered class
                 this.rightSplit.containerEl.removeClass('hovered');
 
                 setTimeout(() => {
@@ -254,7 +279,6 @@ export class AutoHideFeature {
         };
 
         this.leftSplitMouseLeaveHandler = (event: MouseEvent) => {
-            // Don't process if we're leaving to the tab header container or a menu
             const target = event.relatedTarget as HTMLElement;
             if (target && (target.closest('.workspace-tab-header-container-inner') ||
                 (target.hasClass && target.hasClass('menu')) ||
@@ -265,7 +289,6 @@ export class AutoHideFeature {
 
             if (this.settings.leftSidebar) {
                 this.isHoveringLeft = false;
-                // Remove the hovered class
                 this.leftSplit.containerEl.removeClass('hovered');
 
                 setTimeout(() => {
@@ -308,17 +331,13 @@ export class AutoHideFeature {
     getEditorWidth = () => this.app.workspace.containerEl.clientWidth;
 
     expandRight() {
-        // Track auto-expansion
         if (this.rightSplit.collapsed) this.isAutoExpandedRight = true;
-
         this.rightSplit.expand();
         this.isHoveringRight = true;
     }
 
     expandLeft() {
-        // Track auto-expansion
         if (this.leftSplit.collapsed) this.isAutoExpandedLeft = true;
-
         this.leftSplit.expand();
         this.isHoveringLeft = true;
     }
@@ -329,22 +348,18 @@ export class AutoHideFeature {
     }
 
     collapseRight() {
-        // Only collapse if it was auto-expanded
         if (this.isAutoExpandedRight) {
             this.rightSplit.collapse();
             this.isAutoExpandedRight = false;
         }
-        // If manually expanded (isAutoExpandedRight == false), DO NOTHING
         this.isHoveringRight = false;
     }
 
     collapseLeft() {
-        // Only collapse if it was auto-expanded
         if (this.isAutoExpandedLeft) {
             this.leftSplit.collapse();
             this.isAutoExpandedLeft = false;
         }
-        // If manually expanded, DO NOTHING
         this.isHoveringLeft = false;
     }
 
@@ -357,57 +372,60 @@ export class AutoHideFeature {
     mouseMoveHandler = (event: MouseEvent) => {
         const mouseX = event.clientX;
 
-        // Handle right sidebar hover
-        if (this.settings.rightSidebar) {
-            if (!this.isHoveringRight && this.rightSplit.collapsed) {
-                const editorWidth = this.getEditorWidth();
+        // --- RIGHT SIDEBAR ---
+        if (this.settings.rightSidebar && this.rightSplit.collapsed) {
+            const editorWidth = this.getEditorWidth();
+            const inTriggerZone = mouseX >= editorWidth - this.settings.rightSideBarPixelTrigger;
 
-                this.isHoveringRight =
-                    mouseX >= editorWidth - this.settings.rightSideBarPixelTrigger;
+            if (inTriggerZone) {
+                if (!this.isHoveringRight) {
+                    // ENTER ZONE
+                    this.isHoveringRight = true;
+                    if (this.expandTimerRight) clearTimeout(this.expandTimerRight);
 
-                if (this.isHoveringRight && this.rightSplit.collapsed) {
-                    setTimeout(() => {
-                        if (this.isHoveringRight) {
-                            if (this.settings.syncLeftRight) {
-                                this.expandBoth();
-                            } else {
-                                this.expandRight();
-                            }
-                        }
+                    this.expandTimerRight = window.setTimeout(() => {
+                        if (this.settings.syncLeftRight) this.expandBoth();
+                        else this.expandRight();
+                        this.expandTimerRight = null;
                     }, this.settings.sidebarExpandDelay);
                 }
-
-                setTimeout(() => {
-                    if (!this.isHoveringRight) {
-                        this.collapseRight();
+            } else {
+                if (this.isHoveringRight) {
+                    // EXIT ZONE (Before Expand)
+                    this.isHoveringRight = false;
+                    if (this.expandTimerRight) {
+                        clearTimeout(this.expandTimerRight);
+                        this.expandTimerRight = null;
                     }
-                }, this.settings.sidebarDelay);
+                }
             }
         }
 
-        // Handle left sidebar hover
-        if (this.settings.leftSidebar) {
-            if (!this.isHoveringLeft && this.leftSplit.collapsed) {
-                // Check if mouse is in the left trigger area
-                this.isHoveringLeft = mouseX <= this.settings.leftSideBarPixelTrigger;
+        // --- LEFT SIDEBAR ---
+        if (this.settings.leftSidebar && this.leftSplit.collapsed) {
+            const inTriggerZone = mouseX <= this.settings.leftSideBarPixelTrigger;
 
-                if (this.isHoveringLeft && this.leftSplit.collapsed) {
-                    setTimeout(() => {
-                        if (this.isHoveringLeft) {
-                            if (this.settings.syncLeftRight) {
-                                this.expandBoth();
-                            } else {
-                                this.expandLeft();
-                            }
-                        }
+            if (inTriggerZone) {
+                if (!this.isHoveringLeft) {
+                    // ENTER ZONE
+                    this.isHoveringLeft = true;
+                    if (this.expandTimerLeft) clearTimeout(this.expandTimerLeft);
+
+                    this.expandTimerLeft = window.setTimeout(() => {
+                        if (this.settings.syncLeftRight) this.expandBoth();
+                        else this.expandLeft();
+                        this.expandTimerLeft = null;
                     }, this.settings.sidebarExpandDelay);
                 }
-
-                setTimeout(() => {
-                    if (!this.isHoveringLeft) {
-                        this.collapseLeft();
+            } else {
+                if (this.isHoveringLeft) {
+                    // EXIT ZONE (Before Expand)
+                    this.isHoveringLeft = false;
+                    if (this.expandTimerLeft) {
+                        clearTimeout(this.expandTimerLeft);
+                        this.expandTimerLeft = null;
                     }
-                }, this.settings.sidebarDelay);
+                }
             }
         }
     };
