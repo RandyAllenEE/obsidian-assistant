@@ -44,7 +44,7 @@ export class InsertHeadingAtCurrentLevel {
 
     createCommand = (): Command => {
         return {
-            id: `insert-heading-current`,
+            id: `heading-shifter-insert-heading-current`,
             name: t("Insert Heading at current level"),
             icon: `headingShifter_heading`,
             editorCallback: this.editorCallback,
@@ -98,7 +98,7 @@ export class InsertHeadingAtDeeperLevel {
 
     createCommand = (): Command => {
         return {
-            id: `insert-heading-deeper`,
+            id: `heading-shifter-insert-heading-deeper`,
             name: t("Insert Heading at one level deeper"),
             icon: `headingShifter_heading`,
             editorCallback: this.editorCallback,
@@ -147,7 +147,7 @@ export class InsertHeadingAtHigherLevel {
 
     createCommand = (): Command => {
         return {
-            id: `insert-heading-higher`,
+            id: `heading-shifter-insert-heading-higher`,
             name: t("Insert Heading at one level higher"),
             icon: `headingShifter_heading`,
             editorCallback: this.editorCallback,

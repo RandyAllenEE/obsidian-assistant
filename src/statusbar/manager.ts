@@ -12,6 +12,7 @@ export class StatusBarManager {
     settings: StatusBarOrganizerSettings;
     statusBar: HTMLElement | undefined;
     spooler: Spooler;
+    private isLoaded = false;
 
     constructor(app: App, plugin: AssistantPlugin) {
         this.app = app;
@@ -21,13 +22,16 @@ export class StatusBarManager {
     }
 
     async onload() {
+        if (this.isLoaded) return;
+        this.isLoaded = true;
+
         // Find status bar
         this.statusBar = document.querySelector(".status-bar") as HTMLElement;
         if (!this.statusBar) {
             // Try again on layout ready just in case
             this.app.workspace.onLayoutReady(() => {
                 this.statusBar = document.querySelector(".status-bar") as HTMLElement;
-                if (this.statusBar) this.initializeManager();
+                if (this.statusBar && this.isLoaded) this.initializeManager();
             });
             return;
         }
@@ -48,6 +52,8 @@ export class StatusBarManager {
     }
 
     onunload() {
+        if (!this.isLoaded) return;
+        this.isLoaded = false;
         if (this.spooler) this.spooler.disableObserver();
         // Reset order? Or just leave it?
         // Original plugin didn't seem to reset order on unload.

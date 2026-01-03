@@ -61,6 +61,53 @@ export default class AssistantPlugin extends Plugin {
             this.autoNumberingController.onload();
         }
 
+        // --- Centralized Command Registration ---
+
+        // Folders
+        this.addCommand({
+            id: "toggle-attachment-folders",
+            name: t('Toggle visibility of hidden folders'),
+            callback: () => {
+                if (this.settings.myFolders.enabled) this.foldersManager.toggleFunctionality();
+            },
+        });
+
+        // Snippets
+        this.addCommand({
+            id: `open-snippets-menu`,
+            name: t(`Open snippets in status bar`),
+            icon: `pantone-line`,
+            callback: async () => {
+                if (this.settings.mySnippets.enabled) this.snippetsManager.openMenu();
+            },
+        });
+        this.addCommand({
+            id: `open-snippets-create`,
+            name: t(`Create new CSS snippet`),
+            icon: `ms-css-file`,
+            callback: async () => {
+                if (this.settings.mySnippets.enabled) this.snippetsManager.openCreateModal();
+            },
+        });
+
+        // Headings
+        this.addCommand({
+            id: 'configure-headings',
+            name: t('Configure Headings'),
+            callback: () => {
+                if (this.settings.myHeadings.enabled) this.headingsManager.openControlModal();
+            },
+        });
+
+        // Formulas
+        this.addCommand({
+            id: 'configure-formulas',
+            name: t('Configure Formulas'),
+            callback: () => {
+                if (this.settings.myFormulas.enabled) this.formulasManager.openControlModal();
+            },
+        });
+
         this.addSettingTab(new AssistantSettingsTab(this.app, this));
     }
 
@@ -79,67 +126,77 @@ export default class AssistantPlugin extends Plugin {
     async loadSettings() {
         const loadedData = await this.loadData();
 
-        // CLEANUP: Remove obsolete keys to ensure data.json matches current settings structure
         if (loadedData) {
-            if (loadedData.myStatusBar) {
-                delete loadedData.myStatusBar.presets;
-                delete loadedData.myStatusBar.activePreset;
-                delete loadedData.myStatusBar.activeFullscreenPreset;
-                delete loadedData.myStatusBar.separateFullscreenPreset;
-                delete loadedData.myStatusBar.presetsOrder;
-            }
-            // Remove legacy root keys if they exist
-            delete loadedData.statusBar;
-            delete loadedData.statusBarOrganizer;
+            this.migrateSettings(loadedData);
         }
 
+        // 1. Initial Assign for top-level keys
         this.settings = Object.assign({}, DEFAULT_SETTINGS, loadedData);
 
-        // Deep merge for nested settings objects to ensure new defaults (like Heading Shifter) are present
-        // even if the user has pre-existing settings for the module.
+        // 2. Clearer Deep Merge for all modules to ensure default values for new keys
+        // Headings (includes Shifter)
         if (loadedData?.myHeadings) {
             this.settings.myHeadings = Object.assign({}, DEFAULT_SETTINGS.myHeadings, loadedData.myHeadings);
-
-            // Deep merge stylesToRemove if it exists partially or not at all in loadedData
-            // Note: If loadedData.myHeadings.styleToRemove exists, it overwrites. But we want to ensure keys exist.
-            // But since styleToRemove is ALL NEW, if it exists in loadedData it's from this session? 
-            // If it doesn't exist, Object.assign({}, DEFAULT, loaded) handles it because loaded won't have it.
-            // Wait, Object.assign is shallow.
-            // DEFAULT.myHeadings has styleToRemove. loadedData.myHeadings does NOT.
-            // Object.assign(target, default, loaded) -> target gets default.styleToRemove. loaded lacks it, so it keeps default.
-            // So one level deep merge for myHeadings is enough to get styleToRemove.
-
-            // However, styleToRemove itself is nested. If in future we add keys to styleToRemove, we might need deeper.
-            // For now, migrating from "No Shifter" to "Shifter", 1-level deep for myHeadings is sufficient
-            // because strict "undefined" in loadedData means default value prevails.
+            // Even deeper if needed (e.g. styleToRemove)
+            if (loadedData.myHeadings.styleToRemove) {
+                this.settings.myHeadings.styleToRemove = {
+                    beginning: Object.assign({}, DEFAULT_SETTINGS.myHeadings.styleToRemove.beginning, loadedData.myHeadings.styleToRemove.beginning),
+                    surrounding: Object.assign({}, DEFAULT_SETTINGS.myHeadings.styleToRemove.surrounding, loadedData.myHeadings.styleToRemove.surrounding),
+                };
+            }
         }
 
+        // Formulas
         if (loadedData?.myFormulas) {
             this.settings.myFormulas = Object.assign({}, DEFAULT_SETTINGS.myFormulas, loadedData.myFormulas);
         }
 
+        // Folders
+        if (loadedData?.myFolders) {
+            this.settings.myFolders = Object.assign({}, DEFAULT_SETTINGS.myFolders, loadedData.myFolders);
+        }
+
+        // Plugins
+        if (loadedData?.myPlugins) {
+            this.settings.myPlugins = Object.assign({}, DEFAULT_SETTINGS.myPlugins, loadedData.myPlugins);
+            if (loadedData.myPlugins.desktop) {
+                this.settings.myPlugins.desktop = Object.assign({}, DEFAULT_SETTINGS.myPlugins.desktop, loadedData.myPlugins.desktop);
+            }
+            if (loadedData.myPlugins.mobile) {
+                this.settings.myPlugins.mobile = Object.assign({}, DEFAULT_SETTINGS.myPlugins.mobile, loadedData.myPlugins.mobile);
+            }
+        }
+
+        // Snippets
         if (loadedData?.mySnippets) {
             this.settings.mySnippets = Object.assign({}, DEFAULT_SETTINGS.mySnippets, loadedData.mySnippets);
         }
 
+        // SideBar
         if (loadedData?.mySideBar) {
             this.settings.mySideBar = Object.assign({}, DEFAULT_SETTINGS.mySideBar, loadedData.mySideBar);
 
-            // Deep merge for nested objects to ensure 'enabled' flags are present
             if (loadedData.mySideBar.autoHide) {
                 this.settings.mySideBar.autoHide = Object.assign({}, DEFAULT_SETTINGS.mySideBar.autoHide, loadedData.mySideBar.autoHide);
             }
             if (loadedData.mySideBar.ribbon) {
                 this.settings.mySideBar.ribbon = Object.assign({}, DEFAULT_SETTINGS.mySideBar.ribbon, loadedData.mySideBar.ribbon);
             }
-            // tabs is likely new, so the shallow merge of mySideBar handles it if loadedData.mySideBar.tabs is undefined.
-            // But if it exists partially, merge it.
             if (loadedData.mySideBar.tabs) {
                 this.settings.mySideBar.tabs = Object.assign({}, DEFAULT_SETTINGS.mySideBar.tabs, loadedData.mySideBar.tabs);
+
+                // Cleanup splitRatio bounds (Issue #6)
+                if (this.settings.mySideBar.tabs.bindings) {
+                    this.settings.mySideBar.tabs.bindings.forEach(b => {
+                        if (b.splitRatio !== undefined) {
+                            b.splitRatio = Math.round(b.splitRatio);
+                            if (b.splitRatio < 10) b.splitRatio = 10;
+                            if (b.splitRatio > 90) b.splitRatio = 90;
+                        }
+                    });
+                }
             }
         }
-
-
 
         // Save cleaned settings to disk immediately
         await this.saveSettings();
@@ -147,6 +204,20 @@ export default class AssistantPlugin extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
+    }
+
+    private migrateSettings(data: any) {
+        // Migration for version < 2.0.0
+        // Clean up 2.0.0 obsoleted keys
+        if (data.myStatusBar) {
+            delete data.myStatusBar.presets;
+            delete data.myStatusBar.activePreset;
+            delete data.myStatusBar.activeFullscreenPreset;
+            delete data.myStatusBar.separateFullscreenPreset;
+            delete data.myStatusBar.presetsOrder;
+        }
+        delete data.statusBar;
+        delete data.statusBarOrganizer;
     }
 }
 
@@ -156,6 +227,17 @@ class AssistantSettingsTab extends PluginSettingTab {
     constructor(app: App, plugin: AssistantPlugin) {
         super(app, plugin);
         this.plugin = plugin;
+    }
+
+    private refreshAutoNumberingController() {
+        const anyActive = this.plugin.settings.myHeadings.enabled || this.plugin.settings.myFormulas.enabled;
+
+        // Always unload to clear potential old listeners/state
+        this.plugin.autoNumberingController.onunload();
+
+        if (anyActive) {
+            this.plugin.autoNumberingController.onload();
+        }
     }
 
     display(): void {
@@ -277,17 +359,7 @@ class AssistantSettingsTab extends PluginSettingTab {
                     this.plugin.headingsManager.onunload();
                 }
 
-                // Refresh controller: if any module is active, ensure it's loaded. If all inactive, unload.
-                const anyActive = value || this.plugin.settings.myFormulas.enabled;
-                if (anyActive) {
-                    // It's safe to call onload multiple times (idempotent setup usually preferred, but here simple re-register might duplicate listeners if not careful)
-                    // Controller implementation of onload calls 'registerEditorFocusEvents'.
-                    // We should probably unload first just to be safe or check state.
-                    this.plugin.autoNumberingController.onunload(); // Clear old listeners
-                    this.plugin.autoNumberingController.onload();   // Add new listeners
-                } else {
-                    this.plugin.autoNumberingController.onunload();
-                }
+                this.refreshAutoNumberingController();
             },
             (el) => {
                 renderHeadingsSettings(el, this.plugin.headingsManager);
@@ -309,14 +381,7 @@ class AssistantSettingsTab extends PluginSettingTab {
                     this.plugin.formulasManager.onunload();
                 }
 
-                // Refresh controller
-                const anyActive = this.plugin.settings.myHeadings.enabled || value;
-                if (anyActive) {
-                    this.plugin.autoNumberingController.onunload();
-                    this.plugin.autoNumberingController.onload();
-                } else {
-                    this.plugin.autoNumberingController.onunload();
-                }
+                this.refreshAutoNumberingController();
             },
             (el) => {
                 renderFormulasSettings(el, this.plugin.formulasManager);

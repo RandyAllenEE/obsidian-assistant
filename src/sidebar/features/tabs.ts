@@ -7,6 +7,8 @@ export class SidebarTabsFeature {
     app: App;
     plugin: AssistantPlugin;
 
+    scanTimer: number | null = null;
+
     constructor(app: App, plugin: AssistantPlugin) {
         this.app = app;
         this.plugin = plugin;
@@ -17,8 +19,9 @@ export class SidebarTabsFeature {
 
         this.app.workspace.onLayoutReady(() => {
             // Initial delayed scan/apply to let other plugins load
-            setTimeout(() => {
+            this.scanTimer = window.setTimeout(() => {
                 this.scanAndApply();
+                this.scanTimer = null;
             }, 1000);
         });
     }
@@ -187,6 +190,13 @@ export class SidebarTabsFeature {
 
             await this.plugin.saveSettings();
             await this.applyLayout(); // Immediate reflection
+        }
+    }
+
+    onunload() {
+        if (this.scanTimer) {
+            window.clearTimeout(this.scanTimer);
+            this.scanTimer = null;
         }
     }
 }

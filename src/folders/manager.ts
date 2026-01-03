@@ -9,7 +9,8 @@ export class FoldersManager {
     plugin: AssistantPlugin;
     ribbonIconButton: HTMLElement | null = null;
     statusBarItem: HTMLElement | null = null;
-    mutationObserver: MutationObserver;
+    mutationObserver: MutationObserver | null = null;
+    private layoutChangeRef: any = null;
 
     constructor(app: App, plugin: AssistantPlugin) {
         this.app = app;
@@ -59,7 +60,7 @@ export class FoldersManager {
                 console.error(`Failed to process folder ${folderName}:`, e);
             }
         });
-    }, 10, false);
+    }, 100, false);
 
     getQuerySelectorStringForFolderName(folderName: string) {
         if (folderName.toLowerCase().startsWith("endswith::")) {
@@ -118,8 +119,9 @@ export class FoldersManager {
         if (this.settings.areFoldersHidden && !processFeatureDisabling) {
             this.settings.attachmentFolderNames.forEach(folderName => {
                 if (getFolderNameWithoutPrefix(folderName).trim() === "") return;
-                if (ignoreList.contains(this.createIgnoreListRegExpForFolderName(folderName))) return;
-                ignoreList.push(this.createIgnoreListRegExpForFolderName(folderName));
+                const regExp = this.createIgnoreListRegExpForFolderName(folderName);
+                if (ignoreList.contains(regExp)) return;
+                ignoreList.push(regExp);
             });
         } else {
             const folderNameRegexes = this.settings.attachmentFolderNames.map(folderName => this.createIgnoreListRegExpForFolderName(folderName));
@@ -149,7 +151,7 @@ export class FoldersManager {
     async onload() {
         if (!this.settings.enabled) return;
 
-        console.log("Loading MyFolders module");
+        console.log(t("Loading MyFolders module"));
 
         // Ribbon Icon
         this.ribbonIconButton = this.plugin.addRibbonIcon(
@@ -162,18 +164,13 @@ export class FoldersManager {
 
         if (!this.settings.hideBottomStatusBarIndicatorText) {
             this.createBottomStatusBarIndicatorTextItem();
+        } else if (this.statusBarItem) {
+            this.statusBarItem.remove();
+            this.statusBarItem = null;
         }
 
-        // Command
-        this.plugin.addCommand({
-            id: "toggle-attachment-folders",
-            name: t('Toggle visibility of hidden folders'),
-            callback: () => {
-                this.toggleFunctionality();
-            },
-        });
+        // Command is registered in main.ts
 
-        // Mutation Observer
         this.mutationObserver = new MutationObserver((mutationRecord) => {
             const feClasses = [
                 "nav-folder",
@@ -191,26 +188,71 @@ export class FoldersManager {
             if (!shouldTriggerProcessFolders) return;
             this.processFolders();
         });
-        this.mutationObserver.observe(window.document, { childList: true, subtree: true });
+
+        // Optimization: Targeted observation
+        this.observeFileExplorers();
+
+        // Re-attach observer when layout changes (File Explorer might be closed/opened)
+        this.layoutChangeRef = this.app.workspace.on('layout-change', () => {
+            this.observeFileExplorers();
+            this.processFolders();
+        });
 
         // Rename Event
-        this.plugin.registerEvent(this.app.vault.on("rename", () => {
+        this.renameEventRef = this.app.vault.on("rename", () => {
             window.setTimeout(() => {
                 this.processFolders();
-            }, 10);
-        }));
-
-        this.app.workspace.onLayoutReady(() => {
-            if (!this.settings.areFoldersHidden) return;
-            window.setTimeout(() => {
-                this.processFolders();
-            }, 1000);
+            }, 50); // Increased rename delay slightly
         });
+
+        // Optimization: Check layoutReady first
+        if (this.app.workspace.layoutReady) {
+            if (this.settings.areFoldersHidden) {
+                window.setTimeout(() => {
+                    this.processFolders();
+                }, 1000);
+            }
+        } else {
+            this.app.workspace.onLayoutReady(() => {
+                if (!this.settings.areFoldersHidden) return;
+                window.setTimeout(() => {
+                    this.processFolders();
+                }, 1000);
+            });
+        }
+    }
+
+    observeFileExplorers() {
+        if (!this.settings.enabled) return;
+        if (!this.mutationObserver) return;
+        this.mutationObserver.disconnect();
+
+        const fileExplorers = document.querySelectorAll('.nav-files-container');
+        if (fileExplorers.length > 0) {
+            fileExplorers.forEach(container => {
+                this.mutationObserver?.observe(container, { childList: true, subtree: true });
+            });
+        }
     }
 
     onunload() {
+        console.log(t("Unloading MyFolders module"));
         this.mutationObserver?.disconnect();
+        this.mutationObserver = null;
+
+        if (this.renameEventRef) {
+            this.app.vault.offbyref(this.renameEventRef);
+            this.renameEventRef = null;
+        }
+
+        if (this.layoutChangeRef) {
+            this.app.workspace.offref(this.layoutChangeRef);
+            this.layoutChangeRef = null;
+        }
+
         this.ribbonIconButton?.remove();
+        this.ribbonIconButton = null;
         this.statusBarItem?.remove();
+        this.statusBarItem = null;
     }
 }

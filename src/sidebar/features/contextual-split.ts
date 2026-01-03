@@ -17,10 +17,22 @@ export class ContextualSplitFeature {
     }
 
     onload() {
-        this.app.workspace.onLayoutReady(() => {
+        if (this.listeners.length > 0) {
+            this.onunload();
+        }
+
+        const runInit = () => {
             this.cleanOrphans();
             this.applyAllMasquerades();
-        });
+        };
+
+        if (this.app.workspace.layoutReady) {
+            runInit();
+        } else {
+            this.app.workspace.onLayoutReady(() => {
+                runInit();
+            });
+        }
 
         // Re-apply masquerade and check validity on layout changes
         this.listeners.push(
@@ -53,8 +65,8 @@ export class ContextualSplitFeature {
         // Restore all visuals
         const bindings = this.plugin.settings.mySideBar.tabs.bindings || [];
         bindings.forEach(b => {
-            const leaves = this.findLeavesByType(b.masterId);
-            leaves.forEach(l => this.restoreVisuals(l, b.masterId));
+            const masterLeaves = this.findLeavesByType(b.masterId);
+            masterLeaves.forEach(l => this.restoreVisuals(l, b.masterId));
         });
     }
 
@@ -196,14 +208,25 @@ export class ContextualSplitFeature {
                     if (others.length > 0) {
                         const sibling = others[0]; // Master Tabs
 
-                        // Set BOTH to create correct ratio (e.g. 20/80)
-                        (parent as any).setDimension(dim);
-                        if (typeof (sibling as any).setDimension === 'function') {
-                            (sibling as any).setDimension(100 - dim);
+                        try {
+                            if (typeof (parent as any).setDimension === 'function') {
+                                (parent as any).setDimension(dim);
+                            }
+                            if (typeof (sibling as any).setDimension === 'function') {
+                                (sibling as any).setDimension(100 - dim);
+                            }
+                        } catch (e) {
+                            console.error("Assistant Assistant: Failed to set split dimension", e);
                         }
                     } else {
-                        // Fallback if no sibling found (should not happen in split)
-                        (parent as any).setDimension(dim);
+                        // Fallback if no sibling found
+                        try {
+                            if (typeof (parent as any).setDimension === 'function') {
+                                (parent as any).setDimension(dim);
+                            }
+                        } catch (e) {
+                            console.error("Assistant Assistant: Failed to set split dimension (fallback)", e);
+                        }
                     }
                 }
             }

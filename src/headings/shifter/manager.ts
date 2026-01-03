@@ -41,7 +41,7 @@ export class ShifterManager {
             const applyHeadingCmd = new ApplyHeading(settings, heading);
             this.plugin.addCommand({
                 ...applyHeadingCmd.createCommand(),
-                // Unified naming: Use the ID from the command itself (e.g., 'apply-heading-0')
+                // Unified naming: Use the ID from the command itself (e.g., 'shifter-apply-heading-0')
                 // Obsidian will prefix with 'obsidian-assistant:' automatically.
             });
         });
@@ -54,39 +54,46 @@ export class ShifterManager {
         this.plugin.addCommand(insertHeadingAtHigherLevel.createCommand());
 
         // Register Keymap for Tab/Shift-Tab
-        this.plugin.registerEditorExtension(
-            Prec.highest(
-                keymap.of([
-                    {
-                        key: "Tab",
-                        run: this.createKeyMapRunCallback({
-                            check: increaseHeading.check,
-                            run: increaseHeading.editorCallback,
-                        }),
-                    },
-                ]),
-            ),
-        );
+        if (settings.overrideTab) {
+            this.plugin.registerEditorExtension(
+                Prec.high(
+                    keymap.of([
+                        {
+                            key: "Tab",
+                            run: this.createKeyMapRunCallback({
+                                check: increaseHeading.check,
+                                run: increaseHeading.editorCallback,
+                            }),
+                        },
+                    ]),
+                ),
+            );
 
-        this.plugin.registerEditorExtension(
-            Prec.highest(
-                keymap.of([
-                    {
-                        key: "s-Tab",
-                        run: this.createKeyMapRunCallback({
-                            check: decreaseHeading.check,
-                            run: decreaseHeading.editorCallback,
-                        }),
-                    },
-                ]),
-            ),
-        );
+            this.plugin.registerEditorExtension(
+                Prec.high(
+                    keymap.of([
+                        {
+                            key: "s-Tab",
+                            run: this.createKeyMapRunCallback({
+                                check: decreaseHeading.check,
+                                run: decreaseHeading.editorCallback,
+                            }),
+                        },
+                    ]),
+                ),
+            );
+        }
     }
 
     // Helper from ObsidianService
-    private getEditorFromState(state: EditorState) {
-        // @ts-ignore - editorInfoField is available at runtime
-        return state.field(editorInfoField).editor;
+    private getEditorFromState(state: EditorState): Editor | null {
+        try {
+            // @ts-expect-error - editorInfoField is available at runtime
+            return state.field(editorInfoField)?.editor ?? null;
+        } catch (e) {
+            console.error("Failed to get editor from state:", e);
+            return null;
+        }
     }
 
     private createKeyMapRunCallback(config: {

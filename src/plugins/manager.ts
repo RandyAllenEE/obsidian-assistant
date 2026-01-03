@@ -9,6 +9,7 @@ export class PluginsManager {
     manifests: PluginManifest[] = [];
     pendingTimeouts: NodeJS.Timeout[] = [];
     device = 'desktop/global';
+    private isLoaded = false;
 
     constructor(app: App, plugin: AssistantPlugin) {
         this.app = app;
@@ -27,6 +28,9 @@ export class PluginsManager {
     }
 
     async onload() {
+        if (this.isLoaded) return;
+        this.isLoaded = true;
+
         if (!this.settings.enabled) return;
 
         // Dual config initialization logic
@@ -48,11 +52,14 @@ export class PluginsManager {
     }
 
     onunload() {
+        if (!this.isLoaded) return;
+        this.isLoaded = false;
         this.pendingTimeouts.forEach(timeout => clearTimeout(timeout));
+        this.pendingTimeouts = [];
     }
 
     async setPluginStartup(pluginId: string) {
-        // @ts-ignore
+        // @ts-expect-error
         const obsidian = this.app.plugins;
 
         const startupType = this.getPluginStartup(pluginId);
@@ -97,16 +104,19 @@ export class PluginsManager {
     getPluginStartup(pluginId: string): LoadingMethod {
         return this.deviceSettings.plugins?.[pluginId]?.startupType ||
             this.deviceSettings.defaultStartupType ||
-            // @ts-ignore
+            // @ts-expect-error
             (this.app.plugins.enabledPlugins.has(pluginId) ? LoadingMethod.instant : LoadingMethod.disabled);
     }
 
     async setInitialPluginsConfiguration() {
+        let changed = false;
         for (const plugin of this.manifests) {
             if (!this.deviceSettings.plugins?.[plugin.id]?.startupType) {
-                await this.updatePluginSettings(plugin.id, this.getPluginStartup(plugin.id));
+                this.updatePluginSettingsWithNoSave(plugin.id, this.getPluginStartup(plugin.id));
+                changed = true;
             }
         }
+        if (changed) await this.plugin.saveSettings();
     }
 
     async updatePluginSettings(pluginId: string, startupType: LoadingMethod) {
@@ -114,8 +124,12 @@ export class PluginsManager {
         await this.plugin.saveSettings();
     }
 
+    private updatePluginSettingsWithNoSave(pluginId: string, startupType: LoadingMethod) {
+        this.deviceSettings.plugins[pluginId] = { startupType };
+    }
+
     updateManifests() {
-        // @ts-ignore
+        // @ts-expect-error
         this.manifests = Object.values(this.app.plugins.manifests)
             .filter((plugin: PluginManifest) =>
                 plugin.id !== this.plugin.manifest.id &&

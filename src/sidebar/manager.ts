@@ -23,7 +23,7 @@ export class SidebarManager {
     }
 
     async onload() {
-        if (this.plugin.settings.mySideBar.autoHide?.enabled) this.autoHideFeature.load();
+        if (this.plugin.settings.mySideBar.autoHide?.enabled) this.autoHideFeature.onload();
         if (this.plugin.settings.mySideBar.ribbon?.enabled) await this.ribbonFeature.onload();
         if (this.plugin.settings.mySideBar.tabs?.enabled) {
             await this.tabsFeature.onload();
@@ -32,8 +32,9 @@ export class SidebarManager {
     }
 
     onunload() {
-        this.autoHideFeature.unload();
+        this.autoHideFeature.onunload();
         this.ribbonFeature.onunload();
+        this.tabsFeature.onunload();
         this.contextualFeature.onunload();
     }
 }

@@ -2,36 +2,141 @@ import { App } from "obsidian";
 import AssistantPlugin from "../../main";
 import { ExtendedWorkspaceSplit, ExtendedWorkspaceRibbon } from "../types";
 
+class SidebarSideController {
+    side: 'left' | 'right';
+    app: App;
+    plugin: AssistantPlugin;
+    split: ExtendedWorkspaceSplit;
+    isHovering: boolean = false;
+    isAutoExpanded: boolean = false;
+    expandTimer: number | null = null;
+    collapseTimer: number | null = null;
+
+    // Callbacks for unified coordination
+    onExpand: () => void;
+    onCollapse: () => void;
+
+    constructor(
+        side: 'left' | 'right',
+        app: App,
+        plugin: AssistantPlugin,
+        split: ExtendedWorkspaceSplit,
+        onExpand: () => void,
+        onCollapse: () => void
+    ) {
+        this.side = side;
+        this.app = app;
+        this.plugin = plugin;
+        this.split = split;
+        this.onExpand = onExpand;
+        this.onCollapse = onCollapse;
+    }
+
+    get settings() {
+        return this.plugin.settings.mySideBar.autoHide;
+    }
+
+    get isSideEnabled() {
+        return this.side === 'left' ? this.settings.leftSidebar : this.settings.rightSidebar;
+    }
+
+    get pixelTrigger() {
+        return this.side === 'left' ? this.settings.leftSideBarPixelTrigger : this.settings.rightSideBarPixelTrigger;
+    }
+
+    expand() {
+        if (this.split.collapsed) this.isAutoExpanded = true;
+        this.split.expand();
+        this.isHovering = true;
+    }
+
+    collapse() {
+        if (this.isAutoExpanded) {
+            this.split.collapse();
+            this.isAutoExpanded = false;
+        }
+        this.isHovering = false;
+    }
+
+    cancelTimers() {
+        if (this.expandTimer) { clearTimeout(this.expandTimer); this.expandTimer = null; }
+        if (this.collapseTimer) { clearTimeout(this.collapseTimer); this.collapseTimer = null; }
+    }
+
+    // Event Handlers
+    onMouseEnter = () => {
+        this.isHovering = true;
+        this.split.containerEl.addClass('hovered');
+        this.cancelTimers(); // Successfully entered
+    }
+
+    onMouseMove = () => {
+        this.split.containerEl.addClass('hovered');
+    }
+
+    onMouseLeave = (event: MouseEvent) => {
+        const target = event.relatedTarget as HTMLElement;
+        if (target && (target.closest('.workspace-tab-header-container-inner') ||
+            (target.hasClass && target.hasClass('menu')) ||
+            target?.classList?.contains('menu') ||
+            target?.closest('.menu'))) {
+            return;
+        }
+
+        if (this.isSideEnabled) {
+            this.isHovering = false;
+            this.split.containerEl.removeClass('hovered');
+
+            if (this.collapseTimer) clearTimeout(this.collapseTimer);
+            this.collapseTimer = window.setTimeout(() => {
+                if (!this.isHovering) {
+                    this.onCollapse();
+                }
+                this.collapseTimer = null;
+            }, this.settings.sidebarDelay);
+        }
+    }
+
+    cleanup() {
+        this.cancelTimers();
+        if (this.split && this.split.containerEl) {
+            this.split.containerEl.removeClass('hovered');
+            this.split.containerEl.removeEventListener("mouseenter", this.onMouseEnter);
+            this.split.containerEl.removeEventListener("mousemove", this.onMouseMove);
+            this.split.containerEl.removeEventListener("mouseleave", this.onMouseLeave);
+        }
+    }
+
+    attach() {
+        if (this.split && this.split.containerEl) {
+            this.split.containerEl.addEventListener("mouseenter", this.onMouseEnter);
+            this.split.containerEl.addEventListener("mousemove", this.onMouseMove);
+            this.split.containerEl.addEventListener("mouseleave", this.onMouseLeave);
+        }
+    }
+}
+
 export class AutoHideFeature {
     app: App;
     plugin: AssistantPlugin;
 
-    // State
-    isHoveringLeft = false;
-    isHoveringRight = false;
+    private layoutChangeRef: any = null;
+    private isInitialized = false;
 
-    // Manual Override State
-    isAutoExpandedLeft = false;
-    isAutoExpandedRight = false;
-
-    // Timers for Debounce
-    private expandTimerLeft: number | null = null;
-    private expandTimerRight: number | null = null;
-
-    leftSplit: ExtendedWorkspaceSplit;
-    rightSplit: ExtendedWorkspaceSplit;
     leftRibbon: ExtendedWorkspaceRibbon;
 
-    // Handlers
-    leftSplitMouseEnterHandler: () => void;
-    rightSplitMouseEnterHandler: () => void;
-    leftSplitMouseMoveHandler: () => void;
-    rightSplitMouseMoveHandler: () => void;
-    leftSplitMouseLeaveHandler: (event: MouseEvent) => void;
-    rightSplitMouseLeaveHandler: (event: MouseEvent) => void;
+    leftController: SidebarSideController;
+    rightController: SidebarSideController;
+
+    // Additional Handlers
     leftRibbonMouseEnterHandler: () => void;
     documentClickHandler: (e: MouseEvent) => void;
     documentMouseLeaveHandler: (e: MouseEvent) => void;
+    mouseMoveHandler: (event: MouseEvent) => void;
+
+    resizeObserver: ResizeObserver | null = null;
+    editorWidth: number = 0;
+    private rafId: number | null = null;
 
     constructor(app: App, plugin: AssistantPlugin) {
         this.app = app;
@@ -42,16 +147,11 @@ export class AutoHideFeature {
         return this.plugin.settings.mySideBar.autoHide;
     }
 
-    load() {
-        // Apply overlay mode class if enabled in settings
+    onload() {
         if (this.settings.overlayMode) {
             document.body.classList.add("sidebar-overlay-mode");
         }
-
-        // Add global CSS class to implement the suggested JS-CSS approach
         document.body.classList.add("open-sidebar-hover-plugin");
-
-        // Update CSS variables based on settings
         this.updateCSSVariables();
 
         this.app.workspace.onLayoutReady(() => {
@@ -60,372 +160,254 @@ export class AutoHideFeature {
     }
 
     init() {
-        // Cast to extended interfaces to access internal properties
-        this.leftSplit = this.app.workspace.leftSplit as unknown as ExtendedWorkspaceSplit;
-        this.rightSplit = this.app.workspace.rightSplit as unknown as ExtendedWorkspaceSplit;
+        if (this.isInitialized) return;
+        this.isInitialized = true;
+
+        const leftSplit = this.app.workspace.leftSplit as unknown as ExtendedWorkspaceSplit;
+        const rightSplit = this.app.workspace.rightSplit as unknown as ExtendedWorkspaceSplit;
         this.leftRibbon = this.app.workspace.leftRibbon as unknown as ExtendedWorkspaceRibbon;
 
-        // Initialize handlers
+        // Initialize Controllers
+        this.leftController = new SidebarSideController('left', this.app, this.plugin, leftSplit,
+            () => { // Expand Callback
+                if (this.settings.syncLeftRight && this.settings.rightSidebar) {
+                    this.expandBoth();
+                } else {
+                    this.leftController.expand();
+                }
+            },
+            () => { // Collapse Callback
+                if (this.settings.syncLeftRight && this.settings.rightSidebar) {
+                    this.collapseBoth();
+                } else {
+                    this.leftController.collapse();
+                }
+            }
+        );
+
+        this.rightController = new SidebarSideController('right', this.app, this.plugin, rightSplit,
+            () => { // Expand Callback
+                if (this.settings.syncLeftRight && this.settings.leftSidebar) {
+                    this.expandBoth();
+                } else {
+                    this.rightController.expand();
+                }
+            },
+            () => { // Collapse Callback
+                if (this.settings.syncLeftRight && this.settings.leftSidebar) {
+                    this.collapseBoth();
+                } else {
+                    this.rightController.collapse();
+                }
+            }
+        );
+
+        // Attach Controller Listeners
+        this.leftController.attach();
+        this.rightController.attach();
+
+        // Initialize extra handlers
         this.initializeHandlers();
+        this.updateEditorDimensions();
 
-        // add event listeners
+        // Add global event listeners
         document.addEventListener("mousemove", this.mouseMoveHandler);
-        document.addEventListener("mouseleave", this.documentMouseLeaveHandler); // Handle window exit
-
-        // Enhanced implementation with hover class for right split
-        this.rightSplit.containerEl.addEventListener(
-            "mousemove",
-            this.rightSplitMouseMoveHandler
-        );
-        this.rightSplit.containerEl.addEventListener(
-            "mouseleave",
-            this.rightSplitMouseLeaveHandler
-        );
-        this.rightSplit.containerEl.addEventListener(
-            "mouseenter",
-            this.rightSplitMouseEnterHandler
-        );
-
-        // Enhanced implementation with hover class for left split
-        if (this.leftRibbon && this.leftRibbon.containerEl) {
-            this.leftRibbon.containerEl.addEventListener(
-                "mouseenter",
-                this.leftRibbonMouseEnterHandler
-            );
-        }
-
-        this.leftSplit.containerEl.addEventListener(
-            "mousemove",
-            this.leftSplitMouseMoveHandler
-        );
-        this.leftSplit.containerEl.addEventListener(
-            "mouseleave",
-            this.leftSplitMouseLeaveHandler
-        );
-        this.leftSplit.containerEl.addEventListener(
-            "mouseenter",
-            this.leftSplitMouseEnterHandler
-        );
-
-        // Add a document-wide click handler to help with collapse issues
+        document.addEventListener("mouseleave", this.documentMouseLeaveHandler);
         document.addEventListener("click", this.documentClickHandler);
 
+        // Resize Observer for efficient width calculation
+        this.resizeObserver = new ResizeObserver(() => {
+            this.updateEditorDimensions();
+        });
+        this.resizeObserver.observe(this.app.workspace.containerEl);
+
+        if (this.leftRibbon && this.leftRibbon.containerEl) {
+            this.leftRibbon.containerEl.addEventListener("mouseenter", this.leftRibbonMouseEnterHandler);
+        }
+
         // Manual Toggle Logic: Reset auto flags if collapsed manually
-        this.plugin.registerEvent(
-            this.app.workspace.on('layout-change', () => {
-                if (this.leftSplit && this.leftSplit.collapsed) this.isAutoExpandedLeft = false;
-                if (this.rightSplit && this.rightSplit.collapsed) this.isAutoExpandedRight = false;
-            })
-        );
+        this.layoutChangeRef = this.app.workspace.on('layout-change', () => {
+            if (this.leftController.split.collapsed) this.leftController.isAutoExpanded = false;
+            if (this.rightController.split.collapsed) this.rightController.isAutoExpanded = false;
+        });
     }
 
-    unload() {
-        // Clear timers
-        if (this.expandTimerLeft) { clearTimeout(this.expandTimerLeft); this.expandTimerLeft = null; }
-        if (this.expandTimerRight) { clearTimeout(this.expandTimerRight); this.expandTimerRight = null; }
+    onunload() {
+        if (!this.isInitialized) return;
 
-        // Remove overlay mode class if it was added
+        this.leftController?.cleanup();
+        this.rightController?.cleanup();
+
         document.body.classList.remove("sidebar-overlay-mode");
-
-        // Remove the global CSS class
         document.body.classList.remove("open-sidebar-hover-plugin");
 
-        // remove all event listeners
-        if (this.mouseMoveHandler) {
-            document.removeEventListener("mousemove", this.mouseMoveHandler);
-        }
-        if (this.documentClickHandler) {
-            document.removeEventListener("click", this.documentClickHandler);
-        }
-        if (this.documentMouseLeaveHandler) {
-            document.removeEventListener("mouseleave", this.documentMouseLeaveHandler);
-        }
+        document.removeEventListener("mousemove", this.mouseMoveHandler);
+        if (this.documentClickHandler) document.removeEventListener("click", this.documentClickHandler);
+        if (this.documentMouseLeaveHandler) document.removeEventListener("mouseleave", this.documentMouseLeaveHandler);
 
-        // Clean up right split event listeners
-        if (this.rightSplit && this.rightSplit.containerEl) {
-            this.rightSplit.containerEl.removeEventListener(
-                "mouseleave",
-                this.rightSplitMouseLeaveHandler
-            );
-            this.rightSplit.containerEl.removeEventListener(
-                "mouseenter",
-                this.rightSplitMouseEnterHandler
-            );
-            this.rightSplit.containerEl.removeEventListener(
-                "mousemove",
-                this.rightSplitMouseMoveHandler
-            );
-        }
-
-        // Clean up left split event listeners
         if (this.leftRibbon && this.leftRibbon.containerEl) {
-            this.leftRibbon.containerEl.removeEventListener(
-                "mouseenter",
-                this.leftRibbonMouseEnterHandler
-            );
+            this.leftRibbon.containerEl.removeEventListener("mouseenter", this.leftRibbonMouseEnterHandler);
         }
 
-        if (this.leftSplit && this.leftSplit.containerEl) {
-            this.leftSplit.containerEl.removeEventListener(
-                "mouseleave",
-                this.leftSplitMouseLeaveHandler
-            );
-            this.leftSplit.containerEl.removeEventListener(
-                "mouseenter",
-                this.leftSplitMouseEnterHandler
-            );
-            this.leftSplit.containerEl.removeEventListener(
-                "mousemove",
-                this.leftSplitMouseMoveHandler
-            );
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+            this.resizeObserver = null;
+        }
+        if (this.rafId) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = null;
         }
 
         // Remove CSS variables style element
         const styleEl = document.getElementById('obsidian-assistant-sidebar-variables');
-        if (styleEl) {
-            styleEl.remove();
+        if (styleEl) styleEl.remove();
+
+        if (this.layoutChangeRef) {
+            this.app.workspace.offref(this.layoutChangeRef);
+            this.layoutChangeRef = null;
+        }
+
+        this.isInitialized = false;
+    }
+
+    updateEditorDimensions() {
+        if (this.app.workspace.containerEl) {
+            this.editorWidth = this.app.workspace.containerEl.clientWidth;
         }
     }
 
     initializeHandlers() {
-        // Event handler for document clicks
+        // Document Click
         this.documentClickHandler = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
+            if (!this.leftController.split || !this.rightController.split) return;
 
-            // Make sure leftSplit and rightSplit are initialized
-            if (!this.leftSplit || !this.rightSplit) return;
+            const leftSplitEl = this.leftController.split.containerEl;
+            const rightSplitEl = this.rightController.split.containerEl;
 
-            const leftSplitEl = this.leftSplit.containerEl;
-            const rightSplitEl = this.rightSplit.containerEl;
-
-            // If clicking outside sidebar areas and they're expanded, collapse them
+            // If clicking outside sidebar areas
             if (!leftSplitEl.contains(target) && !rightSplitEl.contains(target)) {
-                if (!this.leftSplit.collapsed && this.settings.leftSidebar) {
-                    this.collapseLeft();
+                if (!this.leftController.split.collapsed && this.settings.leftSidebar) {
+                    this.leftController.collapse();
                 }
-                if (!this.rightSplit.collapsed && this.settings.rightSidebar) {
-                    this.collapseRight();
+                if (!this.rightController.split.collapsed && this.settings.rightSidebar) {
+                    this.rightController.collapse();
                 }
             }
         };
 
+        // Window Mouse Leave
         this.documentMouseLeaveHandler = (e: MouseEvent) => {
-            // If cursor leaves the window, cancel pending expansions
-            if (this.expandTimerLeft) { clearTimeout(this.expandTimerLeft); this.expandTimerLeft = null; this.isHoveringLeft = false; }
-            if (this.expandTimerRight) { clearTimeout(this.expandTimerRight); this.expandTimerRight = null; this.isHoveringRight = false; }
+            this.leftController.cancelTimers();
+            this.leftController.isHovering = false;
+            this.rightController.cancelTimers();
+            this.rightController.isHovering = false;
         };
 
-        this.rightSplitMouseMoveHandler = () => this.rightSplit.containerEl.addClass('hovered');
-
-        this.rightSplitMouseEnterHandler = () => {
-            this.isHoveringRight = true;
-            this.rightSplit.containerEl.addClass('hovered');
-            // Ensure timer is cleared if we entered the split itself (success)
-            if (this.expandTimerRight) { clearTimeout(this.expandTimerRight); this.expandTimerRight = null; }
-        };
-
-        this.leftSplitMouseMoveHandler = () => this.leftSplit.containerEl.addClass('hovered');
-
-        this.leftSplitMouseEnterHandler = () => {
-            this.isHoveringLeft = true;
-            this.leftSplit.containerEl.addClass('hovered');
-            // Ensure timer is cleared if we entered the split itself (success)
-            if (this.expandTimerLeft) { clearTimeout(this.expandTimerLeft); this.expandTimerLeft = null; }
-        };
-
+        // Ribbon Hover
         this.leftRibbonMouseEnterHandler = () => {
             if (this.settings.leftSidebar) {
-                // Ribbons trigger expansion too
-                // We treat ribbon hover same as trigger zone hover
-                this.isHoveringLeft = true;
+                this.leftController.isHovering = true;
+                if (this.leftController.expandTimer) clearTimeout(this.leftController.expandTimer);
 
-                if (this.expandTimerLeft) clearTimeout(this.expandTimerLeft);
-                this.expandTimerLeft = window.setTimeout(() => {
-                    if (this.isHoveringLeft) {
-                        if (this.settings.syncLeftRight && this.settings.rightSidebar) {
-                            this.expandBoth();
-                        } else {
-                            this.expandLeft();
-                        }
+                this.leftController.expandTimer = window.setTimeout(() => {
+                    if (this.leftController.isHovering) {
+                        this.leftController.onExpand();
                     }
-                    this.expandTimerLeft = null;
+                    this.leftController.expandTimer = null;
                 }, this.settings.sidebarExpandDelay);
             }
         };
 
-        this.rightSplitMouseLeaveHandler = (event: MouseEvent) => {
-            const target = event.relatedTarget as HTMLElement;
-            if (target && (target.closest('.workspace-tab-header-container-inner') ||
-                (target.hasClass && target.hasClass('menu')) ||
-                target?.classList?.contains('menu') ||
-                target?.closest('.menu'))) {
-                return;
-            }
+        // Global Mouse Move (Trigger Zones)
+        this.mouseMoveHandler = (event: MouseEvent) => {
+            // Optimization: use rAF to throttle
+            if (this.rafId) return;
 
-            if (this.settings.rightSidebar) {
-                this.isHoveringRight = false;
-                this.rightSplit.containerEl.removeClass('hovered');
+            this.rafId = requestAnimationFrame(() => {
+                this.rafId = null;
+                const mouseX = event.clientX;
+                // Use cached width
+                const editorWidth = this.editorWidth;
 
-                setTimeout(() => {
-                    if (!this.isHoveringRight) {
-                        if (this.settings.syncLeftRight && this.settings.leftSidebar) {
-                            this.collapseBoth();
-                        } else {
-                            this.collapseRight();
+                // RIGHT SIDEBAR TRIGGER
+                if (this.settings.rightSidebar && this.rightController.split.collapsed) {
+                    const inTriggerZone = mouseX >= editorWidth - this.settings.rightSideBarPixelTrigger;
+
+                    if (inTriggerZone) {
+                        if (!this.rightController.isHovering) {
+                            this.rightController.isHovering = true;
+                            if (this.rightController.expandTimer) clearTimeout(this.rightController.expandTimer);
+
+                            this.rightController.expandTimer = window.setTimeout(() => {
+                                this.rightController.onExpand();
+                                this.rightController.expandTimer = null;
+                            }, this.settings.sidebarExpandDelay);
+                        }
+                    } else {
+                        if (this.rightController.isHovering) {
+                            // Exit zone
+                            this.rightController.isHovering = false;
+                            if (this.rightController.expandTimer) {
+                                clearTimeout(this.rightController.expandTimer);
+                                this.rightController.expandTimer = null;
+                            }
                         }
                     }
-                }, this.settings.sidebarDelay);
-            }
-        };
+                }
 
-        this.leftSplitMouseLeaveHandler = (event: MouseEvent) => {
-            const target = event.relatedTarget as HTMLElement;
-            if (target && (target.closest('.workspace-tab-header-container-inner') ||
-                (target.hasClass && target.hasClass('menu')) ||
-                target?.classList?.contains('menu') ||
-                target?.closest('.menu'))) {
-                return;
-            }
+                // LEFT SIDEBAR TRIGGER
+                if (this.settings.leftSidebar && this.leftController.split.collapsed) {
+                    const inTriggerZone = mouseX <= this.settings.leftSideBarPixelTrigger;
 
-            if (this.settings.leftSidebar) {
-                this.isHoveringLeft = false;
-                this.leftSplit.containerEl.removeClass('hovered');
+                    if (inTriggerZone) {
+                        if (!this.leftController.isHovering) {
+                            this.leftController.isHovering = true;
+                            if (this.leftController.expandTimer) clearTimeout(this.leftController.expandTimer);
 
-                setTimeout(() => {
-                    if (!this.isHoveringLeft) {
-                        if (this.settings.syncLeftRight && this.settings.rightSidebar) {
-                            this.collapseBoth();
-                        } else {
-                            this.collapseLeft();
+                            this.leftController.expandTimer = window.setTimeout(() => {
+                                this.leftController.onExpand();
+                                this.leftController.expandTimer = null;
+                            }, this.settings.sidebarExpandDelay);
+                        }
+                    } else {
+                        if (this.leftController.isHovering) {
+                            this.leftController.isHovering = false;
+                            if (this.leftController.expandTimer) {
+                                clearTimeout(this.leftController.expandTimer);
+                                this.leftController.expandTimer = null;
+                            }
                         }
                     }
-                }, this.settings.sidebarDelay);
-            }
+                }
+            });
         };
     }
 
-    // Helper method to update CSS variables
     updateCSSVariables() {
         const styleEl = document.createElement('style');
         styleEl.id = 'obsidian-assistant-sidebar-variables';
         const existingStyle = document.getElementById(styleEl.id);
-        if (existingStyle) {
-            existingStyle.remove();
-        }
+        if (existingStyle) existingStyle.remove();
+
         styleEl.textContent = `
             :root {
                 --sidebar-expand-collapse-speed: ${this.settings.expandCollapseSpeed}ms;
                 --sidebar-expand-delay: ${this.settings.sidebarExpandDelay}ms;
                 --left-sidebar-max-width: ${this.settings.leftSidebarMaxWidth}px;
                 --right-sidebar-max-width: ${this.settings.rightSidebarMaxWidth}px;
-                /* Unified Variables */
-                --sidebar-width: ${this.settings.leftSidebarMaxWidth}px;
-                --right-sidebar-width: ${this.settings.rightSidebarMaxWidth}px;
             }
         `;
         document.head.appendChild(styleEl);
     }
 
-    // -- Non-Obsidian API --------------------------
-    getEditorWidth = () => this.app.workspace.containerEl.clientWidth;
-
-    expandRight() {
-        if (this.rightSplit.collapsed) this.isAutoExpandedRight = true;
-        this.rightSplit.expand();
-        this.isHoveringRight = true;
-    }
-
-    expandLeft() {
-        if (this.leftSplit.collapsed) this.isAutoExpandedLeft = true;
-        this.leftSplit.expand();
-        this.isHoveringLeft = true;
-    }
-
     expandBoth() {
-        this.expandRight();
-        this.expandLeft();
-    }
-
-    collapseRight() {
-        if (this.isAutoExpandedRight) {
-            this.rightSplit.collapse();
-            this.isAutoExpandedRight = false;
-        }
-        this.isHoveringRight = false;
-    }
-
-    collapseLeft() {
-        if (this.isAutoExpandedLeft) {
-            this.leftSplit.collapse();
-            this.isAutoExpandedLeft = false;
-        }
-        this.isHoveringLeft = false;
+        this.rightController.expand();
+        this.leftController.expand();
     }
 
     collapseBoth() {
-        this.collapseRight();
-        this.collapseLeft();
+        this.rightController.collapse();
+        this.leftController.collapse();
     }
-
-    // Event handlers
-    mouseMoveHandler = (event: MouseEvent) => {
-        const mouseX = event.clientX;
-
-        // --- RIGHT SIDEBAR ---
-        if (this.settings.rightSidebar && this.rightSplit.collapsed) {
-            const editorWidth = this.getEditorWidth();
-            const inTriggerZone = mouseX >= editorWidth - this.settings.rightSideBarPixelTrigger;
-
-            if (inTriggerZone) {
-                if (!this.isHoveringRight) {
-                    // ENTER ZONE
-                    this.isHoveringRight = true;
-                    if (this.expandTimerRight) clearTimeout(this.expandTimerRight);
-
-                    this.expandTimerRight = window.setTimeout(() => {
-                        if (this.settings.syncLeftRight) this.expandBoth();
-                        else this.expandRight();
-                        this.expandTimerRight = null;
-                    }, this.settings.sidebarExpandDelay);
-                }
-            } else {
-                if (this.isHoveringRight) {
-                    // EXIT ZONE (Before Expand)
-                    this.isHoveringRight = false;
-                    if (this.expandTimerRight) {
-                        clearTimeout(this.expandTimerRight);
-                        this.expandTimerRight = null;
-                    }
-                }
-            }
-        }
-
-        // --- LEFT SIDEBAR ---
-        if (this.settings.leftSidebar && this.leftSplit.collapsed) {
-            const inTriggerZone = mouseX <= this.settings.leftSideBarPixelTrigger;
-
-            if (inTriggerZone) {
-                if (!this.isHoveringLeft) {
-                    // ENTER ZONE
-                    this.isHoveringLeft = true;
-                    if (this.expandTimerLeft) clearTimeout(this.expandTimerLeft);
-
-                    this.expandTimerLeft = window.setTimeout(() => {
-                        if (this.settings.syncLeftRight) this.expandBoth();
-                        else this.expandLeft();
-                        this.expandTimerLeft = null;
-                    }, this.settings.sidebarExpandDelay);
-                }
-            } else {
-                if (this.isHoveringLeft) {
-                    // EXIT ZONE (Before Expand)
-                    this.isHoveringLeft = false;
-                    if (this.expandTimerLeft) {
-                        clearTimeout(this.expandTimerLeft);
-                        this.expandTimerLeft = null;
-                    }
-                }
-            }
-        }
-    };
 }

@@ -82,7 +82,7 @@ export class IncreaseHeading {
 
     createCommand = (): Command => {
         return {
-            id: `increase-heading${this.includesNoHeadingsLine ? "-forced" : ""}`,
+            id: `heading-shifter-increase-heading${this.includesNoHeadingsLine ? "-forced" : ""}`,
             name: this.includesNoHeadingsLine
                 ? t("Increase Headings (forced)")
                 : t("Increase Headings"),
@@ -153,7 +153,7 @@ export class DecreaseHeading {
 
     createCommand = () => {
         return {
-            id: "decrease-heading",
+            id: "heading-shifter-decrease-heading",
             name: t("Decrease Headings"),
             icon: "headingShifter_decreaseIcon",
             editorCallback: this.editorCallback,

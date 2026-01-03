@@ -27,6 +27,7 @@ export class HeadingsManager {
     app: App;
     plugin: AssistantPlugin;
     shifterManager: ShifterManager;
+    private isLoaded = false;
 
     constructor(app: App, plugin: AssistantPlugin) {
         this.app = app;
@@ -35,24 +36,26 @@ export class HeadingsManager {
     }
 
     async onload() {
+        if (this.isLoaded) return;
+        this.isLoaded = true;
+
         // Initialize Shifter Manager
         this.shifterManager.onload();
 
-        // Only register the control modal command
-        this.plugin.addCommand({
-            id: 'configure-headings',
-            name: t('Configure Headings'),
-            callback: () => {
-                const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-                if (activeView && activeView.file) {
-                    new HeadingsControlModal(this.app, this.plugin, activeView.file).open();
-                }
-            }
-        });
+    }
+
+    openControlModal() {
+        if (!this.isLoaded) return;
+        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+        if (activeView && activeView.file) {
+            new HeadingsControlModal(this.app, this.plugin, activeView.file).open();
+        }
     }
 
     onunload() {
-        // No internal timers to clear anymore
+        if (!this.isLoaded) return;
+        this.isLoaded = false;
+        this.shifterManager.onunload();
     }
 
     getActiveViewInfo() {
@@ -85,6 +88,8 @@ export class HeadingsManager {
         const scrollBefore = editor.getScrollInfo();
 
         const headings = data.headings ?? [];
+        if (headings.length === 0) return false;
+
         const codeRanges = getCodeBlockRanges(data);
         const headingStyles = settings.headingStyles || DEFAULT_HEADING_STYLES;
         const headingSeparators = settings.headingSeparators || DEFAULT_HEADING_SEPARATORS;
@@ -163,6 +168,8 @@ export class HeadingsManager {
 
         const changes: any[] = [];
         const headings = data.headings ?? [];
+        if (headings.length === 0) return;
+
 
         for (const heading of headings) {
             const prefixRange = findHeadingPrefixRange(editor, heading);

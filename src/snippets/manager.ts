@@ -13,6 +13,7 @@ export class SnippetsManager {
     plugin: AssistantPlugin;
     settings: MySnippetsSettings;
     statusBarIcon: HTMLElement | undefined;
+    private isLoaded = false;
 
     constructor(app: App, plugin: AssistantPlugin) {
         this.app = app as EnhancedApp;
@@ -21,7 +22,9 @@ export class SnippetsManager {
     }
 
     async onload() {
-        console.log('Loading MySnippets module...');
+        if (this.isLoaded) return;
+        this.isLoaded = true;
+        console.log(t('Loading MySnippets module...'));
         addIcons();
 
         // Ensure status bar icon is setup after layout ready
@@ -44,26 +47,22 @@ export class SnippetsManager {
         // Or we can try to register/unregister.
         // For simplicity, let's register them here.
 
-        this.plugin.addCommand({
-            id: `open-snippets-menu`,
-            name: t(`Open snippets in status bar`),
-            icon: `pantone-line`,
-            callback: async () => {
-                if (this.settings.enabled) snippetsMenu(this.app, this, this.settings);
-            },
-        });
-        this.plugin.addCommand({
-            id: `open-snippets-create`,
-            name: t(`Create new CSS snippet`),
-            icon: `ms-css-file`,
-            callback: async () => {
-                if (this.settings.enabled) new CreateSnippetModal(this.app, this).open();
-            },
-        });
+        // Commands are referenced in main.ts
     }
 
+    openMenu() {
+        if (this.settings.enabled) snippetsMenu(this.app, this, this.settings);
+    }
+
+    openCreateModal() {
+        if (this.settings.enabled) new CreateSnippetModal(this.app, this).open();
+    }
+
+
     onunload() {
-        console.log('Unloading MySnippets module...');
+        if (!this.isLoaded) return;
+        this.isLoaded = false;
+        console.log(t('Unloading MySnippets module...'));
         if (this.statusBarIcon) {
             this.statusBarIcon.remove();
             this.statusBarIcon = undefined;
@@ -94,7 +93,7 @@ export class SnippetsManager {
         });
         setIcon(this.statusBarIcon, "pantone-line");
 
-        this.statusBarIcon.addEventListener("click", () => {
+        this.plugin.registerDomEvent(this.statusBarIcon, "click", () => {
             snippetsMenu(this.app, this, this.settings);
         });
     }

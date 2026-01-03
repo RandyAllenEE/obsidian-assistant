@@ -217,6 +217,7 @@ var en_default = {
   "Modules": "Modules",
   // My Folders
   "My Folders": "My Folders",
+  "Loading MyFolders module": "Loading MyFolders module",
   "Toggle visibility of hidden folders": "Toggle visibility of hidden folders",
   "Show hidden folders": "Show hidden folders",
   "Hide hidden folders again": "Hide hidden folders again",
@@ -292,6 +293,8 @@ var en_default = {
   "No ribbon elements found yet.": "No ribbon elements found yet.",
   // My Snippets
   "My Snippets": "My Snippets",
+  "Loading MySnippets module...": "Loading MySnippets module...",
+  "Unloading MySnippets module...": "Unloading MySnippets module...",
   "Open snippets in status bar": "Open snippets in status bar",
   "Create new CSS snippet": "Create new CSS snippet",
   "Configure Snippets": "Configure Snippets",
@@ -768,6 +771,8 @@ var FoldersManager = class {
   constructor(app, plugin) {
     this.ribbonIconButton = null;
     this.statusBarItem = null;
+    this.mutationObserver = null;
+    this.layoutChangeRef = null;
     this.processFolders = (0, import_obsidian2.debounce)(async (recheckPreviouslyHiddenFolders) => {
       if (!this.settings.enabled)
         return;
@@ -805,7 +810,7 @@ var FoldersManager = class {
           console.error(`Failed to process folder ${folderName}:`, e);
         }
       });
-    }, 10, false);
+    }, 100, false);
     this.app = app;
     this.plugin = plugin;
   }
@@ -862,9 +867,10 @@ var FoldersManager = class {
       this.settings.attachmentFolderNames.forEach((folderName) => {
         if (getFolderNameWithoutPrefix(folderName).trim() === "")
           return;
-        if (ignoreList.contains(this.createIgnoreListRegExpForFolderName(folderName)))
+        const regExp = this.createIgnoreListRegExpForFolderName(folderName);
+        if (ignoreList.contains(regExp))
           return;
-        ignoreList.push(this.createIgnoreListRegExpForFolderName(folderName));
+        ignoreList.push(regExp);
       });
     } else {
       const folderNameRegexes = this.settings.attachmentFolderNames.map((folderName) => this.createIgnoreListRegExpForFolderName(folderName));
@@ -888,7 +894,7 @@ var FoldersManager = class {
   async onload() {
     if (!this.settings.enabled)
       return;
-    console.log("Loading MyFolders module");
+    console.log(t("Loading MyFolders module"));
     this.ribbonIconButton = this.plugin.addRibbonIcon(
       this.settings.areFoldersHidden ? "eye" : "eye-off",
       this.settings.areFoldersHidden ? t("Show hidden folders") : t("Hide hidden folders again"),
@@ -898,14 +904,10 @@ var FoldersManager = class {
     );
     if (!this.settings.hideBottomStatusBarIndicatorText) {
       this.createBottomStatusBarIndicatorTextItem();
+    } else if (this.statusBarItem) {
+      this.statusBarItem.remove();
+      this.statusBarItem = null;
     }
-    this.plugin.addCommand({
-      id: "toggle-attachment-folders",
-      name: t("Toggle visibility of hidden folders"),
-      callback: () => {
-        this.toggleFunctionality();
-      }
-    });
     this.mutationObserver = new MutationObserver((mutationRecord) => {
       const feClasses = [
         "nav-folder",
@@ -926,25 +928,63 @@ var FoldersManager = class {
         return;
       this.processFolders();
     });
-    this.mutationObserver.observe(window.document, { childList: true, subtree: true });
-    this.plugin.registerEvent(this.app.vault.on("rename", () => {
-      window.setTimeout(() => {
-        this.processFolders();
-      }, 10);
-    }));
-    this.app.workspace.onLayoutReady(() => {
-      if (!this.settings.areFoldersHidden)
-        return;
-      window.setTimeout(() => {
-        this.processFolders();
-      }, 1e3);
+    this.observeFileExplorers();
+    this.layoutChangeRef = this.app.workspace.on("layout-change", () => {
+      this.observeFileExplorers();
+      this.processFolders();
     });
+    this.renameEventRef = this.app.vault.on("rename", () => {
+      window.setTimeout(() => {
+        this.processFolders();
+      }, 50);
+    });
+    if (this.app.workspace.layoutReady) {
+      if (this.settings.areFoldersHidden) {
+        window.setTimeout(() => {
+          this.processFolders();
+        }, 1e3);
+      }
+    } else {
+      this.app.workspace.onLayoutReady(() => {
+        if (!this.settings.areFoldersHidden)
+          return;
+        window.setTimeout(() => {
+          this.processFolders();
+        }, 1e3);
+      });
+    }
+  }
+  observeFileExplorers() {
+    if (!this.settings.enabled)
+      return;
+    if (!this.mutationObserver)
+      return;
+    this.mutationObserver.disconnect();
+    const fileExplorers = document.querySelectorAll(".nav-files-container");
+    if (fileExplorers.length > 0) {
+      fileExplorers.forEach((container) => {
+        var _a;
+        (_a = this.mutationObserver) == null ? void 0 : _a.observe(container, { childList: true, subtree: true });
+      });
+    }
   }
   onunload() {
     var _a, _b, _c;
+    console.log(t("Unloading MyFolders module"));
     (_a = this.mutationObserver) == null ? void 0 : _a.disconnect();
+    this.mutationObserver = null;
+    if (this.renameEventRef) {
+      this.app.vault.offbyref(this.renameEventRef);
+      this.renameEventRef = null;
+    }
+    if (this.layoutChangeRef) {
+      this.app.workspace.offref(this.layoutChangeRef);
+      this.layoutChangeRef = null;
+    }
     (_b = this.ribbonIconButton) == null ? void 0 : _b.remove();
+    this.ribbonIconButton = null;
     (_c = this.statusBarItem) == null ? void 0 : _c.remove();
+    this.statusBarItem = null;
   }
 };
 
@@ -1142,16 +1182,20 @@ function fixOrder(plugin) {
 // src/statusbar/manager.ts
 var StatusBarManager = class {
   constructor(app, plugin) {
+    this.isLoaded = false;
     this.app = app;
     this.plugin = plugin;
     this.settings = this.plugin.settings.myStatusBar;
   }
   async onload() {
+    if (this.isLoaded)
+      return;
+    this.isLoaded = true;
     this.statusBar = document.querySelector(".status-bar");
     if (!this.statusBar) {
       this.app.workspace.onLayoutReady(() => {
         this.statusBar = document.querySelector(".status-bar");
-        if (this.statusBar)
+        if (this.statusBar && this.isLoaded)
           this.initializeManager();
       });
       return;
@@ -1166,6 +1210,9 @@ var StatusBarManager = class {
     this.spooler.enableObserver();
   }
   onunload() {
+    if (!this.isLoaded)
+      return;
+    this.isLoaded = false;
     if (this.spooler)
       this.spooler.disableObserver();
   }
@@ -1427,6 +1474,7 @@ var PluginsManager = class {
     this.manifests = [];
     this.pendingTimeouts = [];
     this.device = "desktop/global";
+    this.isLoaded = false;
     this.app = app;
     this.plugin = plugin;
   }
@@ -1440,6 +1488,9 @@ var PluginsManager = class {
     return this.settings.desktop;
   }
   async onload() {
+    if (this.isLoaded)
+      return;
+    this.isLoaded = true;
     if (!this.settings.enabled)
       return;
     if (this.settings.dualConfigs && import_obsidian5.Platform.isMobile) {
@@ -1456,7 +1507,11 @@ var PluginsManager = class {
     this.manifests.forEach((plugin) => this.setPluginStartup(plugin.id));
   }
   onunload() {
+    if (!this.isLoaded)
+      return;
+    this.isLoaded = false;
     this.pendingTimeouts.forEach((timeout) => clearTimeout(timeout));
+    this.pendingTimeouts = [];
   }
   async setPluginStartup(pluginId) {
     var _a, _b;
@@ -1501,20 +1556,27 @@ var PluginsManager = class {
   }
   getPluginStartup(pluginId) {
     var _a, _b;
-    return ((_b = (_a = this.deviceSettings.plugins) == null ? void 0 : _a[pluginId]) == null ? void 0 : _b.startupType) || this.deviceSettings.defaultStartupType || // @ts-ignore
+    return ((_b = (_a = this.deviceSettings.plugins) == null ? void 0 : _a[pluginId]) == null ? void 0 : _b.startupType) || this.deviceSettings.defaultStartupType || // @ts-expect-error
     (this.app.plugins.enabledPlugins.has(pluginId) ? "instant" /* instant */ : "disabled" /* disabled */);
   }
   async setInitialPluginsConfiguration() {
     var _a, _b;
+    let changed = false;
     for (const plugin of this.manifests) {
       if (!((_b = (_a = this.deviceSettings.plugins) == null ? void 0 : _a[plugin.id]) == null ? void 0 : _b.startupType)) {
-        await this.updatePluginSettings(plugin.id, this.getPluginStartup(plugin.id));
+        this.updatePluginSettingsWithNoSave(plugin.id, this.getPluginStartup(plugin.id));
+        changed = true;
       }
     }
+    if (changed)
+      await this.plugin.saveSettings();
   }
   async updatePluginSettings(pluginId, startupType) {
     this.deviceSettings.plugins[pluginId] = { startupType };
     await this.plugin.saveSettings();
+  }
+  updatePluginSettingsWithNoSave(pluginId, startupType) {
+    this.deviceSettings.plugins[pluginId] = { startupType };
   }
   updateManifests() {
     this.manifests = Object.values(this.app.plugins.manifests).filter((plugin) => plugin.id !== this.plugin.manifest.id && !(import_obsidian5.Platform.isMobile && plugin.isDesktopOnly)).sort((a, b) => a.name.localeCompare(b.name));
@@ -1825,12 +1887,16 @@ function snippetsMenu(app, manager, settings) {
 // src/snippets/manager.ts
 var SnippetsManager = class {
   constructor(app, plugin) {
+    this.isLoaded = false;
     this.app = app;
     this.plugin = plugin;
     this.settings = this.plugin.settings.mySnippets;
   }
   async onload() {
-    console.log("Loading MySnippets module...");
+    if (this.isLoaded)
+      return;
+    this.isLoaded = true;
+    console.log(t("Loading MySnippets module..."));
     addIcons();
     if (this.app.workspace.layoutReady) {
       this.setupSnippetsStatusBarIcon();
@@ -1841,27 +1907,20 @@ var SnippetsManager = class {
         });
       });
     }
-    this.plugin.addCommand({
-      id: `open-snippets-menu`,
-      name: t(`Open snippets in status bar`),
-      icon: `pantone-line`,
-      callback: async () => {
-        if (this.settings.enabled)
-          snippetsMenu(this.app, this, this.settings);
-      }
-    });
-    this.plugin.addCommand({
-      id: `open-snippets-create`,
-      name: t(`Create new CSS snippet`),
-      icon: `ms-css-file`,
-      callback: async () => {
-        if (this.settings.enabled)
-          new CreateSnippetModal(this.app, this).open();
-      }
-    });
+  }
+  openMenu() {
+    if (this.settings.enabled)
+      snippetsMenu(this.app, this, this.settings);
+  }
+  openCreateModal() {
+    if (this.settings.enabled)
+      new CreateSnippetModal(this.app, this).open();
   }
   onunload() {
-    console.log("Unloading MySnippets module...");
+    if (!this.isLoaded)
+      return;
+    this.isLoaded = false;
+    console.log(t("Unloading MySnippets module..."));
     if (this.statusBarIcon) {
       this.statusBarIcon.remove();
       this.statusBarIcon = void 0;
@@ -1885,7 +1944,7 @@ var SnippetsManager = class {
       "aria-label-position": "top"
     });
     (0, import_obsidian10.setIcon)(this.statusBarIcon, "pantone-line");
-    this.statusBarIcon.addEventListener("click", () => {
+    this.plugin.registerDomEvent(this.statusBarIcon, "click", () => {
       snippetsMenu(this.app, this, this.settings);
     });
   }
@@ -2738,7 +2797,7 @@ var ApplyHeading = class {
     };
     this.createCommand = () => {
       return {
-        id: `apply-heading-${this.headingSize}`,
+        id: `heading-shifter-apply-heading-${this.headingSize}`,
         name: `${t("Apply Heading")} ${this.headingSize}`,
         icon: `headingShifter_heading${this.headingSize}`,
         editorCallback: this.editorCallback
@@ -2792,7 +2851,7 @@ var IncreaseHeading = class {
     };
     this.createCommand = () => {
       return {
-        id: `increase-heading${this.includesNoHeadingsLine ? "-forced" : ""}`,
+        id: `heading-shifter-increase-heading${this.includesNoHeadingsLine ? "-forced" : ""}`,
         name: this.includesNoHeadingsLine ? t("Increase Headings (forced)") : t("Increase Headings"),
         icon: "headingShifter_increaseIcon",
         // Should check if icon exists or use default
@@ -2846,7 +2905,7 @@ var DecreaseHeading = class {
     };
     this.createCommand = () => {
       return {
-        id: "decrease-heading",
+        id: "heading-shifter-decrease-heading",
         name: t("Decrease Headings"),
         icon: "headingShifter_decreaseIcon",
         editorCallback: this.editorCallback
@@ -2894,7 +2953,7 @@ var InsertHeadingAtCurrentLevel = class {
     };
     this.createCommand = () => {
       return {
-        id: `insert-heading-current`,
+        id: `heading-shifter-insert-heading-current`,
         name: t("Insert Heading at current level"),
         icon: `headingShifter_heading`,
         editorCallback: this.editorCallback
@@ -2933,7 +2992,7 @@ var InsertHeadingAtDeeperLevel = class {
     };
     this.createCommand = () => {
       return {
-        id: `insert-heading-deeper`,
+        id: `heading-shifter-insert-heading-deeper`,
         name: t("Insert Heading at one level deeper"),
         icon: `headingShifter_heading`,
         editorCallback: this.editorCallback
@@ -2968,7 +3027,7 @@ var InsertHeadingAtHigherLevel = class {
     };
     this.createCommand = () => {
       return {
-        id: `insert-heading-higher`,
+        id: `heading-shifter-insert-heading-higher`,
         name: t("Insert Heading at one level higher"),
         icon: `headingShifter_heading`,
         editorCallback: this.editorCallback
@@ -3000,7 +3059,7 @@ var ShifterManager = class {
       const applyHeadingCmd = new ApplyHeading(settings, heading);
       this.plugin.addCommand({
         ...applyHeadingCmd.createCommand()
-        // Unified naming: Use the ID from the command itself (e.g., 'apply-heading-0')
+        // Unified naming: Use the ID from the command itself (e.g., 'shifter-apply-heading-0')
         // Obsidian will prefix with 'obsidian-assistant:' automatically.
       });
     });
@@ -3010,36 +3069,44 @@ var ShifterManager = class {
     this.plugin.addCommand(insertHeadingAtCurrentLabel.createCommand());
     this.plugin.addCommand(insertHeadingAtDeeperLevel.createCommand());
     this.plugin.addCommand(insertHeadingAtHigherLevel.createCommand());
-    this.plugin.registerEditorExtension(
-      import_state.Prec.highest(
-        import_view.keymap.of([
-          {
-            key: "Tab",
-            run: this.createKeyMapRunCallback({
-              check: increaseHeading2.check,
-              run: increaseHeading2.editorCallback
-            })
-          }
-        ])
-      )
-    );
-    this.plugin.registerEditorExtension(
-      import_state.Prec.highest(
-        import_view.keymap.of([
-          {
-            key: "s-Tab",
-            run: this.createKeyMapRunCallback({
-              check: decreaseHeading2.check,
-              run: decreaseHeading2.editorCallback
-            })
-          }
-        ])
-      )
-    );
+    if (settings.overrideTab) {
+      this.plugin.registerEditorExtension(
+        import_state.Prec.high(
+          import_view.keymap.of([
+            {
+              key: "Tab",
+              run: this.createKeyMapRunCallback({
+                check: increaseHeading2.check,
+                run: increaseHeading2.editorCallback
+              })
+            }
+          ])
+        )
+      );
+      this.plugin.registerEditorExtension(
+        import_state.Prec.high(
+          import_view.keymap.of([
+            {
+              key: "s-Tab",
+              run: this.createKeyMapRunCallback({
+                check: decreaseHeading2.check,
+                run: decreaseHeading2.editorCallback
+              })
+            }
+          ])
+        )
+      );
+    }
   }
   // Helper from ObsidianService
   getEditorFromState(state) {
-    return state.field(import_obsidian16.editorInfoField).editor;
+    var _a, _b;
+    try {
+      return (_b = (_a = state.field(import_obsidian16.editorInfoField)) == null ? void 0 : _a.editor) != null ? _b : null;
+    } catch (e) {
+      console.error("Failed to get editor from state:", e);
+      return null;
+    }
   }
   createKeyMapRunCallback(config) {
     const check = config.check || (() => true);
@@ -3063,24 +3130,30 @@ var DEFAULT_HEADING_SEPARATORS = ["", "-", ":", ".", "\u2014", "-"];
 var DEFAULT_HEADING_START_VALUES = ["0", "1", "1", "1", "1", "1"];
 var HeadingsManager = class {
   constructor(app, plugin) {
+    this.isLoaded = false;
     this.app = app;
     this.plugin = plugin;
     this.shifterManager = new ShifterManager(app, plugin);
   }
   async onload() {
+    if (this.isLoaded)
+      return;
+    this.isLoaded = true;
     this.shifterManager.onload();
-    this.plugin.addCommand({
-      id: "configure-headings",
-      name: t("Configure Headings"),
-      callback: () => {
-        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian17.MarkdownView);
-        if (activeView && activeView.file) {
-          new HeadingsControlModal(this.app, this.plugin, activeView.file).open();
-        }
-      }
-    });
+  }
+  openControlModal() {
+    if (!this.isLoaded)
+      return;
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian17.MarkdownView);
+    if (activeView && activeView.file) {
+      new HeadingsControlModal(this.app, this.plugin, activeView.file).open();
+    }
   }
   onunload() {
+    if (!this.isLoaded)
+      return;
+    this.isLoaded = false;
+    this.shifterManager.onunload();
   }
   getActiveViewInfo() {
     const activeView = this.app.workspace.getActiveViewOfType(import_obsidian17.MarkdownView);
@@ -3109,6 +3182,8 @@ var HeadingsManager = class {
     const cursorBefore = editor.getCursor();
     const scrollBefore = editor.getScrollInfo();
     const headings = (_a = data.headings) != null ? _a : [];
+    if (headings.length === 0)
+      return false;
     const codeRanges = getCodeBlockRanges(data);
     const headingStyles = settings.headingStyles || DEFAULT_HEADING_STYLES;
     const headingSeparators = settings.headingSeparators || DEFAULT_HEADING_SEPARATORS;
@@ -3179,6 +3254,8 @@ var HeadingsManager = class {
     const { data, editor } = info;
     const changes = [];
     const headings = (_a = data.headings) != null ? _a : [];
+    if (headings.length === 0)
+      return;
     for (const heading of headings) {
       const prefixRange = findHeadingPrefixRange(editor, heading);
       if (!prefixRange)
@@ -3430,24 +3507,32 @@ var FormulasControlModal = class extends import_obsidian19.Modal {
 };
 
 // src/formulas/manager.ts
+var TAG_REGEX = /\\tag\{([^}]*)\}/;
+var TAG_REMOVE_REGEX = /\s*\\tag\{[^}]*\}/;
+var HEADING_NUMBER_REGEX = /^\s{0,4}#+\s*([0-9a-zA-Z\u4e00-\u9fa5\u2460-\u2473&⓪].*?)(\s|$)/;
 var FormulasManager = class {
   constructor(app, plugin) {
+    this.isLoaded = false;
     this.app = app;
     this.plugin = plugin;
   }
   async onload() {
-    this.plugin.addCommand({
-      id: "configure-formulas",
-      name: t("Configure Formulas"),
-      callback: () => {
-        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian20.MarkdownView);
-        if (activeView && activeView.file) {
-          new FormulasControlModal(this.app, this.plugin, activeView.file).open();
-        }
-      }
-    });
+    if (this.isLoaded)
+      return;
+    this.isLoaded = true;
+  }
+  openControlModal() {
+    if (!this.isLoaded)
+      return;
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian20.MarkdownView);
+    if (activeView && activeView.file) {
+      new FormulasControlModal(this.app, this.plugin, activeView.file).open();
+    }
   }
   onunload() {
+    if (!this.isLoaded)
+      return;
+    this.isLoaded = false;
   }
   getActiveViewInfo() {
     const activeView = this.app.workspace.getActiveViewOfType(import_obsidian20.MarkdownView);
@@ -3488,6 +3573,8 @@ var FormulasManager = class {
         dollarPositions.push({ line: i, ch: pos });
       }
     }
+    if (dollarPositions.length === 0)
+      return false;
     for (let i = 0; i < dollarPositions.length - 1; i += 2) {
       const start = dollarPositions[i];
       const end = dollarPositions[i + 1];
@@ -3506,7 +3593,7 @@ var FormulasManager = class {
         const endLine = editor.getLine(end.line);
         formulaContent += endLine.substring(0, end.ch + 2);
       }
-      const tagRegex = /\\tag\{([^}]+)\}/;
+      const tagRegex = TAG_REGEX;
       const hasTag = formulaContent.match(tagRegex);
       let equationNumber = "";
       if (settings.mode === "heading-based") {
@@ -3531,7 +3618,7 @@ var FormulasManager = class {
         }
         if (targetHeading) {
           const headingLine = editor.getLine(targetHeading.position.start.line);
-          const numberExtractRegex = /^\s{0,4}#+\s*([0-9a-zA-Z\u4e00-\u9fa5\u2460-\u2473&⓪].*?)(\s|$)/;
+          const numberExtractRegex = HEADING_NUMBER_REGEX;
           const match = headingLine.match(numberExtractRegex);
           if (match && match[1]) {
             currentHeadingNumber = match[1].trim();
@@ -3600,7 +3687,7 @@ var FormulasManager = class {
     const { editor } = info;
     const changes = [];
     const lineCount = editor.lineCount();
-    const tagRegex = /\s*\\tag\{[^}]*\}/;
+    const tagRegex = TAG_REMOVE_REGEX;
     const dollarPositions = [];
     for (let i = 0; i < lineCount; i++) {
       const line = editor.getLine(i);
@@ -3609,6 +3696,8 @@ var FormulasManager = class {
         dollarPositions.push({ line: i, ch: pos });
       }
     }
+    if (dollarPositions.length === 0)
+      return;
     for (let i = 0; i < dollarPositions.length - 1; i += 2) {
       const start = dollarPositions[i];
       const end = dollarPositions[i + 1];
@@ -3678,81 +3767,110 @@ function renderFormulasSettings(containerEl, manager) {
 }
 
 // src/sidebar/features/auto-hide.ts
-var AutoHideFeature = class {
-  constructor(app, plugin) {
-    // State
-    this.isHoveringLeft = false;
-    this.isHoveringRight = false;
-    // Manual Override State
-    this.isAutoExpandedLeft = false;
-    this.isAutoExpandedRight = false;
-    // Timers for Debounce
-    this.expandTimerLeft = null;
-    this.expandTimerRight = null;
-    // -- Non-Obsidian API --------------------------
-    this.getEditorWidth = () => this.app.workspace.containerEl.clientWidth;
-    // Event handlers
-    this.mouseMoveHandler = (event) => {
-      const mouseX = event.clientX;
-      if (this.settings.rightSidebar && this.rightSplit.collapsed) {
-        const editorWidth = this.getEditorWidth();
-        const inTriggerZone = mouseX >= editorWidth - this.settings.rightSideBarPixelTrigger;
-        if (inTriggerZone) {
-          if (!this.isHoveringRight) {
-            this.isHoveringRight = true;
-            if (this.expandTimerRight)
-              clearTimeout(this.expandTimerRight);
-            this.expandTimerRight = window.setTimeout(() => {
-              if (this.settings.syncLeftRight)
-                this.expandBoth();
-              else
-                this.expandRight();
-              this.expandTimerRight = null;
-            }, this.settings.sidebarExpandDelay);
-          }
-        } else {
-          if (this.isHoveringRight) {
-            this.isHoveringRight = false;
-            if (this.expandTimerRight) {
-              clearTimeout(this.expandTimerRight);
-              this.expandTimerRight = null;
-            }
-          }
-        }
+var SidebarSideController = class {
+  constructor(side, app, plugin, split, onExpand, onCollapse) {
+    this.isHovering = false;
+    this.isAutoExpanded = false;
+    this.expandTimer = null;
+    this.collapseTimer = null;
+    // Event Handlers
+    this.onMouseEnter = () => {
+      this.isHovering = true;
+      this.split.containerEl.addClass("hovered");
+      this.cancelTimers();
+    };
+    this.onMouseMove = () => {
+      this.split.containerEl.addClass("hovered");
+    };
+    this.onMouseLeave = (event) => {
+      var _a;
+      const target = event.relatedTarget;
+      if (target && (target.closest(".workspace-tab-header-container-inner") || target.hasClass && target.hasClass("menu") || ((_a = target == null ? void 0 : target.classList) == null ? void 0 : _a.contains("menu")) || (target == null ? void 0 : target.closest(".menu")))) {
+        return;
       }
-      if (this.settings.leftSidebar && this.leftSplit.collapsed) {
-        const inTriggerZone = mouseX <= this.settings.leftSideBarPixelTrigger;
-        if (inTriggerZone) {
-          if (!this.isHoveringLeft) {
-            this.isHoveringLeft = true;
-            if (this.expandTimerLeft)
-              clearTimeout(this.expandTimerLeft);
-            this.expandTimerLeft = window.setTimeout(() => {
-              if (this.settings.syncLeftRight)
-                this.expandBoth();
-              else
-                this.expandLeft();
-              this.expandTimerLeft = null;
-            }, this.settings.sidebarExpandDelay);
+      if (this.isSideEnabled) {
+        this.isHovering = false;
+        this.split.containerEl.removeClass("hovered");
+        if (this.collapseTimer)
+          clearTimeout(this.collapseTimer);
+        this.collapseTimer = window.setTimeout(() => {
+          if (!this.isHovering) {
+            this.onCollapse();
           }
-        } else {
-          if (this.isHoveringLeft) {
-            this.isHoveringLeft = false;
-            if (this.expandTimerLeft) {
-              clearTimeout(this.expandTimerLeft);
-              this.expandTimerLeft = null;
-            }
-          }
-        }
+          this.collapseTimer = null;
+        }, this.settings.sidebarDelay);
       }
     };
+    this.side = side;
+    this.app = app;
+    this.plugin = plugin;
+    this.split = split;
+    this.onExpand = onExpand;
+    this.onCollapse = onCollapse;
+  }
+  get settings() {
+    return this.plugin.settings.mySideBar.autoHide;
+  }
+  get isSideEnabled() {
+    return this.side === "left" ? this.settings.leftSidebar : this.settings.rightSidebar;
+  }
+  get pixelTrigger() {
+    return this.side === "left" ? this.settings.leftSideBarPixelTrigger : this.settings.rightSideBarPixelTrigger;
+  }
+  expand() {
+    if (this.split.collapsed)
+      this.isAutoExpanded = true;
+    this.split.expand();
+    this.isHovering = true;
+  }
+  collapse() {
+    if (this.isAutoExpanded) {
+      this.split.collapse();
+      this.isAutoExpanded = false;
+    }
+    this.isHovering = false;
+  }
+  cancelTimers() {
+    if (this.expandTimer) {
+      clearTimeout(this.expandTimer);
+      this.expandTimer = null;
+    }
+    if (this.collapseTimer) {
+      clearTimeout(this.collapseTimer);
+      this.collapseTimer = null;
+    }
+  }
+  cleanup() {
+    this.cancelTimers();
+    if (this.split && this.split.containerEl) {
+      this.split.containerEl.removeClass("hovered");
+      this.split.containerEl.removeEventListener("mouseenter", this.onMouseEnter);
+      this.split.containerEl.removeEventListener("mousemove", this.onMouseMove);
+      this.split.containerEl.removeEventListener("mouseleave", this.onMouseLeave);
+    }
+  }
+  attach() {
+    if (this.split && this.split.containerEl) {
+      this.split.containerEl.addEventListener("mouseenter", this.onMouseEnter);
+      this.split.containerEl.addEventListener("mousemove", this.onMouseMove);
+      this.split.containerEl.addEventListener("mouseleave", this.onMouseLeave);
+    }
+  }
+};
+var AutoHideFeature = class {
+  constructor(app, plugin) {
+    this.layoutChangeRef = null;
+    this.isInitialized = false;
+    this.resizeObserver = null;
+    this.editorWidth = 0;
+    this.rafId = null;
     this.app = app;
     this.plugin = plugin;
   }
   get settings() {
     return this.plugin.settings.mySideBar.autoHide;
   }
-  load() {
+  onload() {
     if (this.settings.overlayMode) {
       document.body.classList.add("sidebar-overlay-mode");
     }
@@ -3763,269 +3881,223 @@ var AutoHideFeature = class {
     });
   }
   init() {
-    this.leftSplit = this.app.workspace.leftSplit;
-    this.rightSplit = this.app.workspace.rightSplit;
+    if (this.isInitialized)
+      return;
+    this.isInitialized = true;
+    const leftSplit = this.app.workspace.leftSplit;
+    const rightSplit = this.app.workspace.rightSplit;
     this.leftRibbon = this.app.workspace.leftRibbon;
+    this.leftController = new SidebarSideController(
+      "left",
+      this.app,
+      this.plugin,
+      leftSplit,
+      () => {
+        if (this.settings.syncLeftRight && this.settings.rightSidebar) {
+          this.expandBoth();
+        } else {
+          this.leftController.expand();
+        }
+      },
+      () => {
+        if (this.settings.syncLeftRight && this.settings.rightSidebar) {
+          this.collapseBoth();
+        } else {
+          this.leftController.collapse();
+        }
+      }
+    );
+    this.rightController = new SidebarSideController(
+      "right",
+      this.app,
+      this.plugin,
+      rightSplit,
+      () => {
+        if (this.settings.syncLeftRight && this.settings.leftSidebar) {
+          this.expandBoth();
+        } else {
+          this.rightController.expand();
+        }
+      },
+      () => {
+        if (this.settings.syncLeftRight && this.settings.leftSidebar) {
+          this.collapseBoth();
+        } else {
+          this.rightController.collapse();
+        }
+      }
+    );
+    this.leftController.attach();
+    this.rightController.attach();
     this.initializeHandlers();
+    this.updateEditorDimensions();
     document.addEventListener("mousemove", this.mouseMoveHandler);
     document.addEventListener("mouseleave", this.documentMouseLeaveHandler);
-    this.rightSplit.containerEl.addEventListener(
-      "mousemove",
-      this.rightSplitMouseMoveHandler
-    );
-    this.rightSplit.containerEl.addEventListener(
-      "mouseleave",
-      this.rightSplitMouseLeaveHandler
-    );
-    this.rightSplit.containerEl.addEventListener(
-      "mouseenter",
-      this.rightSplitMouseEnterHandler
-    );
-    if (this.leftRibbon && this.leftRibbon.containerEl) {
-      this.leftRibbon.containerEl.addEventListener(
-        "mouseenter",
-        this.leftRibbonMouseEnterHandler
-      );
-    }
-    this.leftSplit.containerEl.addEventListener(
-      "mousemove",
-      this.leftSplitMouseMoveHandler
-    );
-    this.leftSplit.containerEl.addEventListener(
-      "mouseleave",
-      this.leftSplitMouseLeaveHandler
-    );
-    this.leftSplit.containerEl.addEventListener(
-      "mouseenter",
-      this.leftSplitMouseEnterHandler
-    );
     document.addEventListener("click", this.documentClickHandler);
-    this.plugin.registerEvent(
-      this.app.workspace.on("layout-change", () => {
-        if (this.leftSplit && this.leftSplit.collapsed)
-          this.isAutoExpandedLeft = false;
-        if (this.rightSplit && this.rightSplit.collapsed)
-          this.isAutoExpandedRight = false;
-      })
-    );
+    this.resizeObserver = new ResizeObserver(() => {
+      this.updateEditorDimensions();
+    });
+    this.resizeObserver.observe(this.app.workspace.containerEl);
+    if (this.leftRibbon && this.leftRibbon.containerEl) {
+      this.leftRibbon.containerEl.addEventListener("mouseenter", this.leftRibbonMouseEnterHandler);
+    }
+    this.layoutChangeRef = this.app.workspace.on("layout-change", () => {
+      if (this.leftController.split.collapsed)
+        this.leftController.isAutoExpanded = false;
+      if (this.rightController.split.collapsed)
+        this.rightController.isAutoExpanded = false;
+    });
   }
-  unload() {
-    if (this.expandTimerLeft) {
-      clearTimeout(this.expandTimerLeft);
-      this.expandTimerLeft = null;
-    }
-    if (this.expandTimerRight) {
-      clearTimeout(this.expandTimerRight);
-      this.expandTimerRight = null;
-    }
+  onunload() {
+    var _a, _b;
+    if (!this.isInitialized)
+      return;
+    (_a = this.leftController) == null ? void 0 : _a.cleanup();
+    (_b = this.rightController) == null ? void 0 : _b.cleanup();
     document.body.classList.remove("sidebar-overlay-mode");
     document.body.classList.remove("open-sidebar-hover-plugin");
-    if (this.mouseMoveHandler) {
-      document.removeEventListener("mousemove", this.mouseMoveHandler);
-    }
-    if (this.documentClickHandler) {
+    document.removeEventListener("mousemove", this.mouseMoveHandler);
+    if (this.documentClickHandler)
       document.removeEventListener("click", this.documentClickHandler);
-    }
-    if (this.documentMouseLeaveHandler) {
+    if (this.documentMouseLeaveHandler)
       document.removeEventListener("mouseleave", this.documentMouseLeaveHandler);
-    }
-    if (this.rightSplit && this.rightSplit.containerEl) {
-      this.rightSplit.containerEl.removeEventListener(
-        "mouseleave",
-        this.rightSplitMouseLeaveHandler
-      );
-      this.rightSplit.containerEl.removeEventListener(
-        "mouseenter",
-        this.rightSplitMouseEnterHandler
-      );
-      this.rightSplit.containerEl.removeEventListener(
-        "mousemove",
-        this.rightSplitMouseMoveHandler
-      );
-    }
     if (this.leftRibbon && this.leftRibbon.containerEl) {
-      this.leftRibbon.containerEl.removeEventListener(
-        "mouseenter",
-        this.leftRibbonMouseEnterHandler
-      );
+      this.leftRibbon.containerEl.removeEventListener("mouseenter", this.leftRibbonMouseEnterHandler);
     }
-    if (this.leftSplit && this.leftSplit.containerEl) {
-      this.leftSplit.containerEl.removeEventListener(
-        "mouseleave",
-        this.leftSplitMouseLeaveHandler
-      );
-      this.leftSplit.containerEl.removeEventListener(
-        "mouseenter",
-        this.leftSplitMouseEnterHandler
-      );
-      this.leftSplit.containerEl.removeEventListener(
-        "mousemove",
-        this.leftSplitMouseMoveHandler
-      );
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+    if (this.rafId) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
     }
     const styleEl = document.getElementById("obsidian-assistant-sidebar-variables");
-    if (styleEl) {
+    if (styleEl)
       styleEl.remove();
+    if (this.layoutChangeRef) {
+      this.app.workspace.offref(this.layoutChangeRef);
+      this.layoutChangeRef = null;
+    }
+    this.isInitialized = false;
+  }
+  updateEditorDimensions() {
+    if (this.app.workspace.containerEl) {
+      this.editorWidth = this.app.workspace.containerEl.clientWidth;
     }
   }
   initializeHandlers() {
     this.documentClickHandler = (e) => {
       const target = e.target;
-      if (!this.leftSplit || !this.rightSplit)
+      if (!this.leftController.split || !this.rightController.split)
         return;
-      const leftSplitEl = this.leftSplit.containerEl;
-      const rightSplitEl = this.rightSplit.containerEl;
+      const leftSplitEl = this.leftController.split.containerEl;
+      const rightSplitEl = this.rightController.split.containerEl;
       if (!leftSplitEl.contains(target) && !rightSplitEl.contains(target)) {
-        if (!this.leftSplit.collapsed && this.settings.leftSidebar) {
-          this.collapseLeft();
+        if (!this.leftController.split.collapsed && this.settings.leftSidebar) {
+          this.leftController.collapse();
         }
-        if (!this.rightSplit.collapsed && this.settings.rightSidebar) {
-          this.collapseRight();
+        if (!this.rightController.split.collapsed && this.settings.rightSidebar) {
+          this.rightController.collapse();
         }
       }
     };
     this.documentMouseLeaveHandler = (e) => {
-      if (this.expandTimerLeft) {
-        clearTimeout(this.expandTimerLeft);
-        this.expandTimerLeft = null;
-        this.isHoveringLeft = false;
-      }
-      if (this.expandTimerRight) {
-        clearTimeout(this.expandTimerRight);
-        this.expandTimerRight = null;
-        this.isHoveringRight = false;
-      }
-    };
-    this.rightSplitMouseMoveHandler = () => this.rightSplit.containerEl.addClass("hovered");
-    this.rightSplitMouseEnterHandler = () => {
-      this.isHoveringRight = true;
-      this.rightSplit.containerEl.addClass("hovered");
-      if (this.expandTimerRight) {
-        clearTimeout(this.expandTimerRight);
-        this.expandTimerRight = null;
-      }
-    };
-    this.leftSplitMouseMoveHandler = () => this.leftSplit.containerEl.addClass("hovered");
-    this.leftSplitMouseEnterHandler = () => {
-      this.isHoveringLeft = true;
-      this.leftSplit.containerEl.addClass("hovered");
-      if (this.expandTimerLeft) {
-        clearTimeout(this.expandTimerLeft);
-        this.expandTimerLeft = null;
-      }
+      this.leftController.cancelTimers();
+      this.leftController.isHovering = false;
+      this.rightController.cancelTimers();
+      this.rightController.isHovering = false;
     };
     this.leftRibbonMouseEnterHandler = () => {
       if (this.settings.leftSidebar) {
-        this.isHoveringLeft = true;
-        if (this.expandTimerLeft)
-          clearTimeout(this.expandTimerLeft);
-        this.expandTimerLeft = window.setTimeout(() => {
-          if (this.isHoveringLeft) {
-            if (this.settings.syncLeftRight && this.settings.rightSidebar) {
-              this.expandBoth();
-            } else {
-              this.expandLeft();
-            }
+        this.leftController.isHovering = true;
+        if (this.leftController.expandTimer)
+          clearTimeout(this.leftController.expandTimer);
+        this.leftController.expandTimer = window.setTimeout(() => {
+          if (this.leftController.isHovering) {
+            this.leftController.onExpand();
           }
-          this.expandTimerLeft = null;
+          this.leftController.expandTimer = null;
         }, this.settings.sidebarExpandDelay);
       }
     };
-    this.rightSplitMouseLeaveHandler = (event) => {
-      var _a;
-      const target = event.relatedTarget;
-      if (target && (target.closest(".workspace-tab-header-container-inner") || target.hasClass && target.hasClass("menu") || ((_a = target == null ? void 0 : target.classList) == null ? void 0 : _a.contains("menu")) || (target == null ? void 0 : target.closest(".menu")))) {
+    this.mouseMoveHandler = (event) => {
+      if (this.rafId)
         return;
-      }
-      if (this.settings.rightSidebar) {
-        this.isHoveringRight = false;
-        this.rightSplit.containerEl.removeClass("hovered");
-        setTimeout(() => {
-          if (!this.isHoveringRight) {
-            if (this.settings.syncLeftRight && this.settings.leftSidebar) {
-              this.collapseBoth();
-            } else {
-              this.collapseRight();
+      this.rafId = requestAnimationFrame(() => {
+        this.rafId = null;
+        const mouseX = event.clientX;
+        const editorWidth = this.editorWidth;
+        if (this.settings.rightSidebar && this.rightController.split.collapsed) {
+          const inTriggerZone = mouseX >= editorWidth - this.settings.rightSideBarPixelTrigger;
+          if (inTriggerZone) {
+            if (!this.rightController.isHovering) {
+              this.rightController.isHovering = true;
+              if (this.rightController.expandTimer)
+                clearTimeout(this.rightController.expandTimer);
+              this.rightController.expandTimer = window.setTimeout(() => {
+                this.rightController.onExpand();
+                this.rightController.expandTimer = null;
+              }, this.settings.sidebarExpandDelay);
+            }
+          } else {
+            if (this.rightController.isHovering) {
+              this.rightController.isHovering = false;
+              if (this.rightController.expandTimer) {
+                clearTimeout(this.rightController.expandTimer);
+                this.rightController.expandTimer = null;
+              }
             }
           }
-        }, this.settings.sidebarDelay);
-      }
-    };
-    this.leftSplitMouseLeaveHandler = (event) => {
-      var _a;
-      const target = event.relatedTarget;
-      if (target && (target.closest(".workspace-tab-header-container-inner") || target.hasClass && target.hasClass("menu") || ((_a = target == null ? void 0 : target.classList) == null ? void 0 : _a.contains("menu")) || (target == null ? void 0 : target.closest(".menu")))) {
-        return;
-      }
-      if (this.settings.leftSidebar) {
-        this.isHoveringLeft = false;
-        this.leftSplit.containerEl.removeClass("hovered");
-        setTimeout(() => {
-          if (!this.isHoveringLeft) {
-            if (this.settings.syncLeftRight && this.settings.rightSidebar) {
-              this.collapseBoth();
-            } else {
-              this.collapseLeft();
+        }
+        if (this.settings.leftSidebar && this.leftController.split.collapsed) {
+          const inTriggerZone = mouseX <= this.settings.leftSideBarPixelTrigger;
+          if (inTriggerZone) {
+            if (!this.leftController.isHovering) {
+              this.leftController.isHovering = true;
+              if (this.leftController.expandTimer)
+                clearTimeout(this.leftController.expandTimer);
+              this.leftController.expandTimer = window.setTimeout(() => {
+                this.leftController.onExpand();
+                this.leftController.expandTimer = null;
+              }, this.settings.sidebarExpandDelay);
+            }
+          } else {
+            if (this.leftController.isHovering) {
+              this.leftController.isHovering = false;
+              if (this.leftController.expandTimer) {
+                clearTimeout(this.leftController.expandTimer);
+                this.leftController.expandTimer = null;
+              }
             }
           }
-        }, this.settings.sidebarDelay);
-      }
+        }
+      });
     };
   }
-  // Helper method to update CSS variables
   updateCSSVariables() {
     const styleEl = document.createElement("style");
     styleEl.id = "obsidian-assistant-sidebar-variables";
     const existingStyle = document.getElementById(styleEl.id);
-    if (existingStyle) {
+    if (existingStyle)
       existingStyle.remove();
-    }
     styleEl.textContent = `
             :root {
                 --sidebar-expand-collapse-speed: ${this.settings.expandCollapseSpeed}ms;
                 --sidebar-expand-delay: ${this.settings.sidebarExpandDelay}ms;
                 --left-sidebar-max-width: ${this.settings.leftSidebarMaxWidth}px;
                 --right-sidebar-max-width: ${this.settings.rightSidebarMaxWidth}px;
-                /* Unified Variables */
-                --sidebar-width: ${this.settings.leftSidebarMaxWidth}px;
-                --right-sidebar-width: ${this.settings.rightSidebarMaxWidth}px;
             }
         `;
     document.head.appendChild(styleEl);
   }
-  expandRight() {
-    if (this.rightSplit.collapsed)
-      this.isAutoExpandedRight = true;
-    this.rightSplit.expand();
-    this.isHoveringRight = true;
-  }
-  expandLeft() {
-    if (this.leftSplit.collapsed)
-      this.isAutoExpandedLeft = true;
-    this.leftSplit.expand();
-    this.isHoveringLeft = true;
-  }
   expandBoth() {
-    this.expandRight();
-    this.expandLeft();
-  }
-  collapseRight() {
-    if (this.isAutoExpandedRight) {
-      this.rightSplit.collapse();
-      this.isAutoExpandedRight = false;
-    }
-    this.isHoveringRight = false;
-  }
-  collapseLeft() {
-    if (this.isAutoExpandedLeft) {
-      this.leftSplit.collapse();
-      this.isAutoExpandedLeft = false;
-    }
-    this.isHoveringLeft = false;
+    this.rightController.expand();
+    this.leftController.expand();
   }
   collapseBoth() {
-    this.collapseRight();
-    this.collapseLeft();
+    this.rightController.collapse();
+    this.leftController.collapse();
   }
 };
 
@@ -4199,6 +4271,7 @@ var RibbonFeature = class {
 var import_obsidian22 = require("obsidian");
 var SidebarTabsFeature = class {
   constructor(app, plugin) {
+    this.scanTimer = null;
     this.app = app;
     this.plugin = plugin;
   }
@@ -4207,8 +4280,9 @@ var SidebarTabsFeature = class {
     if (!((_a = this.plugin.settings.mySideBar.tabs) == null ? void 0 : _a.enabled))
       return;
     this.app.workspace.onLayoutReady(() => {
-      setTimeout(() => {
+      this.scanTimer = window.setTimeout(() => {
         this.scanAndApply();
+        this.scanTimer = null;
       }, 1e3);
     });
   }
@@ -4341,6 +4415,12 @@ var SidebarTabsFeature = class {
       await this.applyLayout();
     }
   }
+  onunload() {
+    if (this.scanTimer) {
+      window.clearTimeout(this.scanTimer);
+      this.scanTimer = null;
+    }
+  }
 };
 
 // src/sidebar/features/contextual-split.ts
@@ -4355,10 +4435,20 @@ var ContextualSplitFeature = class {
     this.plugin = plugin;
   }
   onload() {
-    this.app.workspace.onLayoutReady(() => {
+    if (this.listeners.length > 0) {
+      this.onunload();
+    }
+    const runInit = () => {
       this.cleanOrphans();
       this.applyAllMasquerades();
-    });
+    };
+    if (this.app.workspace.layoutReady) {
+      runInit();
+    } else {
+      this.app.workspace.onLayoutReady(() => {
+        runInit();
+      });
+    }
     this.listeners.push(
       this.app.workspace.on("layout-change", (0, import_obsidian23.debounce)(() => {
         this.applyAllMasquerades();
@@ -4385,8 +4475,8 @@ var ContextualSplitFeature = class {
     }
     const bindings = this.plugin.settings.mySideBar.tabs.bindings || [];
     bindings.forEach((b) => {
-      const leaves = this.findLeavesByType(b.masterId);
-      leaves.forEach((l) => this.restoreVisuals(l, b.masterId));
+      const masterLeaves = this.findLeavesByType(b.masterId);
+      masterLeaves.forEach((l) => this.restoreVisuals(l, b.masterId));
     });
   }
   cleanOrphans() {
@@ -4506,12 +4596,24 @@ var ContextualSplitFeature = class {
           const others = split.children.filter((c) => c !== parent);
           if (others.length > 0) {
             const sibling = others[0];
-            parent.setDimension(dim);
-            if (typeof sibling.setDimension === "function") {
-              sibling.setDimension(100 - dim);
+            try {
+              if (typeof parent.setDimension === "function") {
+                parent.setDimension(dim);
+              }
+              if (typeof sibling.setDimension === "function") {
+                sibling.setDimension(100 - dim);
+              }
+            } catch (e) {
+              console.error("Assistant Assistant: Failed to set split dimension", e);
             }
           } else {
-            parent.setDimension(dim);
+            try {
+              if (typeof parent.setDimension === "function") {
+                parent.setDimension(dim);
+              }
+            } catch (e) {
+              console.error("Assistant Assistant: Failed to set split dimension (fallback)", e);
+            }
           }
         }
       }
@@ -4625,7 +4727,7 @@ var SidebarManager = class {
   async onload() {
     var _a, _b, _c;
     if ((_a = this.plugin.settings.mySideBar.autoHide) == null ? void 0 : _a.enabled)
-      this.autoHideFeature.load();
+      this.autoHideFeature.onload();
     if ((_b = this.plugin.settings.mySideBar.ribbon) == null ? void 0 : _b.enabled)
       await this.ribbonFeature.onload();
     if ((_c = this.plugin.settings.mySideBar.tabs) == null ? void 0 : _c.enabled) {
@@ -4634,8 +4736,9 @@ var SidebarManager = class {
     }
   }
   onunload() {
-    this.autoHideFeature.unload();
+    this.autoHideFeature.onunload();
     this.ribbonFeature.onunload();
+    this.tabsFeature.onunload();
     this.contextualFeature.onunload();
   }
 };
@@ -5124,26 +5227,47 @@ function handleTabDrag(e, row, el, manager, container) {
 // src/utils/auto-numbering.ts
 var import_obsidian26 = require("obsidian");
 var AutoNumberingController = class {
+  // Default refresh interval matching source
   constructor(app, plugin, headingsManager, formulasManager) {
     this.autoUpdateTimeout = null;
-    // Default refresh interval matching source
-    this.REFRESH_INTERVAL = 5e3;
+    this.isLoaded = false;
+    this.isDirty = false;
+    this.dirtyRef = null;
     this.app = app;
     this.plugin = plugin;
     this.headingsManager = headingsManager;
     this.formulasManager = formulasManager;
   }
   onload() {
+    if (this.isLoaded)
+      return;
     this.registerEditorFocusEvents();
+    this.dirtyRef = this.app.workspace.on("editor-change", () => {
+      this.isDirty = true;
+    });
+    this.isLoaded = true;
   }
   onunload() {
+    if (!this.isLoaded)
+      return;
     this.clearAutoUpdateTimer();
+    window.removeEventListener("blur", this.blurHandler);
+    window.removeEventListener("focus", this.focusHandler);
+    if (this.dirtyRef) {
+      this.app.workspace.offref(this.dirtyRef);
+      this.dirtyRef = null;
+    }
+    this.isLoaded = false;
   }
   registerEditorFocusEvents() {
-    this.plugin.registerDomEvent(window, "blur", () => this.handleBlur());
-    this.plugin.registerDomEvent(window, "focus", () => this.handleFocus());
+    this.blurHandler = () => this.handleBlur();
+    this.focusHandler = () => this.handleFocus();
+    window.addEventListener("blur", this.blurHandler);
+    window.addEventListener("focus", this.focusHandler);
   }
   handleBlur() {
+    if (!this.isDirty)
+      return;
     const activeView = this.app.workspace.getActiveViewOfType(import_obsidian26.MarkdownView);
     if (!activeView || !activeView.file)
       return;
@@ -5177,6 +5301,7 @@ var AutoNumberingController = class {
     if (!view.editor)
       return;
     const editor = view.editor;
+    this.isDirty = false;
     const headingsAuto = headingSettings.enabled && headingSettings.auto;
     const formulasAuto = formulaSettings.enabled && formulaSettings.auto;
     if (!headingsAuto && !formulasAuto)
@@ -5239,6 +5364,48 @@ var AssistantPlugin = class extends import_obsidian27.Plugin {
     if (this.settings.myHeadings.enabled || this.settings.myFormulas.enabled) {
       this.autoNumberingController.onload();
     }
+    this.addCommand({
+      id: "toggle-attachment-folders",
+      name: t("Toggle visibility of hidden folders"),
+      callback: () => {
+        if (this.settings.myFolders.enabled)
+          this.foldersManager.toggleFunctionality();
+      }
+    });
+    this.addCommand({
+      id: `open-snippets-menu`,
+      name: t(`Open snippets in status bar`),
+      icon: `pantone-line`,
+      callback: async () => {
+        if (this.settings.mySnippets.enabled)
+          this.snippetsManager.openMenu();
+      }
+    });
+    this.addCommand({
+      id: `open-snippets-create`,
+      name: t(`Create new CSS snippet`),
+      icon: `ms-css-file`,
+      callback: async () => {
+        if (this.settings.mySnippets.enabled)
+          this.snippetsManager.openCreateModal();
+      }
+    });
+    this.addCommand({
+      id: "configure-headings",
+      name: t("Configure Headings"),
+      callback: () => {
+        if (this.settings.myHeadings.enabled)
+          this.headingsManager.openControlModal();
+      }
+    });
+    this.addCommand({
+      id: "configure-formulas",
+      name: t("Configure Formulas"),
+      callback: () => {
+        if (this.settings.myFormulas.enabled)
+          this.formulasManager.openControlModal();
+      }
+    });
     this.addSettingTab(new AssistantSettingsTab(this.app, this));
   }
   onunload() {
@@ -5256,22 +5423,32 @@ var AssistantPlugin = class extends import_obsidian27.Plugin {
   async loadSettings() {
     const loadedData = await this.loadData();
     if (loadedData) {
-      if (loadedData.myStatusBar) {
-        delete loadedData.myStatusBar.presets;
-        delete loadedData.myStatusBar.activePreset;
-        delete loadedData.myStatusBar.activeFullscreenPreset;
-        delete loadedData.myStatusBar.separateFullscreenPreset;
-        delete loadedData.myStatusBar.presetsOrder;
-      }
-      delete loadedData.statusBar;
-      delete loadedData.statusBarOrganizer;
+      this.migrateSettings(loadedData);
     }
     this.settings = Object.assign({}, DEFAULT_SETTINGS, loadedData);
     if (loadedData == null ? void 0 : loadedData.myHeadings) {
       this.settings.myHeadings = Object.assign({}, DEFAULT_SETTINGS.myHeadings, loadedData.myHeadings);
+      if (loadedData.myHeadings.styleToRemove) {
+        this.settings.myHeadings.styleToRemove = {
+          beginning: Object.assign({}, DEFAULT_SETTINGS.myHeadings.styleToRemove.beginning, loadedData.myHeadings.styleToRemove.beginning),
+          surrounding: Object.assign({}, DEFAULT_SETTINGS.myHeadings.styleToRemove.surrounding, loadedData.myHeadings.styleToRemove.surrounding)
+        };
+      }
     }
     if (loadedData == null ? void 0 : loadedData.myFormulas) {
       this.settings.myFormulas = Object.assign({}, DEFAULT_SETTINGS.myFormulas, loadedData.myFormulas);
+    }
+    if (loadedData == null ? void 0 : loadedData.myFolders) {
+      this.settings.myFolders = Object.assign({}, DEFAULT_SETTINGS.myFolders, loadedData.myFolders);
+    }
+    if (loadedData == null ? void 0 : loadedData.myPlugins) {
+      this.settings.myPlugins = Object.assign({}, DEFAULT_SETTINGS.myPlugins, loadedData.myPlugins);
+      if (loadedData.myPlugins.desktop) {
+        this.settings.myPlugins.desktop = Object.assign({}, DEFAULT_SETTINGS.myPlugins.desktop, loadedData.myPlugins.desktop);
+      }
+      if (loadedData.myPlugins.mobile) {
+        this.settings.myPlugins.mobile = Object.assign({}, DEFAULT_SETTINGS.myPlugins.mobile, loadedData.myPlugins.mobile);
+      }
     }
     if (loadedData == null ? void 0 : loadedData.mySnippets) {
       this.settings.mySnippets = Object.assign({}, DEFAULT_SETTINGS.mySnippets, loadedData.mySnippets);
@@ -5286,6 +5463,17 @@ var AssistantPlugin = class extends import_obsidian27.Plugin {
       }
       if (loadedData.mySideBar.tabs) {
         this.settings.mySideBar.tabs = Object.assign({}, DEFAULT_SETTINGS.mySideBar.tabs, loadedData.mySideBar.tabs);
+        if (this.settings.mySideBar.tabs.bindings) {
+          this.settings.mySideBar.tabs.bindings.forEach((b) => {
+            if (b.splitRatio !== void 0) {
+              b.splitRatio = Math.round(b.splitRatio);
+              if (b.splitRatio < 10)
+                b.splitRatio = 10;
+              if (b.splitRatio > 90)
+                b.splitRatio = 90;
+            }
+          });
+        }
       }
     }
     await this.saveSettings();
@@ -5293,11 +5481,29 @@ var AssistantPlugin = class extends import_obsidian27.Plugin {
   async saveSettings() {
     await this.saveData(this.settings);
   }
+  migrateSettings(data) {
+    if (data.myStatusBar) {
+      delete data.myStatusBar.presets;
+      delete data.myStatusBar.activePreset;
+      delete data.myStatusBar.activeFullscreenPreset;
+      delete data.myStatusBar.separateFullscreenPreset;
+      delete data.myStatusBar.presetsOrder;
+    }
+    delete data.statusBar;
+    delete data.statusBarOrganizer;
+  }
 };
 var AssistantSettingsTab = class extends import_obsidian27.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
+  }
+  refreshAutoNumberingController() {
+    const anyActive = this.plugin.settings.myHeadings.enabled || this.plugin.settings.myFormulas.enabled;
+    this.plugin.autoNumberingController.onunload();
+    if (anyActive) {
+      this.plugin.autoNumberingController.onload();
+    }
   }
   display() {
     const { containerEl } = this;
@@ -5393,13 +5599,7 @@ var AssistantSettingsTab = class extends import_obsidian27.PluginSettingTab {
         } else {
           this.plugin.headingsManager.onunload();
         }
-        const anyActive = value || this.plugin.settings.myFormulas.enabled;
-        if (anyActive) {
-          this.plugin.autoNumberingController.onunload();
-          this.plugin.autoNumberingController.onload();
-        } else {
-          this.plugin.autoNumberingController.onunload();
-        }
+        this.refreshAutoNumberingController();
       },
       (el) => {
         renderHeadingsSettings(el, this.plugin.headingsManager);
@@ -5417,13 +5617,7 @@ var AssistantSettingsTab = class extends import_obsidian27.PluginSettingTab {
         } else {
           this.plugin.formulasManager.onunload();
         }
-        const anyActive = this.plugin.settings.myHeadings.enabled || value;
-        if (anyActive) {
-          this.plugin.autoNumberingController.onunload();
-          this.plugin.autoNumberingController.onload();
-        } else {
-          this.plugin.autoNumberingController.onunload();
-        }
+        this.refreshAutoNumberingController();
       },
       (el) => {
         renderFormulasSettings(el, this.plugin.formulasManager);

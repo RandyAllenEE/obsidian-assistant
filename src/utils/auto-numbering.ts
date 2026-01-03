@@ -12,9 +12,15 @@ export class AutoNumberingController {
     headingsManager: HeadingsManager;
     formulasManager: FormulasManager;
     autoUpdateTimeout: number | null = null;
+    private isLoaded = false;
+    private isDirty = false;
+
+    private blurHandler: () => void;
+    private focusHandler: () => void;
+    private dirtyRef: any = null;
 
     // Default refresh interval matching source
-    private readonly REFRESH_INTERVAL = 5000;
+
 
     constructor(app: App, plugin: AssistantPlugin, headingsManager: HeadingsManager, formulasManager: FormulasManager) {
         this.app = app;
@@ -24,19 +30,42 @@ export class AutoNumberingController {
     }
 
     onload() {
+        if (this.isLoaded) return;
         this.registerEditorFocusEvents();
+
+        // Track changes to avoid unnecessary scans
+        this.dirtyRef = this.app.workspace.on('editor-change', () => {
+            this.isDirty = true;
+        });
+
+        this.isLoaded = true;
     }
 
     onunload() {
+        if (!this.isLoaded) return;
         this.clearAutoUpdateTimer();
+        window.removeEventListener('blur', this.blurHandler);
+        window.removeEventListener('focus', this.focusHandler);
+
+        if (this.dirtyRef) {
+            this.app.workspace.offref(this.dirtyRef);
+            this.dirtyRef = null;
+        }
+
+        this.isLoaded = false;
     }
 
     registerEditorFocusEvents() {
-        this.plugin.registerDomEvent(window, 'blur', () => this.handleBlur());
-        this.plugin.registerDomEvent(window, 'focus', () => this.handleFocus());
+        this.blurHandler = () => this.handleBlur();
+        this.focusHandler = () => this.handleFocus();
+        window.addEventListener('blur', this.blurHandler);
+        window.addEventListener('focus', this.focusHandler);
     }
 
     handleBlur() {
+        // Optimization: If no changes since last check, skip
+        if (!this.isDirty) return;
+
         // 1. Get active view info
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!activeView || !activeView.file) return;
@@ -68,7 +97,7 @@ export class AutoNumberingController {
 
     handleFocus() {
         if (this.autoUpdateTimeout) {
-            // console.log('AutoNumbering: Focused. Timer cancelled.');
+
             this.clearAutoUpdateTimer();
         }
     }
@@ -83,6 +112,9 @@ export class AutoNumberingController {
     performAutoUpdate(view: MarkdownView, headingSettings: any, formulaSettings: any) {
         if (!view.editor) return;
         const editor = view.editor;
+
+        // Reset dirty flag as we are about to process
+        this.isDirty = false;
 
         // Re-check enabled status just in case (though we checked on blur)
         const headingsAuto = headingSettings.enabled && headingSettings.auto;

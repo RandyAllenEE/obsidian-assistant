@@ -5,9 +5,15 @@ import { parseFormulasFrontMatter } from '../utils/frontmatter';
 import { FormulasControlModal } from './modal';
 import { t } from '../i18n/helpers';
 
+// Pre-compile Regex patterns for performance (Issue #10)
+const TAG_REGEX = /\\tag\{([^}]*)\}/;
+const TAG_REMOVE_REGEX = /\s*\\tag\{[^}]*\}/;
+const HEADING_NUMBER_REGEX = /^\s{0,4}#+\s*([0-9a-zA-Z\u4e00-\u9fa5\u2460-\u2473&⓪].*?)(\s|$)/;
+
 export class FormulasManager {
     app: App;
     plugin: AssistantPlugin;
+    private isLoaded = false;
 
     constructor(app: App, plugin: AssistantPlugin) {
         this.app = app;
@@ -15,21 +21,23 @@ export class FormulasManager {
     }
 
     async onload() {
-        // Only register the control modal command
-        this.plugin.addCommand({
-            id: 'configure-formulas',
-            name: t('Configure Formulas'),
-            callback: () => {
-                const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-                if (activeView && activeView.file) {
-                    new FormulasControlModal(this.app, this.plugin, activeView.file).open();
-                }
-            }
-        });
+        if (this.isLoaded) return;
+        this.isLoaded = true;
+
+        // Command is now registered in main.ts
+    }
+
+    openControlModal() {
+        if (!this.isLoaded) return;
+        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+        if (activeView && activeView.file) {
+            new FormulasControlModal(this.app, this.plugin, activeView.file).open();
+        }
     }
 
     onunload() {
-        // Cleanup if needed
+        if (!this.isLoaded) return;
+        this.isLoaded = false;
     }
 
     getActiveViewInfo() {
@@ -79,6 +87,8 @@ export class FormulasManager {
             }
         }
 
+        if (dollarPositions.length === 0) return false;
+
         // 2. Process Pairs
         for (let i = 0; i < dollarPositions.length - 1; i += 2) {
             const start = dollarPositions[i];
@@ -101,7 +111,7 @@ export class FormulasManager {
                 formulaContent += endLine.substring(0, end.ch + 2);
             }
 
-            const tagRegex = /\\tag\{([^}]+)\}/;
+            const tagRegex = TAG_REGEX;
             const hasTag = formulaContent.match(tagRegex);
 
             let equationNumber = '';
@@ -135,8 +145,9 @@ export class FormulasManager {
                 if (targetHeading) {
                     const headingLine = editor.getLine(targetHeading.position.start.line);
                     // Decoupled Regex: Extract whatever number is there (1.1, A, 1-1, etc.)
+                    // Decoupled Regex: Extract whatever number is there (1.1, A, 1-1, etc.)
                     // Look for hash, space, then a potential number sequence
-                    const numberExtractRegex = /^\s{0,4}#+\s*([0-9a-zA-Z\u4e00-\u9fa5\u2460-\u2473&⓪].*?)(\s|$)/;
+                    const numberExtractRegex = HEADING_NUMBER_REGEX;
                     const match = headingLine.match(numberExtractRegex);
 
                     if (match && match[1]) {
@@ -216,8 +227,9 @@ export class FormulasManager {
         const { editor } = info;
 
         const changes: any[] = [];
+
         const lineCount = editor.lineCount();
-        const tagRegex = /\s*\\tag\{[^}]*\}/;
+        const tagRegex = TAG_REMOVE_REGEX;
 
         const dollarPositions: { line: number, ch: number }[] = [];
         for (let i = 0; i < lineCount; i++) {
@@ -227,6 +239,8 @@ export class FormulasManager {
                 dollarPositions.push({ line: i, ch: pos });
             }
         }
+
+        if (dollarPositions.length === 0) return;
 
         for (let i = 0; i < dollarPositions.length - 1; i += 2) {
             const start = dollarPositions[i];

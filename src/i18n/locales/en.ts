@@ -9,6 +9,7 @@ export default {
 
     // My Folders
     "My Folders": "My Folders",
+    "Loading MyFolders module": "Loading MyFolders module",
     "Toggle visibility of hidden folders": "Toggle visibility of hidden folders",
     "Show hidden folders": "Show hidden folders",
     "Hide hidden folders again": "Hide hidden folders again",
@@ -87,6 +88,8 @@ export default {
 
     // My Snippets
     "My Snippets": "My Snippets",
+    "Loading MySnippets module...": "Loading MySnippets module...",
+    "Unloading MySnippets module...": "Unloading MySnippets module...",
     "Open snippets in status bar": "Open snippets in status bar",
     "Create new CSS snippet": "Create new CSS snippet",
     "Configure Snippets": "Configure Snippets",

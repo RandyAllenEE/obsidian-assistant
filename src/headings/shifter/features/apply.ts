@@ -188,7 +188,7 @@ export class ApplyHeading {
 
     createCommand = (): Command => {
         return {
-            id: `apply-heading-${this.headingSize}`,
+            id: `heading-shifter-apply-heading-${this.headingSize}`,
             name: `${t('Apply Heading')} ${this.headingSize}`,
             icon: `headingShifter_heading${this.headingSize}`,
             editorCallback: this.editorCallback,
