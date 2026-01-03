@@ -23,12 +23,23 @@ export function renderSnippetsSettings(containerEl: HTMLElement, manager: Snippe
         });
 
     const snippetsSection = containerEl.createEl("details");
-    const snippetsSummary = containerEl.createEl("summary");
-    snippetsSummary.innerText = t("Manage Snippets");
-    snippetsSection.appendChild(snippetsSummary);
+    snippetsSection.style.marginBottom = '10px';
+    snippetsSection.style.border = '1px solid var(--background-modifier-border)';
+    snippetsSection.style.borderRadius = '5px';
+    snippetsSection.style.padding = '0.5em';
 
+    const snippetsSummary = snippetsSection.createEl("summary");
+    snippetsSummary.style.cursor = 'pointer';
+    snippetsSummary.style.fontWeight = 'bold';
+    snippetsSummary.innerText = t("Manage Snippets");
+    snippetsSummary.style.outline = 'none';
+
+    // Move content into a wrapper div
     const snippetsContainer = snippetsSection.createDiv();
-    snippetsContainer.addClass("ms-manage-snippets-container");
+    snippetsContainer.style.marginTop = '10px';
+    snippetsContainer.style.paddingLeft = '5px';
+    snippetsContainer.style.borderLeft = '2px solid var(--background-modifier-border)';
+    snippetsContainer.addClass("ms-manage-snippets-container"); // Custom class kept for inner layout
     renderSnippetsList(snippetsContainer, manager);
 
     containerEl.appendChild(snippetsSection);

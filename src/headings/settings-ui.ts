@@ -13,17 +13,23 @@ export function renderHeadingsSettings(containerEl: HTMLElement, manager: Headin
     const settings = manager.plugin.settings.myHeadings;
 
     // === Auto Numbering Section ===
+    // === Auto Numbering Section ===
     const autoNumberingDetails = containerEl.createEl('details');
-    autoNumberingDetails.open = true; // Default open? Or closed to save space? Let's keep it open or check user preference? Open by default is safer for visibility.
+    autoNumberingDetails.open = false; // Default closed to match standard, or true if preferred. User didn't specify, but Sidebar use false. I'll use false for consistency.
+    autoNumberingDetails.style.marginBottom = '10px';
+    autoNumberingDetails.style.border = '1px solid var(--background-modifier-border)';
+    autoNumberingDetails.style.borderRadius = '5px';
+    autoNumberingDetails.style.padding = '0.5em';
+
     const autoNumberingSummary = autoNumberingDetails.createEl('summary');
     autoNumberingSummary.setText(t('Auto Numbering'));
-    autoNumberingSummary.style.fontSize = '1.2em';
     autoNumberingSummary.style.fontWeight = 'bold';
     autoNumberingSummary.style.cursor = 'pointer';
-    autoNumberingSummary.style.marginBottom = '10px';
+    autoNumberingSummary.style.outline = 'none';
 
     const autoNumberingContent = autoNumberingDetails.createEl('div');
-    autoNumberingContent.style.paddingLeft = '10px';
+    autoNumberingContent.style.marginTop = '10px';
+    autoNumberingContent.style.paddingLeft = '5px';
     autoNumberingContent.style.borderLeft = '2px solid var(--background-modifier-border)';
 
     new Setting(autoNumberingContent)
@@ -115,17 +121,23 @@ export function renderHeadingsSettings(containerEl: HTMLElement, manager: Headin
     containerEl.createEl('br');
 
     // === Heading Shifter Section ===
+    // === Heading Shifter Section ===
     const shifterDetails = containerEl.createEl('details');
-    shifterDetails.open = false; // Closed by default
+    shifterDetails.open = false;
+    shifterDetails.style.marginBottom = '10px';
+    shifterDetails.style.border = '1px solid var(--background-modifier-border)';
+    shifterDetails.style.borderRadius = '5px';
+    shifterDetails.style.padding = '0.5em';
+
     const shifterSummary = shifterDetails.createEl('summary');
     shifterSummary.setText(t('Heading Shifter'));
-    shifterSummary.style.fontSize = '1.2em';
     shifterSummary.style.fontWeight = 'bold';
     shifterSummary.style.cursor = 'pointer';
-    shifterSummary.style.marginBottom = '10px';
+    shifterSummary.style.outline = 'none';
 
     const shifterContent = shifterDetails.createEl('div');
-    shifterContent.style.paddingLeft = '10px';
+    shifterContent.style.marginTop = '10px';
+    shifterContent.style.paddingLeft = '5px';
     shifterContent.style.borderLeft = '2px solid var(--background-modifier-border)';
 
     new Setting(shifterContent)

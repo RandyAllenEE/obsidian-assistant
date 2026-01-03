@@ -27,7 +27,7 @@ __export(main_exports, {
   default: () => AssistantPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian25 = require("obsidian");
+var import_obsidian24 = require("obsidian");
 
 // src/settings.ts
 var DEFAULT_MY_FOLDERS_SETTINGS = {
@@ -63,11 +63,7 @@ var DEFAULT_MY_PLUGINS_SETTINGS = {
 };
 var DEFAULT_STATUS_BAR_SETTINGS = {
   enabled: true,
-  activePreset: "Default",
-  activeFullscreenPreset: "Default",
-  separateFullscreenPreset: false,
-  presets: { "Default": {} },
-  presetsOrder: ["Default"],
+  status: {},
   version: "0.0.1"
 };
 var DEFAULT_MY_SNIPPETS_SETTINGS = {
@@ -117,6 +113,24 @@ var DEFAULT_MY_FORMULAS_SETTINGS = {
   mode: "continuous",
   maxDepth: 4
 };
+var DEFAULT_MY_SIDEBAR_SETTINGS = {
+  enabled: true,
+  autoHide: {
+    leftSidebar: true,
+    rightSidebar: true,
+    syncLeftRight: false,
+    enforceSameDelay: true,
+    sidebarDelay: 150,
+    sidebarExpandDelay: 10,
+    leftSideBarPixelTrigger: 20,
+    rightSideBarPixelTrigger: 20,
+    overlayMode: false,
+    expandCollapseSpeed: 370,
+    leftSidebarMaxWidth: 325,
+    rightSidebarMaxWidth: 325
+  },
+  ribbon: { elements: {} }
+};
 var DEFAULT_SETTINGS = {
   myFolders: DEFAULT_MY_FOLDERS_SETTINGS,
   myPlugins: DEFAULT_MY_PLUGINS_SETTINGS,
@@ -124,6 +138,7 @@ var DEFAULT_SETTINGS = {
   mySnippets: DEFAULT_MY_SNIPPETS_SETTINGS,
   myHeadings: DEFAULT_MY_HEADINGS_SETTINGS,
   myFormulas: DEFAULT_MY_FORMULAS_SETTINGS,
+  mySideBar: DEFAULT_MY_SIDEBAR_SETTINGS,
   refreshInterval: 1e3
   // Default 1 second (1000ms) as per source
 };
@@ -252,17 +267,13 @@ var en_default = {
   "\u231A Short delay": "\u231A Short delay",
   "\u{1F4A4} Long delay": "\u{1F4A4} Long delay",
   "{id} after a {type} delay": "{id} after a {type} delay",
-  // My Status Bar
   "My Status Bar": "My Status Bar",
-  "Separate fullscreen and windowed mode": "Separate fullscreen and windowed mode",
-  "When enabled, the plugin will remember which preset was active for fullscreen mode and which for windowed mode and switch correspondingly.": "When enabled, the plugin will remember which preset was active for fullscreen mode and which for windowed mode and switch correspondingly.",
-  "Switch to preset slot {n}": "Switch to preset slot {n}",
-  "Default": "Default",
-  "New Preset": "New Preset",
   "Drag to reorder": "Drag to reorder",
   "Visibility": "Visibility",
   "Remove orphan": "Remove orphan",
   "This element is currently not present in the status bar.": "This element is currently not present in the status bar.",
+  "Drag to reorder ribbon icons. Click eye icon to toggle visibility.": "Drag to reorder ribbon icons. Click eye icon to toggle visibility.",
+  "No ribbon elements found yet.": "No ribbon elements found yet.",
   // My Snippets
   "My Snippets": "My Snippets",
   "Open snippets in status bar": "Open snippets in status bar",
@@ -378,7 +389,6 @@ var en_default = {
   "Insert Heading at one level higher": "Insert Heading at one level higher",
   // Commands & Modals
   "Configure Headings": "Configure Headings",
-  // 'Configure Formulas': 'Configure Formulas', // Duplicate
   "Apply Now": "Apply Now",
   "Apply numbering once without saving to frontmatter": "Apply numbering once without saving to frontmatter",
   "Save to Frontmatter": "Save to Frontmatter",
@@ -388,7 +398,41 @@ var en_default = {
   "Formula numbering applied (one-time)": "Formula numbering applied (one-time)",
   "Settings saved to frontmatter and applied": "Settings saved to frontmatter and applied",
   "Heading numbering removed": "Heading numbering removed",
-  "Formula numbering removed": "Formula numbering removed"
+  "Formula numbering removed": "Formula numbering removed",
+  // MySideBar
+  "My SideBar": "My SideBar",
+  "Left Sidebar": "Left Sidebar",
+  "Right Sidebar": "Right Sidebar",
+  "Auto Hide": "Auto Hide",
+  "Coming Soon": "Coming Soon",
+  "Settings for Left Sidebar control will be here.": "Settings for Left Sidebar control will be here.",
+  "Settings for Right Sidebar control will be here.": "Settings for Right Sidebar control will be here.",
+  "Left sidebar hover": "Left sidebar hover",
+  "Enables the expansion and collapsing of the left sidebar on hover.": "Enables the expansion and collapsing of the left sidebar on hover.",
+  "Right sidebar hover": "Right sidebar hover",
+  "Enables the expansion and collapsing of the right sidebar on hover. Only collapses the right panel unless you have a right ribbon.": "Enables the expansion and collapsing of the right sidebar on hover. Only collapses the right panel unless you have a right ribbon.",
+  "Sync left and right": "Sync left and right",
+  "If enabled, hovering over the right sidebar will also expand the left sidebar at the same time, and vice versa. (Left and Right sidebar must both be enabled above)": "If enabled, hovering over the right sidebar will also expand the left sidebar at the same time, and vice versa. (Left and Right sidebar must both be enabled above)",
+  "Overlay mode": "Overlay mode",
+  "When enabled, sidebars will slide over the main content without affecting the layout. When disabled, sidebars will expand by pushing content.": "When enabled, sidebars will slide over the main content without affecting the layout. When disabled, sidebars will expand by pushing content.",
+  "Behavior": "Behavior",
+  "Left sidebar pixel trigger": "Left sidebar pixel trigger",
+  "Specify the number of pixels from the left edge of the editor that will trigger the left sidebar to open on hover (must be greater than 0)": "Specify the number of pixels from the left edge of the editor that will trigger the left sidebar to open on hover (must be greater than 0)",
+  "Right sidebar pixel trigger": "Right sidebar pixel trigger",
+  "Specify the number of pixels from the right edge of the editor that will trigger the right sidebar to open on hover (must be greater than 0)": "Specify the number of pixels from the right edge of the editor that will trigger the right sidebar to open on hover (must be greater than 0)",
+  "Timing": "Timing",
+  "Sidebar collapse delay": "Sidebar collapse delay",
+  "The delay in milliseconds before the sidebar collapses after the mouse has left. Enter '0' to disable delay.": "The delay in milliseconds before the sidebar collapses after the mouse has left. Enter '0' to disable delay.",
+  "Sidebar expand delay": "Sidebar expand delay",
+  "The delay in milliseconds before the sidebar expands after hovering. Default is 200ms.": "The delay in milliseconds before the sidebar expands after hovering. Default is 200ms.",
+  "Expand/collapse animation speed": "Expand/collapse animation speed",
+  "The speed of the sidebar expand/collapse animation in milliseconds.": "The speed of the sidebar expand/collapse animation in milliseconds.",
+  "Appearance": "Appearance",
+  "Left sidebar maximum width": "Left sidebar maximum width",
+  "Specify the maximum width in pixels for the left sidebar when expanded": "Specify the maximum width in pixels for the left sidebar when expanded",
+  "Right sidebar maximum width": "Right sidebar maximum width",
+  "Specify the maximum width in pixels for the right sidebar when expanded": "Specify the maximum width in pixels for the right sidebar when expanded",
+  "Ribbon Buttons": "Ribbon Buttons"
 };
 
 // src/i18n/locales/zh.ts
@@ -468,17 +512,13 @@ var zh_default = {
   "\u231A Short delay": "\u231A \u77ED\u5EF6\u8FDF",
   "\u{1F4A4} Long delay": "\u{1F4A4} \u957F\u5EF6\u8FDF",
   "{id} after a {type} delay": "\u5EF6\u8FDF {type} \u540E\u542F\u52A8 {id}",
-  // My Status Bar
   "My Status Bar": "\u6211\u7684\u72B6\u6001\u680F",
-  "Separate fullscreen and windowed mode": "\u5206\u79BB\u5168\u5C4F\u548C\u7A97\u53E3\u6A21\u5F0F",
-  "When enabled, the plugin will remember which preset was active for fullscreen mode and which for windowed mode and switch correspondingly.": "\u542F\u7528\u540E\uFF0C\u63D2\u4EF6\u5C06\u8BB0\u4F4F\u5168\u5C4F\u6A21\u5F0F\u548C\u7A97\u53E3\u6A21\u5F0F\u4E0B\u7684\u6D3B\u52A8\u9884\u8BBE\u5E76\u8FDB\u884C\u76F8\u5E94\u5207\u6362\u3002",
-  "Switch to preset slot {n}": "\u5207\u6362\u81F3\u9884\u8BBE\u63D2\u69FD {n}",
-  "Default": "\u9ED8\u8BA4",
-  "New Preset": "\u65B0\u5EFA\u9884\u8BBE",
   "Drag to reorder": "\u62D6\u62FD\u5E76\u6392\u5E8F",
   "Visibility": "\u53EF\u89C1\u6027",
   "Remove orphan": "\u79FB\u9664\u6B8B\u7559\u9879",
   "This element is currently not present in the status bar.": "\u8BE5\u5143\u7D20\u5F53\u524D\u4E0D\u5728\u72B6\u6001\u680F\u4E2D\u3002",
+  "Drag to reorder ribbon icons. Click eye icon to toggle visibility.": "\u62D6\u52A8\u4EE5\u91CD\u65B0\u6392\u5E8F\u529F\u80FD\u533A\u56FE\u6807\u3002\u70B9\u51FB\u773C\u775B\u56FE\u6807\u4EE5\u5207\u6362\u53EF\u89C1\u6027\u3002",
+  "No ribbon elements found yet.": "\u5C1A\u672A\u53D1\u73B0\u529F\u80FD\u533A\u5143\u7D20\u3002",
   // My Snippets
   "My Snippets": "\u6211\u7684\u7247\u6BB5",
   "Open snippets in status bar": "\u5728\u72B6\u6001\u680F\u6253\u5F00\u4EE3\u7801\u7247\u6BB5",
@@ -590,7 +630,41 @@ var zh_default = {
   "Formula numbering applied (one-time)": "\u516C\u5F0F\u7F16\u53F7\u5DF2\u5E94\u7528\uFF08\u4E00\u6B21\u6027\uFF09",
   "Settings saved to frontmatter and applied": "\u8BBE\u7F6E\u5DF2\u4FDD\u5B58\u5230frontmatter\u5E76\u5E94\u7528",
   "Heading numbering removed": "\u6807\u9898\u7F16\u53F7\u5DF2\u79FB\u9664",
-  "Formula numbering removed": "\u516C\u5F0F\u7F16\u53F7\u5DF2\u79FB\u9664"
+  "Formula numbering removed": "\u516C\u5F0F\u7F16\u53F7\u5DF2\u79FB\u9664",
+  // MySideBar
+  "My SideBar": "\u6211\u7684\u4FA7\u8FB9\u680F",
+  "Left Sidebar": "\u5DE6\u4FA7\u8FB9\u680F",
+  "Right Sidebar": "\u53F3\u4FA7\u8FB9\u680F",
+  "Auto Hide": "\u81EA\u52A8\u9690\u85CF",
+  "Coming Soon": "\u656C\u8BF7\u671F\u5F85",
+  "Settings for Left Sidebar control will be here.": "\u5DE6\u4FA7\u8FB9\u680F\u7684\u76F8\u5173\u8BBE\u7F6E\u5C06\u5728\u6B64\u5904\u663E\u793A\u3002",
+  "Settings for Right Sidebar control will be here.": "\u53F3\u4FA7\u8FB9\u680F\u7684\u76F8\u5173\u8BBE\u7F6E\u5C06\u5728\u6B64\u5904\u663E\u793A\u3002",
+  "Left sidebar hover": "\u5DE6\u4FA7\u8FB9\u680F\u60AC\u505C",
+  "Enables the expansion and collapsing of the left sidebar on hover.": "\u5F00\u542F\u60AC\u505C\u65F6\u81EA\u52A8\u5C55\u5F00/\u6298\u53E0\u5DE6\u4FA7\u8FB9\u680F\u3002",
+  "Right sidebar hover": "\u53F3\u4FA7\u8FB9\u680F\u60AC\u505C",
+  "Enables the expansion and collapsing of the right sidebar on hover. Only collapses the right panel unless you have a right ribbon.": "\u5F00\u542F\u60AC\u505C\u65F6\u81EA\u52A8\u5C55\u5F00/\u6298\u53E0\u53F3\u4FA7\u8FB9\u680F\u3002\u4EC5\u5728\u5177\u5907\u53F3\u4FA7 Ribbbon \u65F6\u6298\u53E0\u53F3\u4FA7\u9762\u677F\u3002",
+  "Sync left and right": "\u5DE6\u53F3\u540C\u6B65",
+  "If enabled, hovering over the right sidebar will also expand the left sidebar at the same time, and vice versa. (Left and Right sidebar must both be enabled above)": "\u5982\u679C\u542F\u7528\uFF0C\u60AC\u505C\u53F3\u4FA7\u8FB9\u680F\u4E5F\u4F1A\u540C\u65F6\u5C55\u5F00\u5DE6\u4FA7\u8FB9\u680F\uFF0C\u53CD\u4E4B\u4EA6\u7136\u3002\uFF08\u9700\u540C\u65F6\u542F\u7528\u5DE6\u53F3\u4FA7\u8FB9\u680F\u60AC\u505C\uFF09",
+  "Overlay mode": "\u8986\u76D6\u6A21\u5F0F",
+  "When enabled, sidebars will slide over the main content without affecting the layout. When disabled, sidebars will expand by pushing content.": "\u542F\u7528\u65F6\uFF0C\u4FA7\u8FB9\u680F\u5C06\u8986\u76D6\u5728\u4E3B\u5185\u5BB9\u4E4B\u4E0A\u800C\u4E0D\u5F71\u54CD\u5E03\u5C40\u3002\u7981\u7528\u65F6\uFF0C\u4FA7\u8FB9\u680F\u5C55\u5F00\u4F1A\u6324\u538B\u5185\u5BB9\u3002",
+  "Behavior": "\u884C\u4E3A",
+  "Left sidebar pixel trigger": "\u5DE6\u4FA7\u89E6\u53D1\u50CF\u7D20",
+  "Specify the number of pixels from the left edge of the editor that will trigger the left sidebar to open on hover (must be greater than 0)": "\u6307\u5B9A\u8DDD\u79BB\u7F16\u8F91\u5668\u5DE6\u8FB9\u7F18\u591A\u5C11\u50CF\u7D20\u65F6\u89E6\u53D1\u5DE6\u4FA7\u8FB9\u680F\u5C55\u5F00\uFF08\u5FC5\u987B\u5927\u4E8E0\uFF09",
+  "Right sidebar pixel trigger": "\u53F3\u4FA7\u89E6\u53D1\u50CF\u7D20",
+  "Specify the number of pixels from the right edge of the editor that will trigger the right sidebar to open on hover (must be greater than 0)": "\u6307\u5B9A\u8DDD\u79BB\u7F16\u8F91\u5668\u53F3\u8FB9\u7F18\u591A\u5C11\u50CF\u7D20\u65F6\u89E6\u53D1\u53F3\u4FA7\u8FB9\u680F\u5C55\u5F00\uFF08\u5FC5\u987B\u5927\u4E8E0\uFF09",
+  "Timing": "\u65F6\u673A",
+  "Sidebar collapse delay": "\u4FA7\u8FB9\u680F\u6298\u53E0\u5EF6\u8FDF",
+  "The delay in milliseconds before the sidebar collapses after the mouse has left. Enter '0' to disable delay.": "\u9F20\u6807\u79BB\u5F00\u540E\u4FA7\u8FB9\u680F\u6298\u53E0\u524D\u7684\u5EF6\u8FDF\uFF08\u6BEB\u79D2\uFF09\u3002\u8F93\u5165 '0' \u7981\u7528\u5EF6\u8FDF\u3002",
+  "Sidebar expand delay": "\u4FA7\u8FB9\u680F\u5C55\u5F00\u5EF6\u8FDF",
+  "The delay in milliseconds before the sidebar expands after hovering. Default is 200ms.": "\u60AC\u505C\u540E\u4FA7\u8FB9\u680F\u5C55\u5F00\u524D\u7684\u5EF6\u8FDF\uFF08\u6BEB\u79D2\uFF09\u3002\u9ED8\u8BA4\u4E3A 200ms\u3002",
+  "Expand/collapse animation speed": "\u5C55\u5F00/\u6298\u53E0\u52A8\u753B\u901F\u5EA6",
+  "The speed of the sidebar expand/collapse animation in milliseconds.": "\u4FA7\u8FB9\u680F\u5C55\u5F00/\u6298\u53E0\u52A8\u753B\u7684\u901F\u5EA6\uFF08\u6BEB\u79D2\uFF09\u3002",
+  "Appearance": "\u5916\u89C2",
+  "Left sidebar maximum width": "\u5DE6\u4FA7\u8FB9\u680F\u6700\u5927\u5BBD\u5EA6",
+  "Specify the maximum width in pixels for the left sidebar when expanded": "\u6307\u5B9A\u5DE6\u4FA7\u8FB9\u680F\u5C55\u5F00\u65F6\u7684\u6700\u5927\u5BBD\u5EA6\uFF08\u50CF\u7D20\uFF09",
+  "Right sidebar maximum width": "\u53F3\u4FA7\u8FB9\u680F\u6700\u5927\u5BBD\u5EA6",
+  "Specify the maximum width in pixels for the right sidebar when expanded": "\u6307\u5B9A\u53F3\u4FA7\u8FB9\u680F\u5C55\u5F00\u65F6\u7684\u6700\u5927\u5BBD\u5EA6\uFF08\u50CF\u7D20\uFF09",
+  "Ribbon Buttons": "\u529F\u80FD\u533A\u6309\u94AE"
 };
 
 // src/i18n/helpers.ts
@@ -798,9 +872,20 @@ function renderFoldersSettings(containerEl, manager) {
   const plugin = manager.plugin;
   const settings = manager.settings;
   const experimentalSettingsContainerEl = document.createElement("details");
+  experimentalSettingsContainerEl.style.marginBottom = "10px";
+  experimentalSettingsContainerEl.style.border = "1px solid var(--background-modifier-border)";
+  experimentalSettingsContainerEl.style.borderRadius = "5px";
+  experimentalSettingsContainerEl.style.padding = "0.5em";
   const experimentalSettingsTitleEl = document.createElement("summary");
   experimentalSettingsTitleEl.innerText = t("Experimental & Unstable Settings");
+  experimentalSettingsTitleEl.style.cursor = "pointer";
+  experimentalSettingsTitleEl.style.fontWeight = "bold";
+  experimentalSettingsTitleEl.style.outline = "none";
   experimentalSettingsContainerEl.appendChild(experimentalSettingsTitleEl);
+  const experimentalContent = experimentalSettingsContainerEl.createDiv();
+  experimentalContent.style.marginTop = "10px";
+  experimentalContent.style.paddingLeft = "5px";
+  experimentalContent.style.borderLeft = "2px solid var(--background-modifier-border)";
   new import_obsidian3.Setting(containerEl).setName(t("Folders to hide")).setDesc(t("The names of the folders to hide, one per line. Either exact folder-names, startsWith::FOLDERPREFIX, or endsWith::FOLDERSUFFIX")).addTextArea((text) => text.setPlaceholder(t("attachments\nendsWith::_attachments")).setValue(settings.attachmentFolderNames.join("\n")).onChange(async (value) => {
     const newSettingsValue = value.split("\n");
     await manager.removeSpecificFoldersFromObsidianIgnoreList(settings.attachmentFolderNames.filter((e) => !newSettingsValue.includes(e)));
@@ -837,7 +922,7 @@ function renderFoldersSettings(containerEl, manager) {
     }
     await plugin.saveSettings();
   }));
-  new import_obsidian3.Setting(experimentalSettingsContainerEl).setName(t("[EXPERIMENTAL] Compatibility: quick-explorer by pjeby")).setDesc(t("[WARNING: UNSTABLE] Also hide hidden folders in the https://github.com/pjeby/quick-explorer plugin. Not affiliated with quick-explorer's author.")).addToggle((toggle) => toggle.setValue(settings.enableCompatQuickExplorer).onChange(async (value) => {
+  new import_obsidian3.Setting(experimentalContent).setName(t("[EXPERIMENTAL] Compatibility: quick-explorer by pjeby")).setDesc(t("[WARNING: UNSTABLE] Also hide hidden folders in the https://github.com/pjeby/quick-explorer plugin. Not affiliated with quick-explorer's author.")).addToggle((toggle) => toggle.setValue(settings.enableCompatQuickExplorer).onChange(async (value) => {
     settings.enableCompatQuickExplorer = value;
     await plugin.saveSettings();
   }));
@@ -941,14 +1026,124 @@ function parseElementId(id) {
     index
   };
 }
-function generatePresetId(preset) {
-  return preset.replace(/-/g, "\\-").replace(/\s/g, "-");
+
+// src/statusbar/organizer.ts
+function fixOrder(plugin) {
+  if (!plugin.statusBar)
+    return;
+  const elements = getStatusBarElements(plugin.statusBar);
+  const status = plugin.settings.status;
+  if (!status)
+    return;
+  const known = [];
+  const orphans = [];
+  for (const element of elements) {
+    if (element.id in status) {
+      const myStatus = status[element.id];
+      known.push([element, myStatus.position]);
+      if (myStatus.visible)
+        element.element.removeClass("statusbar-organizer-element-hidden");
+      else
+        element.element.addClass("statusbar-organizer-element-hidden");
+    } else {
+      orphans.push(element.element);
+    }
+  }
+  const orderedElements = known.sort((a, b) => a[1] - b[1]).map((x) => x[0].element);
+  const allElements = orderedElements.concat(orphans);
+  for (const [i, element] of allElements.entries()) {
+    if (element)
+      element.style.order = (i + 1).toString();
+  }
 }
 
-// src/statusbar/util.ts
-function deepCopy(obj) {
-  return JSON.parse(JSON.stringify(obj));
-}
+// src/statusbar/manager.ts
+var StatusBarManager = class {
+  constructor(app, plugin) {
+    this.app = app;
+    this.plugin = plugin;
+    this.settings = this.plugin.settings.myStatusBar;
+  }
+  async onload() {
+    this.statusBar = document.querySelector(".status-bar");
+    if (!this.statusBar) {
+      this.app.workspace.onLayoutReady(() => {
+        this.statusBar = document.querySelector(".status-bar");
+        if (this.statusBar)
+          this.initializeManager();
+      });
+      return;
+    }
+    this.initializeManager();
+  }
+  initializeManager() {
+    if (!this.statusBar)
+      return;
+    this.spooler = new Spooler(this, fixOrder);
+    fixOrder(this);
+    this.spooler.enableObserver();
+  }
+  onunload() {
+    if (this.spooler)
+      this.spooler.disableObserver();
+  }
+  saveSettings() {
+    return this.plugin.saveSettings();
+  }
+  async saveStatus(currentBarStatus) {
+    this.settings.status = currentBarStatus;
+    await this.saveSettings();
+  }
+  /**
+   * Merge information about status bar elements based on
+   * the saved settings and the state of the actual status bar.
+   */
+  async consolidateSettingsAndElements() {
+    const loadedElementStatus = this.settings.status || {};
+    if (!this.statusBar) {
+      return { rows: [], barStatus: {}, existsStatus: {} };
+    }
+    const unorderedStatusBarElements = getStatusBarElements(this.statusBar);
+    const defaultElementStatus = {};
+    for (const [index, statusBarElement] of unorderedStatusBarElements.entries()) {
+      defaultElementStatus[statusBarElement.id] = {
+        position: index,
+        visible: true
+      };
+    }
+    const barStatus = {};
+    const existsStatus = {};
+    for (const [index, status] of Object.entries(loadedElementStatus)) {
+      barStatus[index] = status;
+      existsStatus[index] = index in defaultElementStatus;
+    }
+    let insertPosition = Object.keys(barStatus).length + 1;
+    for (const element of unorderedStatusBarElements) {
+      if (element.id in barStatus)
+        continue;
+      const status = defaultElementStatus[element.id];
+      status.position = insertPosition++;
+      barStatus[element.id] = status;
+      existsStatus[element.id] = true;
+    }
+    const disabledStatusBarElements = Object.keys(loadedElementStatus).filter((x) => !existsStatus[x]).map((x) => {
+      const parsed = parseElementId(x);
+      return {
+        name: parsed.name,
+        index: parsed.index,
+        id: x
+      };
+    });
+    const rows = unorderedStatusBarElements.concat(disabledStatusBarElements).map((x) => [x, barStatus[x.id].position]).sort((a, b) => a[1] - b[1]).map((x) => x[0]);
+    await this.saveStatus(barStatus);
+    this.spooler.spoolFix(0);
+    return {
+      rows,
+      barStatus,
+      existsStatus
+    };
+  }
+};
 
 // src/statusbar/rows.ts
 var import_obsidian4 = require("obsidian");
@@ -1030,14 +1225,14 @@ async function toggleVisibility(plugin, barStatus, row) {
     (_d = row.entry) == null ? void 0 : _d.addClass("statusbar-organizer-row-hidden");
     (0, import_obsidian4.setIcon)(row.entry.children[3], "eye-off");
   }
-  plugin.savePreset(barStatus);
+  plugin.saveStatus(barStatus);
 }
 async function removeOrphan(plugin, rowsContainer, barStatus, row) {
   rowsContainer.removeChild(row.entry);
   delete barStatus[row.id];
   for (const [entryIndex, entry] of Array.from(rowsContainer.children).entries())
     barStatus[entry.getAttribute("data-statusbar-organizer-id")].position = entryIndex;
-  plugin.savePreset(barStatus);
+  plugin.saveStatus(barStatus);
 }
 function cloneRow(settingsContainer, barStatus, existsStatus, rowsContainer, event, row) {
   const realEntry = row.entry;
@@ -1125,370 +1320,26 @@ function handleMouseDown(event, plugin, barStatus, existsStatus, settingsContain
     dragging = false;
     window.removeEventListener("mouseup", handleMouseUp);
     window.removeEventListener("mousemove", handleMouseMove);
-    plugin.savePreset(barStatus);
+    plugin.saveStatus(barStatus);
   }
   window.addEventListener("mouseup", handleMouseUp);
 }
 
-// src/statusbar/fullscreen.ts
-var menuListener;
-var fullscreenCallback;
-function monitorFullscreen(plugin) {
-  if (typeof electronWindow !== "undefined") {
-    fullscreenCallback = fullscreenChange(plugin);
-    electronWindow.addListener("enter-full-screen", fullscreenCallback);
-    electronWindow.addListener("leave-full-screen", fullscreenCallback);
-    fullscreenCallback();
-  }
-}
-function stopMonitoringFullscreen() {
-  if (typeof electronWindow !== "undefined" && fullscreenCallback) {
-    electronWindow.removeListener("enter-full-screen", fullscreenCallback);
-    electronWindow.removeListener("leave-full-screen", fullscreenCallback);
-  }
-}
-function fullscreenChange(plugin) {
-  return async () => {
-    const settings = plugin.settings;
-    if (!settings.separateFullscreenPreset || !(getActivePreset(plugin) in settings.presets)) {
-      if (isFullscreen())
-        settings.activeFullscreenPreset = settings.activePreset;
-      else
-        settings.activePreset = settings.activeFullscreenPreset;
-      await plugin.plugin.saveSettings();
-    }
-    fixOrder(plugin);
-    menuListener == null ? void 0 : menuListener();
-  };
-}
-function isFullscreen() {
-  if (typeof electronWindow !== "undefined") {
-    return electronWindow.isFullScreen();
-  }
-  return false;
-}
-function setFullscreenListener(callback) {
-  menuListener = callback;
-}
-
-// src/statusbar/hotkeys.ts
-function commandCallback(plugin, index) {
-  return (checking) => {
-    if (!plugin.settings.enabled)
-      return false;
-    const presets = plugin.settings.presetsOrder;
-    if (presets.length <= index)
-      return false;
-    if (!checking) {
-      setActivePreset(plugin, presets[index]);
-      fixOrder(plugin);
-    }
-    return true;
-  };
-}
-function registerHotkeys(plugin) {
-  for (let i = 0; i < 10; i++) {
-    plugin.plugin.addCommand({
-      id: `statusbar-organizer-preset-${i}`,
-      name: t(`Switch to preset slot {n}`).replace("{n}", (i + 1).toString()),
-      checkCallback: commandCallback(plugin, i)
-    });
-  }
-}
-
-// src/statusbar/presets.ts
-var import_obsidian5 = require("obsidian");
-async function initializePresets(plugin, presetsContainer, settingsContainer) {
-  presetsContainer.empty();
-  if (plugin.settings.presetsOrder.length == 0) {
-    plugin.settings.presetsOrder.push(t("Default"));
-    plugin.settings.presets[t("Default")] = {};
-    setActivePreset(plugin, t("Default"));
-    await plugin.plugin.saveSettings();
-  }
-  if (!(getActivePreset(plugin) in plugin.settings.presets)) {
-    setActivePreset(plugin, plugin.settings.presetsOrder[0]);
-    await plugin.plugin.saveSettings();
-  }
-  for (let presetName of plugin.settings.presetsOrder) {
-    const presetEntry = document.createElement("div");
-    presetEntry.addClass("statusbar-organizer-preset");
-    presetEntry.id = getPresetId(presetName);
-    if (presetName == getActivePreset(plugin))
-      presetEntry.addClass("statusbar-organizer-preset-active");
-    presetsContainer.appendChild(presetEntry);
-    const nameField = document.createElement("input");
-    nameField.addClass("statusbar-organizer-preset-name");
-    nameField.value = presetName;
-    nameField.setAttribute("size", nameField.value.length.toString());
-    nameField.maxLength = 25;
-    presetEntry.appendChild(nameField);
-    const renameButton = document.createElement("span");
-    renameButton.addClass("statusbar-organizer-preset-delete");
-    (0, import_obsidian5.setIcon)(renameButton, "pencil");
-    renameButton.addEventListener("click", async (event) => {
-      event.stopPropagation();
-      select();
-      nameField.focus();
-    });
-    const rename = async () => {
-      nameField.blur();
-      presetName = await renamePreset(plugin, presetEntry, nameField, presetName);
-    };
-    nameField.addEventListener("change", async () => rename());
-    nameField.addEventListener("input", () => {
-      nameField.setAttribute("size", Math.max(nameField.value.length, 1).toString());
-    });
-    presetEntry.appendChild(renameButton);
-    const deleteButton = document.createElement("span");
-    deleteButton.addClass("statusbar-organizer-preset-delete");
-    (0, import_obsidian5.setIcon)(deleteButton, "x");
-    deleteButton.addEventListener("click", async (event) => {
-      event.stopPropagation();
-      await deletePreset(plugin, presetsContainer, settingsContainer, presetName);
-    });
-    presetEntry.appendChild(deleteButton);
-    const select = async () => {
-      await selectPreset(plugin, presetEntry, presetName, settingsContainer);
-    };
-    presetEntry.addEventListener("click", async () => select());
-  }
-  const newPresetEntry = document.createElement("div");
-  newPresetEntry.addClass("statusbar-organizer-preset");
-  (0, import_obsidian5.setIcon)(newPresetEntry, "plus");
-  newPresetEntry.addEventListener("click", () => addPreset(plugin, presetsContainer, settingsContainer));
-  presetsContainer.appendChild(newPresetEntry);
-  registerHotkeys(plugin, plugin.settings.presetsOrder);
-}
-async function addPreset(plugin, presetsContainer, settingsContainer) {
-  const presetName = disambiguate(t("New Preset"), plugin.settings.presetsOrder);
-  plugin.settings.presets[presetName] = deepCopy(plugin.settings.presets[getActivePreset(plugin)]);
-  plugin.settings.presetsOrder.push(presetName);
-  setActivePreset(plugin, presetName);
-  await plugin.plugin.saveSettings();
-  await initializePresets(plugin, presetsContainer, settingsContainer);
-}
-async function deletePreset(plugin, presetsContainer, settingsContainer, presetName) {
-  if (getActivePreset(plugin) == presetName) {
-    const currentIndex = plugin.settings.presetsOrder.indexOf(presetName);
-    if (currentIndex > 0)
-      setActivePreset(plugin, plugin.settings.presetsOrder[currentIndex - 1]);
-    else if (currentIndex < plugin.settings.presetsOrder.length - 1)
-      setActivePreset(plugin, plugin.settings.presetsOrder[currentIndex + 1]);
-    else
-      setActivePreset(plugin, t("Default"));
-  }
-  delete plugin.settings.presets[presetName];
-  plugin.settings.presetsOrder = plugin.settings.presetsOrder.filter((x) => x != presetName);
-  await plugin.plugin.saveSettings();
-  await initializePresets(plugin, presetsContainer, settingsContainer);
-  await initializeRows(plugin, settingsContainer);
-}
-async function renamePreset(plugin, presetEntry, nameField, presetName) {
-  let newName = nameField.value.substring(0, 25).trim();
-  const otherPresets = plugin.settings.presetsOrder.filter((x) => x != presetName);
-  newName = newName == "" ? disambiguate(t("New Preset"), otherPresets) : disambiguate(newName, otherPresets, 2, true);
-  nameField.value = newName;
-  nameField.setAttribute("size", newName.length.toString());
-  if (newName == presetName)
-    return presetName;
-  presetEntry.id = getPresetId(newName);
-  plugin.settings.presets[newName] = plugin.settings.presets[presetName];
-  delete plugin.settings.presets[presetName];
-  plugin.settings.presetsOrder = plugin.settings.presetsOrder.map((x) => x == presetName ? newName : x);
-  setActivePreset(plugin, newName);
-  await plugin.plugin.saveSettings();
-  return newName;
-}
-async function selectPreset(plugin, presetEntry, presetName, settingsContainer) {
-  var _a;
-  (_a = document.getElementById(getPresetId(getActivePreset(plugin)))) == null ? void 0 : _a.removeClass("statusbar-organizer-preset-active");
-  presetEntry.addClass("statusbar-organizer-preset-active");
-  await setActivePreset(plugin, presetName);
-  await initializeRows(plugin, settingsContainer);
-}
-async function setActivePreset(plugin, presetName) {
-  if (isFullscreen()) {
-    plugin.settings.activeFullscreenPreset = presetName;
-  } else {
-    plugin.settings.activePreset = presetName;
-  }
-  await plugin.plugin.saveSettings();
-}
-function getActivePreset(plugin) {
-  if (isFullscreen()) {
-    return plugin.settings.activeFullscreenPreset;
-  } else {
-    return plugin.settings.activePreset;
-  }
-}
-function disambiguate(presetName, presets, start = 1, allowNoNumber = false) {
-  if (allowNoNumber && !presets.includes(presetName))
-    return presetName;
-  while (presets.includes(`${presetName} ${start}`))
-    start++;
-  return `${presetName} ${start}`;
-}
-function getPresetId(presetName) {
-  return `statusbar-organizer-preset-${generatePresetId(presetName)}`;
-}
-
-// src/statusbar/organizer.ts
-function fixOrder(plugin) {
-  if (!plugin.statusBar)
-    return;
-  const elements = getStatusBarElements(plugin.statusBar);
-  const activePresetName = getActivePreset(plugin);
-  const status = plugin.settings.presets[activePresetName];
-  if (!status)
-    return;
-  const known = [];
-  const orphans = [];
-  for (const element of elements) {
-    if (element.id in status) {
-      const myStatus = status[element.id];
-      known.push([element, myStatus.position]);
-      if (myStatus.visible)
-        element.element.removeClass("statusbar-organizer-element-hidden");
-      else
-        element.element.addClass("statusbar-organizer-element-hidden");
-    } else {
-      orphans.push(element.element);
-    }
-  }
-  const orderedElements = known.sort((a, b) => a[1] - b[1]).map((x) => x[0].element);
-  const allElements = orderedElements.concat(orphans);
-  for (const [i, element] of allElements.entries()) {
-    if (element)
-      element.style.order = (i + 1).toString();
-  }
-}
-
-// src/statusbar/manager.ts
-var StatusBarManager = class {
-  constructor(app, plugin) {
-    this.app = app;
-    this.plugin = plugin;
-    this.settings = this.plugin.settings.myStatusBar;
-  }
-  async onload() {
-    this.statusBar = document.querySelector(".status-bar");
-    if (!this.statusBar) {
-      this.app.workspace.onLayoutReady(() => {
-        this.statusBar = document.querySelector(".status-bar");
-        if (this.statusBar)
-          this.initializeManager();
-      });
-      return;
-    }
-    this.initializeManager();
-  }
-  initializeManager() {
-    if (!this.statusBar)
-      return;
-    this.spooler = new Spooler(this, fixOrder);
-    monitorFullscreen(this);
-    fixOrder(this);
-    registerHotkeys(this);
-    this.spooler.enableObserver();
-  }
-  onunload() {
-    if (this.spooler)
-      this.spooler.disableObserver();
-    stopMonitoringFullscreen();
-  }
-  saveSettings() {
-    return this.plugin.saveSettings();
-  }
-  async savePreset(currentBarStatus) {
-    this.settings.presets[getActivePreset(this)] = deepCopy(currentBarStatus);
-    await this.saveSettings();
-  }
-  /**
-   * Merge information about status bar elements based on
-   * the saved settings and the state of the actual status bar.
-   */
-  async consolidateSettingsAndElements() {
-    const loadedElementStatus = this.settings.presets[getActivePreset(this)] || {};
-    if (!this.statusBar) {
-      return { rows: [], barStatus: {}, existsStatus: {} };
-    }
-    const unorderedStatusBarElements = getStatusBarElements(this.statusBar);
-    const defaultElementStatus = {};
-    for (const [index, statusBarElement] of unorderedStatusBarElements.entries()) {
-      defaultElementStatus[statusBarElement.id] = {
-        position: index,
-        visible: true
-      };
-    }
-    const barStatus = {};
-    const existsStatus = {};
-    for (const [index, status] of Object.entries(loadedElementStatus)) {
-      barStatus[index] = status;
-      existsStatus[index] = index in defaultElementStatus;
-    }
-    let insertPosition = Object.keys(barStatus).length + 1;
-    for (const element of unorderedStatusBarElements) {
-      if (element.id in barStatus)
-        continue;
-      const status = defaultElementStatus[element.id];
-      status.position = insertPosition++;
-      barStatus[element.id] = status;
-      existsStatus[element.id] = true;
-    }
-    const disabledStatusBarElements = Object.keys(loadedElementStatus).filter((x) => !existsStatus[x]).map((x) => {
-      const parsed = parseElementId(x);
-      return {
-        name: parsed.name,
-        index: parsed.index,
-        id: x
-      };
-    });
-    const rows = unorderedStatusBarElements.concat(disabledStatusBarElements).map((x) => [x, barStatus[x.id].position]).sort((a, b) => a[1] - b[1]).map((x) => x[0]);
-    await this.savePreset(barStatus);
-    this.spooler.spoolFix(0);
-    return {
-      rows,
-      barStatus,
-      existsStatus
-    };
-  }
-};
-
 // src/statusbar/settings-ui.ts
-var import_obsidian6 = require("obsidian");
 function renderStatusBarSettings(containerEl, manager) {
   const plugin = manager;
   showSettings(plugin, containerEl);
 }
 async function showSettings(plugin, topContainer) {
   topContainer.empty();
-  const dummyInput = document.createElement("input");
-  dummyInput.setAttribute("autofocus", "autofocus");
-  dummyInput.setAttribute("type", "hidden");
-  topContainer.appendChild(dummyInput);
-  const presetsContainer = document.createElement("div");
-  presetsContainer.addClass("statusbar-organizer-presets-container");
-  topContainer.appendChild(presetsContainer);
   const settingsContainer = document.createElement("div");
   settingsContainer.addClass("statusbar-organizer-rows-container-wrapper");
   topContainer.appendChild(settingsContainer);
-  await initializePresets(plugin, presetsContainer, settingsContainer);
   await initializeRows(plugin, settingsContainer);
-  new import_obsidian6.Setting(topContainer).setName(t("Separate fullscreen and windowed mode")).setDesc(t("When enabled, the plugin will remember which preset was active for fullscreen mode and which for windowed mode and switch correspondingly. This is useful for example when you want to display more information in fullscreen mode, like a clock.")).addToggle(
-    (toggle) => toggle.setValue(plugin.settings.separateFullscreenPreset).onChange(async (value) => {
-      plugin.settings.separateFullscreenPreset = value;
-      plugin.plugin.saveSettings();
-    })
-  );
-  setFullscreenListener(async () => {
-    await initializePresets(plugin, presetsContainer, settingsContainer);
-    await initializeRows(plugin, settingsContainer);
-  });
 }
 
 // src/plugins/manager.ts
-var import_obsidian7 = require("obsidian");
+var import_obsidian5 = require("obsidian");
 var PluginsManager = class {
   constructor(app, plugin) {
     this.manifests = [];
@@ -1501,7 +1352,7 @@ var PluginsManager = class {
     return this.plugin.settings.myPlugins;
   }
   get deviceSettings() {
-    if (this.settings.dualConfigs && import_obsidian7.Platform.isMobile) {
+    if (this.settings.dualConfigs && import_obsidian5.Platform.isMobile) {
       return this.settings.mobile || this.settings.desktop;
     }
     return this.settings.desktop;
@@ -1509,7 +1360,7 @@ var PluginsManager = class {
   async onload() {
     if (!this.settings.enabled)
       return;
-    if (this.settings.dualConfigs && import_obsidian7.Platform.isMobile) {
+    if (this.settings.dualConfigs && import_obsidian5.Platform.isMobile) {
       if (!this.settings.mobile) {
         this.settings.mobile = JSON.parse(JSON.stringify(this.settings.desktop));
         await this.plugin.saveSettings();
@@ -1584,12 +1435,12 @@ var PluginsManager = class {
     await this.plugin.saveSettings();
   }
   updateManifests() {
-    this.manifests = Object.values(this.app.plugins.manifests).filter((plugin) => plugin.id !== this.plugin.manifest.id && !(import_obsidian7.Platform.isMobile && plugin.isDesktopOnly)).sort((a, b) => a.name.localeCompare(b.name));
+    this.manifests = Object.values(this.app.plugins.manifests).filter((plugin) => plugin.id !== this.plugin.manifest.id && !(import_obsidian5.Platform.isMobile && plugin.isDesktopOnly)).sort((a, b) => a.name.localeCompare(b.name));
   }
 };
 
 // src/plugins/settings-ui.ts
-var import_obsidian8 = require("obsidian");
+var import_obsidian6 = require("obsidian");
 function renderPluginsSettings(containerEl, manager) {
   const view = new PluginsSettingsView(containerEl, manager);
   view.display();
@@ -1607,7 +1458,7 @@ var PluginsSettingsView = class {
     const { containerEl } = this;
     if (!this.settings.enabled)
       return;
-    new import_obsidian8.Setting(containerEl).setName(t("Separate desktop/mobile configuration")).setDesc(t("Enable this if you want to have different settings depending whether you're using a desktop or mobile device. All of the settings below can be configured differently on desktop and mobile. You're currently using the {device} settings.").replace("{device}", this.manager.device)).addToggle((toggle) => {
+    new import_obsidian6.Setting(containerEl).setName(t("Separate desktop/mobile configuration")).setDesc(t("Enable this if you want to have different settings depending whether you're using a desktop or mobile device. All of the settings below can be configured differently on desktop and mobile. You're currently using the {device} settings.").replace("{device}", this.manager.device)).addToggle((toggle) => {
       toggle.setValue(this.settings.dualConfigs).onChange(async (value) => {
         this.settings.dualConfigs = value;
         await this.manager.plugin.saveSettings();
@@ -1618,12 +1469,12 @@ var PluginsSettingsView = class {
       shortDelaySeconds: t("Short delay (seconds)"),
       longDelaySeconds: t("Long delay (seconds)")
     }).forEach(([key, name]) => {
-      new import_obsidian8.Setting(containerEl).setName(name).addText((text) => text.setValue(this.manager.deviceSettings[key].toString()).onChange(async (value) => {
+      new import_obsidian6.Setting(containerEl).setName(name).addText((text) => text.setValue(this.manager.deviceSettings[key].toString()).onChange(async (value) => {
         this.manager.deviceSettings[key] = parseFloat(parseFloat(value).toFixed(3));
         await this.manager.plugin.saveSettings();
       }));
     });
-    new import_obsidian8.Setting(containerEl).setName(t("Default startup type for new plugins")).addDropdown((dropdown) => {
+    new import_obsidian6.Setting(containerEl).setName(t("Default startup type for new plugins")).addDropdown((dropdown) => {
       dropdown.addOption("", t("Nothing configured"));
       this.addDelayOptions(dropdown);
       dropdown.setValue(this.manager.deviceSettings.defaultStartupType || "").onChange(async (value) => {
@@ -1631,14 +1482,14 @@ var PluginsSettingsView = class {
         await this.manager.plugin.saveSettings();
       });
     });
-    new import_obsidian8.Setting(containerEl).setName(t("Show plugin descriptions")).addToggle((toggle) => {
+    new import_obsidian6.Setting(containerEl).setName(t("Show plugin descriptions")).addToggle((toggle) => {
       toggle.setValue(this.manager.deviceSettings.showDescriptions).onChange(async (value) => {
         this.manager.deviceSettings.showDescriptions = value;
         await this.manager.plugin.saveSettings();
         this.buildPluginList();
       });
     });
-    new import_obsidian8.Setting(containerEl).setName(t("Set the delay for all plugins at once")).addDropdown((dropdown) => {
+    new import_obsidian6.Setting(containerEl).setName(t("Set the delay for all plugins at once")).addDropdown((dropdown) => {
       dropdown.addOption("", t("Set all plugins to be:"));
       this.addDelayOptions(dropdown);
       dropdown.onChange(async (value) => {
@@ -1650,14 +1501,30 @@ var PluginsSettingsView = class {
         await this.manager.plugin.saveSettings();
       });
     });
-    const filterSetting = new import_obsidian8.Setting(containerEl).setName(t("Plugins")).setHeading().setDesc(t("Filter by: "));
-    this.addFilterButton(filterSetting.descEl, t("All"));
-    Object.keys(LoadingMethod).forEach((key) => this.addFilterButton(filterSetting.descEl, t(LoadingMethod[key]) || key, key));
-    new import_obsidian8.Setting(containerEl).addText((text) => text.setPlaceholder(t("Type to filter list")).onChange((value) => {
+    const pluginsDetails = containerEl.createEl("details");
+    pluginsDetails.style.marginBottom = "10px";
+    pluginsDetails.style.border = "1px solid var(--background-modifier-border)";
+    pluginsDetails.style.borderRadius = "5px";
+    pluginsDetails.style.padding = "0.5em";
+    pluginsDetails.open = true;
+    const pluginsSummary = pluginsDetails.createEl("summary");
+    pluginsSummary.setText(t("Plugins"));
+    pluginsSummary.style.cursor = "pointer";
+    pluginsSummary.style.fontWeight = "bold";
+    pluginsSummary.style.outline = "none";
+    const pluginsContent = pluginsDetails.createEl("div");
+    pluginsContent.style.marginTop = "10px";
+    pluginsContent.style.paddingLeft = "5px";
+    pluginsContent.style.borderLeft = "2px solid var(--background-modifier-border)";
+    const filterContainer = pluginsContent.createDiv();
+    filterContainer.createSpan({ text: t("Filter by: "), style: "margin-right: 10px; font-weight: bold;" });
+    this.addFilterButton(filterContainer, t("All"));
+    Object.keys(LoadingMethod).forEach((key) => this.addFilterButton(filterContainer, t(LoadingMethod[key]) || key, key));
+    new import_obsidian6.Setting(pluginsContent).addText((text) => text.setPlaceholder(t("Type to filter list")).onChange((value) => {
       this.filterString = value;
       this.buildPluginList();
     }));
-    this.pluginListContainer = containerEl.createEl("div");
+    this.pluginListContainer = pluginsContent.createEl("div");
     this.buildPluginList();
   }
   buildPluginList() {
@@ -1669,7 +1536,7 @@ var PluginsSettingsView = class {
         return;
       if (this.filterString && !plugin.name.toLowerCase().includes(this.filterString.toLowerCase()))
         return;
-      new import_obsidian8.Setting(this.pluginListContainer).setName(plugin.name).addDropdown((dropdown) => {
+      new import_obsidian6.Setting(this.pluginListContainer).setName(plugin.name).addDropdown((dropdown) => {
         this.dropdowns.push(dropdown);
         this.addDelayOptions(dropdown);
         dropdown.setValue(currentValue).onChange(async (value) => {
@@ -1706,10 +1573,10 @@ var PluginsSettingsView = class {
 };
 
 // src/snippets/manager.ts
-var import_obsidian12 = require("obsidian");
+var import_obsidian10 = require("obsidian");
 
 // src/snippets/icons/customIcons.ts
-var import_obsidian9 = require("obsidian");
+var import_obsidian7 = require("obsidian");
 var icons = {
   "art-fill": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="0" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14c-.092.064-2 2.083-2 3.5c0 1.494.949 2.448 2 2.5c.906.044 2-.891 2-2.5c0-1.5-1.908-3.436-2-3.5zM9.586 20c.378.378.88.586 1.414.586s1.036-.208 1.414-.586l7-7l-.707-.707L11 4.586L8.707 2.293L7.293 3.707L9.586 6L4 11.586c-.378.378-.586.88-.586 1.414s.208 1.036.586 1.414L9.586 20zM11 7.414L16.586 13H5.414L11 7.414z" fill="currentColor"/></svg>`,
   "art-brush": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="0" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2H7c-1.103 0-2 .897-2 2v3c0 1.103.897 2 2 2h11c1.103 0 2-.897 2-2V4c0-1.103-.897-2-2-2zM7 7V4h11l.002 3H7z" fill="currentColor"/><path d="M13 15v-2c0-1.103-.897-2-2-2H4V5c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h7v2a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1z" fill="currentColor"/></svg>`,
@@ -1726,12 +1593,12 @@ var icons = {
 };
 function addIcons() {
   Object.keys(icons).forEach((key) => {
-    (0, import_obsidian9.addIcon)(key, icons[key]);
+    (0, import_obsidian7.addIcon)(key, icons[key]);
   });
 }
 
 // src/snippets/ui/snippetsMenu.ts
-var import_obsidian11 = require("obsidian");
+var import_obsidian9 = require("obsidian");
 
 // src/snippets/util/setAttributes.ts
 function setAttributes(element, attributes) {
@@ -1741,8 +1608,8 @@ function setAttributes(element, attributes) {
 }
 
 // src/snippets/modal/createSnippetModal.ts
-var import_obsidian10 = require("obsidian");
-var CreateSnippetModal = class extends import_obsidian10.Modal {
+var import_obsidian8 = require("obsidian");
+var CreateSnippetModal = class extends import_obsidian8.Modal {
   constructor(app, manager) {
     super(app);
     this.app = app;
@@ -1757,15 +1624,15 @@ var CreateSnippetModal = class extends import_obsidian10.Modal {
     const title = document.createElement("h1");
     title.setText(t("Create a CSS Snippet"));
     contentEl.appendChild(title);
-    const fileTitleSetting = new import_obsidian10.Setting(contentEl);
-    const fileTitleValue = new import_obsidian10.TextComponent(fileTitleSetting.controlEl);
+    const fileTitleSetting = new import_obsidian8.Setting(contentEl);
+    const fileTitleValue = new import_obsidian8.TextComponent(fileTitleSetting.controlEl);
     fileTitleSetting.setName(t("CSS Snippet Title")).setDesc(t("Write the title for this CSS snippet file."));
-    const cssStylesSetting = new import_obsidian10.Setting(contentEl);
+    const cssStylesSetting = new import_obsidian8.Setting(contentEl);
     cssStylesSetting.settingEl.setAttribute(
       "style",
       "display: grid; grid-template-columns: 1fr;"
     );
-    const cssStylesValue = new import_obsidian10.TextAreaComponent(cssStylesSetting.controlEl);
+    const cssStylesValue = new import_obsidian8.TextAreaComponent(cssStylesSetting.controlEl);
     setAttributes(cssStylesValue.inputEl, {
       style: "margin-top: 12px; width: 100%;  height: 32vh;",
       class: "ms-css-editor"
@@ -1790,11 +1657,11 @@ var CreateSnippetModal = class extends import_obsidian10.Modal {
           customCss.requestLoadSnippets();
           this.close();
         } else
-          new import_obsidian10.Notice(t('"{fileName}.css" already exists.').replace("{fileName}", fileName));
+          new import_obsidian8.Notice(t('"{fileName}.css" already exists.').replace("{fileName}", fileName));
       } else
-        new import_obsidian10.Notice(t("Missing name for file"));
+        new import_obsidian8.Notice(t("Missing name for file"));
     };
-    const saveButton = new import_obsidian10.ButtonComponent(contentEl).setButtonText(t("Create Snippet")).onClick(doAdd);
+    const saveButton = new import_obsidian8.ButtonComponent(contentEl).setButtonText(t("Create Snippet")).onClick(doAdd);
     saveButton.buttonEl.addClass("wg-button");
     fileTitleValue.inputEl.focus();
   }
@@ -1810,7 +1677,7 @@ function snippetsMenu(app, manager, settings) {
   const windowY = window.innerHeight;
   const menuExists = document.querySelector(".menu.MySnippets-statusbar-menu");
   if (!menuExists) {
-    const menu = new import_obsidian11.Menu();
+    const menu = new import_obsidian9.Menu();
     const menuDom = menu.dom;
     menuDom.addClass("MySnippets-statusbar-menu");
     if (settings.aestheticStyle) {
@@ -1827,8 +1694,8 @@ function snippetsMenu(app, manager, settings) {
       menu.addItem((snippetElement) => {
         snippetElement.setTitle(snippet);
         const snippetElementDom = snippetElement.dom;
-        const toggleComponent = new import_obsidian11.ToggleComponent(snippetElementDom);
-        const buttonComponent = new import_obsidian11.ButtonComponent(snippetElementDom);
+        const toggleComponent = new import_obsidian9.ToggleComponent(snippetElementDom);
+        const buttonComponent = new import_obsidian9.ButtonComponent(snippetElementDom);
         function changeSnippetStatus() {
           const isEnabled = customCss.enabledSnippets.has(snippet);
           customCss.setCssEnabledStatus(snippet, !isEnabled);
@@ -1850,14 +1717,14 @@ function snippetsMenu(app, manager, settings) {
       enhancedActions.setTitle(t("Actions"));
       const actionsDom = enhancedActions.dom;
       setAttributes(enhancedActions.titleEl, { style: "font-weight: 700" });
-      const reloadButton = new import_obsidian11.ButtonComponent(actionsDom);
-      const folderButton = new import_obsidian11.ButtonComponent(actionsDom);
-      const addButton = new import_obsidian11.ButtonComponent(actionsDom);
+      const reloadButton = new import_obsidian9.ButtonComponent(actionsDom);
+      const folderButton = new import_obsidian9.ButtonComponent(actionsDom);
+      const addButton = new import_obsidian9.ButtonComponent(actionsDom);
       setAttributes(reloadButton.buttonEl, { style: "margin-right: 3px" });
       setAttributes(addButton.buttonEl, { style: "margin-left: 3px" });
       reloadButton.setIcon("ms-reload").setClass("MySnippetsButton").setClass("MS-Reload").setTooltip(t("Reload snippets")).onClick((e) => {
         customCss.requestLoadSnippets();
-        new import_obsidian11.Notice(t("Snippets reloaded"));
+        new import_obsidian9.Notice(t("Snippets reloaded"));
       });
       folderButton.setIcon("ms-folder").setClass("MySnippetsButton").setClass("MS-Folder").setTooltip(t("Open snippets folder")).onClick((e) => {
         app.openWithDefaultApp(snippetsFolder);
@@ -1935,7 +1802,7 @@ var SnippetsManager = class {
       "aria-label": "Configure Snippets",
       "aria-label-position": "top"
     });
-    (0, import_obsidian12.setIcon)(this.statusBarIcon, "pantone-line");
+    (0, import_obsidian10.setIcon)(this.statusBarIcon, "pantone-line");
     this.statusBarIcon.addEventListener("click", () => {
       snippetsMenu(this.app, this, this.settings);
     });
@@ -1949,11 +1816,11 @@ var SnippetsManager = class {
 };
 
 // src/snippets/settings-ui.ts
-var import_obsidian13 = require("obsidian");
+var import_obsidian11 = require("obsidian");
 function renderSnippetsSettings(containerEl, manager) {
   const plugin = manager.plugin;
   const settings = manager.settings;
-  new import_obsidian13.Setting(containerEl).setName(t("Show Status Bar Icon")).setDesc(t("Toggle the visibility of the snippets icon in the status bar.")).addToggle((toggle) => {
+  new import_obsidian11.Setting(containerEl).setName(t("Show Status Bar Icon")).setDesc(t("Toggle the visibility of the snippets icon in the status bar.")).addToggle((toggle) => {
     toggle.setValue(settings.showStatusBarIcon).onChange(async (value) => {
       settings.showStatusBarIcon = value;
       await manager.saveSettings();
@@ -1961,14 +1828,23 @@ function renderSnippetsSettings(containerEl, manager) {
     });
   });
   const snippetsSection = containerEl.createEl("details");
-  const snippetsSummary = containerEl.createEl("summary");
+  snippetsSection.style.marginBottom = "10px";
+  snippetsSection.style.border = "1px solid var(--background-modifier-border)";
+  snippetsSection.style.borderRadius = "5px";
+  snippetsSection.style.padding = "0.5em";
+  const snippetsSummary = snippetsSection.createEl("summary");
+  snippetsSummary.style.cursor = "pointer";
+  snippetsSummary.style.fontWeight = "bold";
   snippetsSummary.innerText = t("Manage Snippets");
-  snippetsSection.appendChild(snippetsSummary);
+  snippetsSummary.style.outline = "none";
   const snippetsContainer = snippetsSection.createDiv();
+  snippetsContainer.style.marginTop = "10px";
+  snippetsContainer.style.paddingLeft = "5px";
+  snippetsContainer.style.borderLeft = "2px solid var(--background-modifier-border)";
   snippetsContainer.addClass("ms-manage-snippets-container");
   renderSnippetsList(snippetsContainer, manager);
   containerEl.appendChild(snippetsSection);
-  new import_obsidian13.Setting(containerEl).setName(t("Glass menu effect")).setDesc(
+  new import_obsidian11.Setting(containerEl).setName(t("Glass menu effect")).setDesc(
     t("Choose to change the background from the secondary background color of your theme to a glass background.")
   ).addToggle((toggle) => {
     toggle.setValue(settings.aestheticStyle).onChange(async (value) => {
@@ -1976,7 +1852,7 @@ function renderSnippetsSettings(containerEl, manager) {
       await manager.saveSettings();
     });
   });
-  new import_obsidian13.Setting(containerEl).setName(t("Auto open new snippet")).setDesc(
+  new import_obsidian11.Setting(containerEl).setName(t("Auto open new snippet")).setDesc(
     t("Choose whether or not to open CSS snippet files immeditaley after creating them. It will open in your default app.")
   ).addToggle((toggle) => {
     toggle.setValue(settings.openSnippetFile).onChange(async (value) => {
@@ -1984,7 +1860,7 @@ function renderSnippetsSettings(containerEl, manager) {
       await manager.saveSettings();
     });
   });
-  new import_obsidian13.Setting(containerEl).setName(t("Set new snippet status")).setDesc(
+  new import_obsidian11.Setting(containerEl).setName(t("Set new snippet status")).setDesc(
     t("Choose whether or not to have newly created CSS snippet files toggled on automatically upon creation.")
   ).addToggle((toggle) => {
     toggle.setValue(settings.snippetEnabledStatus).onChange(async (value) => {
@@ -1992,7 +1868,7 @@ function renderSnippetsSettings(containerEl, manager) {
       await manager.saveSettings();
     });
   });
-  const stylingTemplateSetting = new import_obsidian13.Setting(containerEl);
+  const stylingTemplateSetting = new import_obsidian11.Setting(containerEl);
   stylingTemplateSetting.settingEl.setAttribute(
     "style",
     "display: grid; grid-template-columns: 1fr;"
@@ -2000,7 +1876,7 @@ function renderSnippetsSettings(containerEl, manager) {
   stylingTemplateSetting.setName(t("CSS snippet template")).setDesc(
     t("Set default CSS styling as a template for new CSS files you choose to create.")
   );
-  const stylingTemplateContent = new import_obsidian13.TextAreaComponent(
+  const stylingTemplateContent = new import_obsidian11.TextAreaComponent(
     stylingTemplateSetting.controlEl
   );
   setAttributes(stylingTemplateContent.inputEl, {
@@ -2022,7 +1898,7 @@ function renderSnippetsList(containerEl, manager) {
     return;
   }
   currentSnippets.forEach((snippet) => {
-    new import_obsidian13.Setting(containerEl).setName(snippet).addToggle((toggle) => {
+    new import_obsidian11.Setting(containerEl).setName(snippet).addToggle((toggle) => {
       toggle.setValue(customCss.enabledSnippets.has(snippet)).onChange((value) => {
         customCss.setCssEnabledStatus(snippet, value);
       });
@@ -2030,14 +1906,14 @@ function renderSnippetsList(containerEl, manager) {
   });
   const buttonContainer = containerEl.createDiv();
   buttonContainer.addClass("ms-reload-container");
-  new import_obsidian13.Setting(buttonContainer).addButton((button) => button.setButtonText(t("Reload Snippets")).onClick(() => {
+  new import_obsidian11.Setting(buttonContainer).addButton((button) => button.setButtonText(t("Reload Snippets")).onClick(() => {
     customCss.requestLoadSnippets();
     renderSnippetsList(containerEl, manager);
   }));
 }
 
 // src/headings/manager.ts
-var import_obsidian19 = require("obsidian");
+var import_obsidian17 = require("obsidian");
 
 // src/utils/numbering-tokens.ts
 var chineseNumbers = ["\u96F6", "\u4E00", "\u4E8C", "\u4E09", "\u56DB", "\u4E94", "\u516D", "\u4E03", "\u516B", "\u4E5D", "\u5341"];
@@ -2221,12 +2097,12 @@ function isLineIgnored(lineNum, lineText, codeRanges) {
 }
 
 // src/utils/frontmatter.ts
-var import_obsidian14 = require("obsidian");
+var import_obsidian12 = require("obsidian");
 function parseHeadingsFrontMatter(fm, defaultSettings) {
   const settings = Object.assign({}, defaultSettings);
   if (!fm)
     return settings;
-  const entry = (0, import_obsidian14.parseFrontMatterEntry)(fm, "number headings");
+  const entry = (0, import_obsidian12.parseFrontMatterEntry)(fm, "number headings");
   if (entry) {
     const parts = String(entry).split(",").map((p) => p.trim()).filter((p) => p.length > 0);
     const rangeRegex = /^\d-\d$/;
@@ -2305,7 +2181,7 @@ function parseFormulasFrontMatter(fm, defaultSettings) {
   const settings = Object.assign({}, defaultSettings);
   if (!fm)
     return settings;
-  const entry = (0, import_obsidian14.parseFrontMatterEntry)(fm, "number formulas");
+  const entry = (0, import_obsidian12.parseFrontMatterEntry)(fm, "number formulas");
   if (entry) {
     const parts = String(entry).split(",").map((p) => p.trim());
     for (const part of parts) {
@@ -2355,8 +2231,8 @@ async function saveSettingsToFrontMatter(app, file, headingsSettings, formulasSe
 }
 
 // src/headings/modal.ts
-var import_obsidian15 = require("obsidian");
-var HeadingsControlModal = class extends import_obsidian15.Modal {
+var import_obsidian13 = require("obsidian");
+var HeadingsControlModal = class extends import_obsidian13.Modal {
   constructor(app, plugin, file) {
     super(app);
     this.plugin = plugin;
@@ -2370,10 +2246,10 @@ var HeadingsControlModal = class extends import_obsidian15.Modal {
     const { contentEl } = this;
     contentEl.empty();
     contentEl.createEl("h2", { text: t("Configure Headings") });
-    new import_obsidian15.Setting(contentEl).setName(t("Auto Number Headings")).setDesc(t("Automatically number headings on blur")).addToggle((toggle) => toggle.setValue(this.settings.auto).onChange((v) => this.settings.auto = v));
-    new import_obsidian15.Setting(contentEl).setName(t("First Level")).setDesc(t("Starting heading level for numbering")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(this.settings.firstLevel).setDynamicTooltip().onChange((v) => this.settings.firstLevel = v));
-    new import_obsidian15.Setting(contentEl).setName(t("Max Level")).setDesc(t("Maximum heading level for numbering")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(this.settings.maxLevel).setDynamicTooltip().onChange((v) => this.settings.maxLevel = v));
-    const stylesSetting = new import_obsidian15.Setting(contentEl).setName(t("Heading Styles")).setDesc(t("Numbering style for each level (1-6)")).setClass("heading-styles-setting");
+    new import_obsidian13.Setting(contentEl).setName(t("Auto Number Headings")).setDesc(t("Automatically number headings on blur")).addToggle((toggle) => toggle.setValue(this.settings.auto).onChange((v) => this.settings.auto = v));
+    new import_obsidian13.Setting(contentEl).setName(t("First Level")).setDesc(t("Starting heading level for numbering")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(this.settings.firstLevel).setDynamicTooltip().onChange((v) => this.settings.firstLevel = v));
+    new import_obsidian13.Setting(contentEl).setName(t("Max Level")).setDesc(t("Maximum heading level for numbering")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(this.settings.maxLevel).setDynamicTooltip().onChange((v) => this.settings.maxLevel = v));
+    const stylesSetting = new import_obsidian13.Setting(contentEl).setName(t("Heading Styles")).setDesc(t("Numbering style for each level (1-6)")).setClass("heading-styles-setting");
     const stylesContainer = createDiv({ cls: "heading-styles-container" });
     stylesSetting.settingEl.appendChild(stylesContainer);
     const styleOptions = ["1", "a", "A", "\u4E00", "\u2460"];
@@ -2391,7 +2267,7 @@ var HeadingsControlModal = class extends import_obsidian15.Modal {
         this.settings.headingStyles[i] = select.value;
       };
     }
-    const separatorsSetting = new import_obsidian15.Setting(contentEl).setName(t("Heading Separators")).setDesc(t("Separator after each level (empty for H1, then 2-6)")).setClass("heading-separators-setting");
+    const separatorsSetting = new import_obsidian13.Setting(contentEl).setName(t("Heading Separators")).setDesc(t("Separator after each level (empty for H1, then 2-6)")).setClass("heading-separators-setting");
     const separatorsContainer = createDiv({ cls: "heading-separators-container" });
     separatorsSetting.settingEl.appendChild(separatorsContainer);
     for (let i = 1; i < 6; i++) {
@@ -2407,7 +2283,7 @@ var HeadingsControlModal = class extends import_obsidian15.Modal {
         this.settings.headingSeparators[i] = input.value || "";
       };
     }
-    const startValuesSetting = new import_obsidian15.Setting(contentEl).setName(t("Start Values")).setDesc(t("Starting number for each level")).setClass("heading-start-values-setting");
+    const startValuesSetting = new import_obsidian13.Setting(contentEl).setName(t("Start Values")).setDesc(t("Starting number for each level")).setClass("heading-start-values-setting");
     const startValuesContainer = createDiv({ cls: "heading-start-values-container" });
     startValuesSetting.settingEl.appendChild(startValuesContainer);
     for (let i = 0; i < 6; i++) {
@@ -2424,7 +2300,7 @@ var HeadingsControlModal = class extends import_obsidian15.Modal {
       };
     }
     const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
-    new import_obsidian15.Setting(buttonContainer).addButton((btn) => btn.setButtonText(t("Apply Now")).setTooltip(t("Apply numbering once without saving to frontmatter")).onClick(() => {
+    new import_obsidian13.Setting(buttonContainer).addButton((btn) => btn.setButtonText(t("Apply Now")).setTooltip(t("Apply numbering once without saving to frontmatter")).onClick(() => {
       this.applyNumbering();
       this.close();
     })).addButton((btn) => btn.setButtonText(t("Save to Frontmatter")).setTooltip(t("Save settings to frontmatter and apply")).setCta().onClick(async () => {
@@ -2432,7 +2308,7 @@ var HeadingsControlModal = class extends import_obsidian15.Modal {
       this.close();
     })).addButton((btn) => btn.setButtonText(t("Remove Numbering")).setWarning().onClick(() => {
       this.plugin.headingsManager.removeNumbering();
-      new import_obsidian15.Notice(t("Heading numbering removed"));
+      new import_obsidian13.Notice(t("Heading numbering removed"));
       this.close();
     }));
   }
@@ -2445,13 +2321,13 @@ var HeadingsControlModal = class extends import_obsidian15.Modal {
     this.plugin.settings.myHeadings = this.settings;
     this.plugin.headingsManager.updateNumbering(true, true);
     this.plugin.settings.myHeadings = originalSettings;
-    new import_obsidian15.Notice(t("Numbering applied (one-time)"));
+    new import_obsidian13.Notice(t("Numbering applied (one-time)"));
   }
   async saveAndApply() {
     await saveSettingsToFrontMatter(this.app, this.file, this.settings);
     await new Promise((resolve) => setTimeout(resolve, 100));
     this.plugin.headingsManager.updateNumbering(true, true);
-    new import_obsidian15.Notice(t("Settings saved to frontmatter and applied"));
+    new import_obsidian13.Notice(t("Settings saved to frontmatter and applied"));
   }
   onClose() {
     const { contentEl } = this;
@@ -2460,12 +2336,12 @@ var HeadingsControlModal = class extends import_obsidian15.Modal {
 };
 
 // src/headings/shifter/manager.ts
-var import_obsidian18 = require("obsidian");
+var import_obsidian16 = require("obsidian");
 var import_state = require("@codemirror/state");
 var import_view = require("@codemirror/view");
 
 // src/headings/shifter/features/shift.ts
-var import_obsidian16 = require("obsidian");
+var import_obsidian14 = require("obsidian");
 
 // src/headings/shifter/utils/constants.ts
 var TABSIZE = 4;
@@ -2814,7 +2690,7 @@ var IncreaseHeading = class {
         }
       );
       if (maxHeading !== void 0 && maxHeading >= 6) {
-        new import_obsidian16.Notice("Cannot Increase (contains more than Heading 6)");
+        new import_obsidian14.Notice("Cannot Increase (contains more than Heading 6)");
         return true;
       }
       const isOneLine = editor.getCursor("from").line === editor.getCursor("to").line;
@@ -2864,7 +2740,7 @@ var DecreaseHeading = class {
         editor.getCursor("to").line
       );
       if (minHeading !== void 0 && minHeading <= Number(this.settings.limitHeadingFrom)) {
-        new import_obsidian16.Notice(
+        new import_obsidian14.Notice(
           `Cannot Decrease (contains less than Heading${Number(
             this.settings.limitHeadingFrom
           )})`
@@ -2909,7 +2785,7 @@ var DecreaseHeading = class {
 };
 
 // src/headings/shifter/features/insert.ts
-var import_obsidian17 = require("obsidian");
+var import_obsidian15 = require("obsidian");
 var InsertHeadingAtCurrentLevel = class {
   constructor(settings) {
     this.editorCallback = (editor) => {
@@ -2952,7 +2828,7 @@ var InsertHeadingAtDeeperLevel = class {
       const lastHeadingLine = getPreviousHeading(editor, cursorLine);
       const headingLevel = lastHeadingLine ? checkHeading(editor.getLine(lastHeadingLine)) : 0;
       if (headingLevel + 1 > 6) {
-        new import_obsidian17.Notice("Cannot Increase (contains more than Heading 6)");
+        new import_obsidian15.Notice("Cannot Increase (contains more than Heading 6)");
         return true;
       }
       const targetHeadingLevel = headingLevel + 1;
@@ -3086,7 +2962,7 @@ var ShifterManager = class {
   }
   // Helper from ObsidianService
   getEditorFromState(state) {
-    return state.field(import_obsidian18.editorInfoField).editor;
+    return state.field(import_obsidian16.editorInfoField).editor;
   }
   createKeyMapRunCallback(config) {
     const check = config.check || (() => true);
@@ -3120,7 +2996,7 @@ var HeadingsManager = class {
       id: "configure-headings",
       name: t("Configure Headings"),
       callback: () => {
-        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian19.MarkdownView);
+        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian17.MarkdownView);
         if (activeView && activeView.file) {
           new HeadingsControlModal(this.app, this.plugin, activeView.file).open();
         }
@@ -3130,7 +3006,7 @@ var HeadingsManager = class {
   onunload() {
   }
   getActiveViewInfo() {
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian19.MarkdownView);
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian17.MarkdownView);
     if (activeView && activeView.file) {
       const data = this.app.metadataCache.getFileCache(activeView.file);
       const editor = activeView.editor;
@@ -3242,29 +3118,33 @@ var HeadingsManager = class {
 };
 
 // src/headings/settings-ui.ts
-var import_obsidian20 = require("obsidian");
+var import_obsidian18 = require("obsidian");
 function renderHeadingsSettings(containerEl, manager) {
   const settings = manager.plugin.settings.myHeadings;
   const autoNumberingDetails = containerEl.createEl("details");
-  autoNumberingDetails.open = true;
+  autoNumberingDetails.open = false;
+  autoNumberingDetails.style.marginBottom = "10px";
+  autoNumberingDetails.style.border = "1px solid var(--background-modifier-border)";
+  autoNumberingDetails.style.borderRadius = "5px";
+  autoNumberingDetails.style.padding = "0.5em";
   const autoNumberingSummary = autoNumberingDetails.createEl("summary");
   autoNumberingSummary.setText(t("Auto Numbering"));
-  autoNumberingSummary.style.fontSize = "1.2em";
   autoNumberingSummary.style.fontWeight = "bold";
   autoNumberingSummary.style.cursor = "pointer";
-  autoNumberingSummary.style.marginBottom = "10px";
+  autoNumberingSummary.style.outline = "none";
   const autoNumberingContent = autoNumberingDetails.createEl("div");
-  autoNumberingContent.style.paddingLeft = "10px";
+  autoNumberingContent.style.marginTop = "10px";
+  autoNumberingContent.style.paddingLeft = "5px";
   autoNumberingContent.style.borderLeft = "2px solid var(--background-modifier-border)";
-  new import_obsidian20.Setting(autoNumberingContent).setName(t("Auto Number Headings")).setDesc(t("Create numbers automatically on blur")).addToggle((toggle) => toggle.setValue(settings.auto).onChange(async (value) => {
+  new import_obsidian18.Setting(autoNumberingContent).setName(t("Auto Number Headings")).setDesc(t("Create numbers automatically on blur")).addToggle((toggle) => toggle.setValue(settings.auto).onChange(async (value) => {
     settings.auto = value;
     await manager.plugin.saveSettings();
   }));
-  new import_obsidian20.Setting(autoNumberingContent).setName(t("First Level")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(settings.firstLevel).setDynamicTooltip().onChange(async (value) => {
+  new import_obsidian18.Setting(autoNumberingContent).setName(t("First Level")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(settings.firstLevel).setDynamicTooltip().onChange(async (value) => {
     settings.firstLevel = value;
     await manager.plugin.saveSettings();
   }));
-  new import_obsidian20.Setting(autoNumberingContent).setName(t("Max Level")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(settings.maxLevel).setDynamicTooltip().onChange(async (value) => {
+  new import_obsidian18.Setting(autoNumberingContent).setName(t("Max Level")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(settings.maxLevel).setDynamicTooltip().onChange(async (value) => {
     settings.maxLevel = value;
     await manager.plugin.saveSettings();
   }));
@@ -3311,16 +3191,20 @@ function renderHeadingsSettings(containerEl, manager) {
   containerEl.createEl("br");
   const shifterDetails = containerEl.createEl("details");
   shifterDetails.open = false;
+  shifterDetails.style.marginBottom = "10px";
+  shifterDetails.style.border = "1px solid var(--background-modifier-border)";
+  shifterDetails.style.borderRadius = "5px";
+  shifterDetails.style.padding = "0.5em";
   const shifterSummary = shifterDetails.createEl("summary");
   shifterSummary.setText(t("Heading Shifter"));
-  shifterSummary.style.fontSize = "1.2em";
   shifterSummary.style.fontWeight = "bold";
   shifterSummary.style.cursor = "pointer";
-  shifterSummary.style.marginBottom = "10px";
+  shifterSummary.style.outline = "none";
   const shifterContent = shifterDetails.createEl("div");
-  shifterContent.style.paddingLeft = "10px";
+  shifterContent.style.marginTop = "10px";
+  shifterContent.style.paddingLeft = "5px";
   shifterContent.style.borderLeft = "2px solid var(--background-modifier-border)";
-  new import_obsidian20.Setting(shifterContent).setName(t("Lower limit of Heading")).setDesc(t("The lower Heading Size that will be decreased by the Heading Shift")).addDropdown((dropdown) => {
+  new import_obsidian18.Setting(shifterContent).setName(t("Lower limit of Heading")).setDesc(t("The lower Heading Size that will be decreased by the Heading Shift")).addDropdown((dropdown) => {
     const headingOptions = {};
     [0, 1, 2, 3, 4, 5, 6].forEach((h) => headingOptions[String(h)] = String(h));
     dropdown.addOptions(headingOptions).setValue(String(settings.limitHeadingFrom)).onChange(async (value) => {
@@ -3328,7 +3212,7 @@ function renderHeadingsSettings(containerEl, manager) {
       await manager.plugin.saveSettings();
     });
   });
-  new import_obsidian20.Setting(shifterContent).setName(t("Enable override tab behavior")).setDesc(t('Tab execute "Increase Headings" and Shift-Tab execute "Decrease Headings"')).addToggle(
+  new import_obsidian18.Setting(shifterContent).setName(t("Enable override tab behavior")).setDesc(t('Tab execute "Increase Headings" and Shift-Tab execute "Decrease Headings"')).addToggle(
     (toggle) => toggle.setValue(settings.overrideTab).onChange(async (value) => {
       settings.overrideTab = value;
       await manager.plugin.saveSettings();
@@ -3337,7 +3221,7 @@ function renderHeadingsSettings(containerEl, manager) {
   shifterContent.createEl("h3", { text: t("Style to remove") });
   shifterContent.createEl("p", { text: t("If this style is at the position of a line, remove it") });
   shifterContent.createEl("b", { text: t("Beginning") });
-  new import_obsidian20.Setting(shifterContent).setName(t("Unordered list")).setDesc("-").addToggle(
+  new import_obsidian18.Setting(shifterContent).setName(t("Unordered list")).setDesc("-").addToggle(
     (toggle) => {
       var _a, _b;
       return toggle.setValue((_b = (_a = settings.styleToRemove) == null ? void 0 : _a.beginning) == null ? void 0 : _b.ul).onChange(async (value) => {
@@ -3346,7 +3230,7 @@ function renderHeadingsSettings(containerEl, manager) {
       });
     }
   );
-  new import_obsidian20.Setting(shifterContent).setName(t("Ordered list")).setDesc("1., 2. ,3. ,...").addToggle(
+  new import_obsidian18.Setting(shifterContent).setName(t("Ordered list")).setDesc("1., 2. ,3. ,...").addToggle(
     (toggle) => {
       var _a, _b;
       return toggle.setValue((_b = (_a = settings.styleToRemove) == null ? void 0 : _a.beginning) == null ? void 0 : _b.ol).onChange(async (value) => {
@@ -3355,7 +3239,7 @@ function renderHeadingsSettings(containerEl, manager) {
       });
     }
   );
-  new import_obsidian20.Setting(shifterContent).setName(t("User defined")).setDesc(t("Arbitrary string (regular expression)")).addTextArea((str) => {
+  new import_obsidian18.Setting(shifterContent).setName(t("User defined")).setDesc(t("Arbitrary string (regular expression)")).addTextArea((str) => {
     var _a, _b;
     str.setValue((_b = (_a = settings.styleToRemove.beginning) == null ? void 0 : _a.userDefined) == null ? void 0 : _b.join("\n")).onChange(async (str2) => {
       settings.styleToRemove.beginning.userDefined = str2.split("\n");
@@ -3363,7 +3247,7 @@ function renderHeadingsSettings(containerEl, manager) {
     });
   });
   shifterContent.createEl("b", { text: t("Surrounding") });
-  new import_obsidian20.Setting(shifterContent).setName(t("Bold")).setDesc("**|__").addToggle(
+  new import_obsidian18.Setting(shifterContent).setName(t("Bold")).setDesc("**|__").addToggle(
     (toggle) => {
       var _a, _b;
       return toggle.setValue((_b = (_a = settings.styleToRemove) == null ? void 0 : _a.surrounding) == null ? void 0 : _b.bold).onChange(async (value) => {
@@ -3372,7 +3256,7 @@ function renderHeadingsSettings(containerEl, manager) {
       });
     }
   );
-  new import_obsidian20.Setting(shifterContent).setName(t("Italic")).setDesc("*|_").addToggle(
+  new import_obsidian18.Setting(shifterContent).setName(t("Italic")).setDesc("*|_").addToggle(
     (toggle) => {
       var _a, _b;
       return toggle.setValue((_b = (_a = settings.styleToRemove) == null ? void 0 : _a.surrounding) == null ? void 0 : _b.italic).onChange(async (value) => {
@@ -3381,7 +3265,7 @@ function renderHeadingsSettings(containerEl, manager) {
       });
     }
   );
-  new import_obsidian20.Setting(shifterContent).setName(t("User defined")).setDesc(t("Arbitrary string (regular expression)")).addTextArea((str) => {
+  new import_obsidian18.Setting(shifterContent).setName(t("User defined")).setDesc(t("Arbitrary string (regular expression)")).addTextArea((str) => {
     var _a, _b, _c;
     str.setValue((_c = (_b = (_a = settings.styleToRemove) == null ? void 0 : _a.surrounding) == null ? void 0 : _b.userDefined) == null ? void 0 : _c.join("\n")).onChange(async (str2) => {
       settings.styleToRemove.surrounding.userDefined = str2.split("\n");
@@ -3389,14 +3273,14 @@ function renderHeadingsSettings(containerEl, manager) {
     });
   });
   shifterContent.createEl("h3", { text: t("List") });
-  new import_obsidian20.Setting(shifterContent).setName(t("Children behavior")).addDropdown((dropdown) => {
+  new import_obsidian18.Setting(shifterContent).setName(t("Children behavior")).addDropdown((dropdown) => {
     dropdown.addOption("outdent to zero", t("Outdent to 0")).addOption("sync with headings", t("Sync with headings")).addOption("noting", t("Noting")).setValue(settings.list.childrenBehavior).onChange((v) => {
       settings.list.childrenBehavior = v;
       manager.plugin.saveSettings();
     });
   });
   shifterContent.createEl("h3", { text: t("Editor") });
-  new import_obsidian20.Setting(shifterContent).setName(t("Tab size")).addSlider((cb) => {
+  new import_obsidian18.Setting(shifterContent).setName(t("Tab size")).addSlider((cb) => {
     cb.setDynamicTooltip().setLimits(2, 8, 2).setValue(settings.editor.tabSize).onChange((v) => {
       settings.editor.tabSize = v;
       manager.plugin.saveSettings();
@@ -3405,11 +3289,11 @@ function renderHeadingsSettings(containerEl, manager) {
 }
 
 // src/formulas/manager.ts
-var import_obsidian22 = require("obsidian");
+var import_obsidian20 = require("obsidian");
 
 // src/formulas/modal.ts
-var import_obsidian21 = require("obsidian");
-var FormulasControlModal = class extends import_obsidian21.Modal {
+var import_obsidian19 = require("obsidian");
+var FormulasControlModal = class extends import_obsidian19.Modal {
   constructor(app, plugin, file) {
     super(app);
     this.plugin = plugin;
@@ -3425,16 +3309,16 @@ var FormulasControlModal = class extends import_obsidian21.Modal {
     const { contentEl } = this;
     contentEl.empty();
     contentEl.createEl("h2", { text: t("Configure Formulas") });
-    new import_obsidian21.Setting(contentEl).setName(t("Auto Number Formulas")).setDesc(t("Automatically number formulas on blur")).addToggle((toggle) => toggle.setValue(this.settings.auto).onChange((v) => this.settings.auto = v));
-    new import_obsidian21.Setting(contentEl).setName(t("Numbering Mode")).setDesc(t("Continuous: 1,2,3... | Heading-based: 1.1-1, 1.1-2...")).addDropdown((dropdown) => dropdown.addOption("continuous", t("Continuous")).addOption("heading-based", t("Heading-based")).setValue(this.settings.mode).onChange((v) => {
+    new import_obsidian19.Setting(contentEl).setName(t("Auto Number Formulas")).setDesc(t("Automatically number formulas on blur")).addToggle((toggle) => toggle.setValue(this.settings.auto).onChange((v) => this.settings.auto = v));
+    new import_obsidian19.Setting(contentEl).setName(t("Numbering Mode")).setDesc(t("Continuous: 1,2,3... | Heading-based: 1.1-1, 1.1-2...")).addDropdown((dropdown) => dropdown.addOption("continuous", t("Continuous")).addOption("heading-based", t("Heading-based")).setValue(this.settings.mode).onChange((v) => {
       this.settings.mode = v;
       this.display();
     }));
     if (this.settings.mode === "heading-based") {
-      new import_obsidian21.Setting(contentEl).setName(t("Max Heading Depth")).setDesc(t("Maximum heading level to use for formula numbering")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(this.settings.maxDepth).setDynamicTooltip().onChange((v) => this.settings.maxDepth = v));
+      new import_obsidian19.Setting(contentEl).setName(t("Max Heading Depth")).setDesc(t("Maximum heading level to use for formula numbering")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(this.settings.maxDepth).setDynamicTooltip().onChange((v) => this.settings.maxDepth = v));
     }
     const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
-    new import_obsidian21.Setting(buttonContainer).addButton((btn) => btn.setButtonText(t("Apply Now")).setTooltip(t("Apply numbering once without saving to frontmatter")).onClick(() => {
+    new import_obsidian19.Setting(buttonContainer).addButton((btn) => btn.setButtonText(t("Apply Now")).setTooltip(t("Apply numbering once without saving to frontmatter")).onClick(() => {
       this.applyNumbering();
       this.close();
     })).addButton((btn) => btn.setButtonText(t("Save to Frontmatter")).setTooltip(t("Save settings to frontmatter and apply")).setCta().onClick(async () => {
@@ -3442,7 +3326,7 @@ var FormulasControlModal = class extends import_obsidian21.Modal {
       this.close();
     })).addButton((btn) => btn.setButtonText(t("Remove Numbering")).setWarning().onClick(() => {
       this.plugin.formulasManager.removeNumbering();
-      new import_obsidian21.Notice(t("Formula numbering removed"));
+      new import_obsidian19.Notice(t("Formula numbering removed"));
       this.close();
     }));
   }
@@ -3454,13 +3338,13 @@ var FormulasControlModal = class extends import_obsidian21.Modal {
     this.plugin.settings.myFormulas = this.settings;
     this.plugin.formulasManager.updateNumbering(true, true);
     this.plugin.settings.myFormulas = originalSettings;
-    new import_obsidian21.Notice(t("Formula numbering applied (one-time)"));
+    new import_obsidian19.Notice(t("Formula numbering applied (one-time)"));
   }
   async saveAndApply() {
     await saveSettingsToFrontMatter(this.app, this.file, void 0, this.settings);
     await new Promise((resolve) => setTimeout(resolve, 100));
     this.plugin.formulasManager.updateNumbering(true, true);
-    new import_obsidian21.Notice(t("Settings saved to frontmatter and applied"));
+    new import_obsidian19.Notice(t("Settings saved to frontmatter and applied"));
   }
   onClose() {
     const { contentEl } = this;
@@ -3479,7 +3363,7 @@ var FormulasManager = class {
       id: "configure-formulas",
       name: t("Configure Formulas"),
       callback: () => {
-        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian22.MarkdownView);
+        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian20.MarkdownView);
         if (activeView && activeView.file) {
           new FormulasControlModal(this.app, this.plugin, activeView.file).open();
         }
@@ -3489,7 +3373,7 @@ var FormulasManager = class {
   onunload() {
   }
   getActiveViewInfo() {
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian22.MarkdownView);
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian20.MarkdownView);
     if (activeView && activeView.file) {
       const data = this.app.metadataCache.getFileCache(activeView.file);
       const editor = activeView.editor;
@@ -3689,19 +3573,19 @@ var FormulasManager = class {
 };
 
 // src/formulas/settings-ui.ts
-var import_obsidian23 = require("obsidian");
+var import_obsidian21 = require("obsidian");
 function renderFormulasSettings(containerEl, manager) {
   const settings = manager.plugin.settings.myFormulas;
-  new import_obsidian23.Setting(containerEl).setName(t("Auto Number Formulas")).setDesc(t("Automatically number formulas (triggers on blur if enabled)")).addToggle((toggle) => toggle.setValue(settings.auto).onChange(async (value) => {
+  new import_obsidian21.Setting(containerEl).setName(t("Auto Number Formulas")).setDesc(t("Automatically number formulas (triggers on blur if enabled)")).addToggle((toggle) => toggle.setValue(settings.auto).onChange(async (value) => {
     settings.auto = value;
     await manager.plugin.saveSettings();
   }));
-  new import_obsidian23.Setting(containerEl).setName(t("Numbering Mode")).setDesc(t("Continuous (1, 2, 3) or Heading-based (1.1-1, 1.1-2)")).addDropdown((dropdown) => dropdown.addOption("continuous", t("Continuous")).addOption("heading-based", t("Heading-based")).setValue(settings.mode).onChange(async (value) => {
+  new import_obsidian21.Setting(containerEl).setName(t("Numbering Mode")).setDesc(t("Continuous (1, 2, 3) or Heading-based (1.1-1, 1.1-2)")).addDropdown((dropdown) => dropdown.addOption("continuous", t("Continuous")).addOption("heading-based", t("Heading-based")).setValue(settings.mode).onChange(async (value) => {
     settings.mode = value;
     await manager.plugin.saveSettings();
     const nextSetting = containerEl.lastElementChild;
   }));
-  const depthSetting = new import_obsidian23.Setting(containerEl).setName(t("Max Heading Depth")).setDesc(t("For Heading-based mode: max depth of heading to use as prefix (e.g. 4 means use H4 at most)")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(settings.maxDepth).setDynamicTooltip().onChange(async (value) => {
+  const depthSetting = new import_obsidian21.Setting(containerEl).setName(t("Max Heading Depth")).setDesc(t("For Heading-based mode: max depth of heading to use as prefix (e.g. 4 means use H4 at most)")).addSlider((slider) => slider.setLimits(1, 6, 1).setValue(settings.maxDepth).setDynamicTooltip().onChange(async (value) => {
     settings.maxDepth = value;
     await manager.plugin.saveSettings();
   }));
@@ -3716,8 +3600,757 @@ function renderFormulasSettings(containerEl, manager) {
   const modeSetting = containerEl.children[containerEl.children.length - 2];
 }
 
+// src/sidebar/features/auto-hide.ts
+var AutoHideFeature = class {
+  constructor(app, plugin) {
+    // State
+    this.isHoveringLeft = false;
+    this.isHoveringRight = false;
+    // -- Non-Obsidian API --------------------------
+    // Helpers
+    this.getEditorWidth = () => this.app.workspace.containerEl.clientWidth;
+    // Event handlers
+    this.mouseMoveHandler = (event) => {
+      const mouseX = event.clientX;
+      if (this.settings.rightSidebar) {
+        if (!this.isHoveringRight && this.rightSplit.collapsed) {
+          const editorWidth = this.getEditorWidth();
+          this.isHoveringRight = mouseX >= editorWidth - this.settings.rightSideBarPixelTrigger;
+          if (this.isHoveringRight && this.rightSplit.collapsed) {
+            setTimeout(() => {
+              if (this.isHoveringRight) {
+                if (this.settings.syncLeftRight) {
+                  this.expandBoth();
+                } else {
+                  this.expandRight();
+                }
+              }
+            }, this.settings.sidebarExpandDelay);
+          }
+          setTimeout(() => {
+            if (!this.isHoveringRight) {
+              this.collapseRight();
+            }
+          }, this.settings.sidebarDelay);
+        }
+      }
+      if (this.settings.leftSidebar) {
+        if (!this.isHoveringLeft && this.leftSplit.collapsed) {
+          this.isHoveringLeft = mouseX <= this.settings.leftSideBarPixelTrigger;
+          if (this.isHoveringLeft && this.leftSplit.collapsed) {
+            setTimeout(() => {
+              if (this.isHoveringLeft) {
+                if (this.settings.syncLeftRight) {
+                  this.expandBoth();
+                } else {
+                  this.expandLeft();
+                }
+              }
+            }, this.settings.sidebarExpandDelay);
+          }
+          setTimeout(() => {
+            if (!this.isHoveringLeft) {
+              this.collapseLeft();
+            }
+          }, this.settings.sidebarDelay);
+        }
+      }
+    };
+    this.app = app;
+    this.plugin = plugin;
+  }
+  get settings() {
+    return this.plugin.settings.mySideBar.autoHide;
+  }
+  load() {
+    if (this.settings.overlayMode) {
+      document.body.classList.add("sidebar-overlay-mode");
+    }
+    document.body.classList.add("open-sidebar-hover-plugin");
+    this.updateCSSVariables();
+    this.app.workspace.onLayoutReady(() => {
+      this.init();
+    });
+  }
+  init() {
+    this.leftSplit = this.app.workspace.leftSplit;
+    this.rightSplit = this.app.workspace.rightSplit;
+    this.leftRibbon = this.app.workspace.leftRibbon;
+    this.initializeHandlers();
+    document.addEventListener("mousemove", this.mouseMoveHandler);
+    this.rightSplit.containerEl.addEventListener(
+      "mousemove",
+      this.rightSplitMouseMoveHandler
+    );
+    this.rightSplit.containerEl.addEventListener(
+      "mouseleave",
+      this.rightSplitMouseLeaveHandler
+    );
+    this.rightSplit.containerEl.addEventListener(
+      "mouseenter",
+      this.rightSplitMouseEnterHandler
+    );
+    if (this.leftRibbon && this.leftRibbon.containerEl) {
+      this.leftRibbon.containerEl.addEventListener(
+        "mouseenter",
+        this.leftRibbonMouseEnterHandler
+      );
+    }
+    this.leftSplit.containerEl.addEventListener(
+      "mousemove",
+      this.leftSplitMouseMoveHandler
+    );
+    this.leftSplit.containerEl.addEventListener(
+      "mouseleave",
+      this.leftSplitMouseLeaveHandler
+    );
+    this.leftSplit.containerEl.addEventListener(
+      "mouseenter",
+      this.leftSplitMouseEnterHandler
+    );
+    document.addEventListener("click", this.documentClickHandler);
+  }
+  unload() {
+    document.body.classList.remove("sidebar-overlay-mode");
+    document.body.classList.remove("open-sidebar-hover-plugin");
+    if (this.mouseMoveHandler) {
+      document.removeEventListener("mousemove", this.mouseMoveHandler);
+    }
+    if (this.documentClickHandler) {
+      document.removeEventListener("click", this.documentClickHandler);
+    }
+    if (this.rightSplit && this.rightSplit.containerEl) {
+      this.rightSplit.containerEl.removeEventListener(
+        "mouseleave",
+        this.rightSplitMouseLeaveHandler
+      );
+      this.rightSplit.containerEl.removeEventListener(
+        "mouseenter",
+        this.rightSplitMouseEnterHandler
+      );
+      this.rightSplit.containerEl.removeEventListener(
+        "mousemove",
+        this.rightSplitMouseMoveHandler
+      );
+    }
+    if (this.leftRibbon && this.leftRibbon.containerEl) {
+      this.leftRibbon.containerEl.removeEventListener(
+        "mouseenter",
+        this.leftRibbonMouseEnterHandler
+      );
+    }
+    if (this.leftSplit && this.leftSplit.containerEl) {
+      this.leftSplit.containerEl.removeEventListener(
+        "mouseleave",
+        this.leftSplitMouseLeaveHandler
+      );
+      this.leftSplit.containerEl.removeEventListener(
+        "mouseenter",
+        this.leftSplitMouseEnterHandler
+      );
+      this.leftSplit.containerEl.removeEventListener(
+        "mousemove",
+        this.leftSplitMouseMoveHandler
+      );
+    }
+    const styleEl = document.getElementById("obsidian-assistant-sidebar-variables");
+    if (styleEl) {
+      styleEl.remove();
+    }
+  }
+  initializeHandlers() {
+    this.documentClickHandler = (e) => {
+      const target = e.target;
+      if (!this.leftSplit || !this.rightSplit)
+        return;
+      const leftSplitEl = this.leftSplit.containerEl;
+      const rightSplitEl = this.rightSplit.containerEl;
+      if (!leftSplitEl.contains(target) && !rightSplitEl.contains(target)) {
+        if (!this.leftSplit.collapsed && this.settings.leftSidebar) {
+          this.collapseLeft();
+        }
+        if (!this.rightSplit.collapsed && this.settings.rightSidebar) {
+          this.collapseRight();
+        }
+      }
+    };
+    this.rightSplitMouseMoveHandler = () => this.rightSplit.containerEl.addClass("hovered");
+    this.rightSplitMouseEnterHandler = () => {
+      this.isHoveringRight = true;
+      this.rightSplit.containerEl.addClass("hovered");
+    };
+    this.leftSplitMouseMoveHandler = () => this.leftSplit.containerEl.addClass("hovered");
+    this.leftSplitMouseEnterHandler = () => {
+      this.isHoveringLeft = true;
+      this.leftSplit.containerEl.addClass("hovered");
+    };
+    this.leftRibbonMouseEnterHandler = () => {
+      if (this.settings.leftSidebar) {
+        this.isHoveringLeft = true;
+        setTimeout(() => {
+          if (this.isHoveringLeft) {
+            if (this.settings.syncLeftRight && this.settings.rightSidebar) {
+              this.expandBoth();
+            } else {
+              this.expandLeft();
+            }
+          }
+        }, this.settings.sidebarExpandDelay);
+      }
+    };
+    this.rightSplitMouseLeaveHandler = (event) => {
+      var _a;
+      const target = event.relatedTarget;
+      if (target && (target.closest(".workspace-tab-header-container-inner") || target.hasClass && target.hasClass("menu") || ((_a = target == null ? void 0 : target.classList) == null ? void 0 : _a.contains("menu")) || (target == null ? void 0 : target.closest(".menu")))) {
+        return;
+      }
+      if (this.settings.rightSidebar) {
+        this.isHoveringRight = false;
+        this.rightSplit.containerEl.removeClass("hovered");
+        setTimeout(() => {
+          if (!this.isHoveringRight) {
+            if (this.settings.syncLeftRight && this.settings.leftSidebar) {
+              this.collapseBoth();
+            } else {
+              this.collapseRight();
+            }
+          }
+        }, this.settings.sidebarDelay);
+      }
+    };
+    this.leftSplitMouseLeaveHandler = (event) => {
+      var _a;
+      const target = event.relatedTarget;
+      if (target && (target.closest(".workspace-tab-header-container-inner") || target.hasClass && target.hasClass("menu") || ((_a = target == null ? void 0 : target.classList) == null ? void 0 : _a.contains("menu")) || (target == null ? void 0 : target.closest(".menu")))) {
+        return;
+      }
+      if (this.settings.leftSidebar) {
+        this.isHoveringLeft = false;
+        this.leftSplit.containerEl.removeClass("hovered");
+        setTimeout(() => {
+          if (!this.isHoveringLeft) {
+            if (this.settings.syncLeftRight && this.settings.rightSidebar) {
+              this.collapseBoth();
+            } else {
+              this.collapseLeft();
+            }
+          }
+        }, this.settings.sidebarDelay);
+      }
+    };
+  }
+  // Helper method to update CSS variables
+  updateCSSVariables() {
+    const styleEl = document.createElement("style");
+    styleEl.id = "obsidian-assistant-sidebar-variables";
+    const existingStyle = document.getElementById(styleEl.id);
+    if (existingStyle) {
+      existingStyle.remove();
+    }
+    styleEl.textContent = `
+            :root {
+                --sidebar-expand-collapse-speed: ${this.settings.expandCollapseSpeed}ms;
+                --sidebar-expand-delay: ${this.settings.sidebarExpandDelay}ms;
+                --left-sidebar-max-width: ${this.settings.leftSidebarMaxWidth}px;
+                --right-sidebar-max-width: ${this.settings.rightSidebarMaxWidth}px;
+            }
+            
+            body {
+                --sidebar-width: ${this.settings.leftSidebarMaxWidth}px !important;
+                --right-sidebar-width: ${this.settings.rightSidebarMaxWidth}px !important;
+            }
+        `;
+    document.head.appendChild(styleEl);
+  }
+  expandRight() {
+    this.rightSplit.expand();
+    this.isHoveringRight = true;
+  }
+  expandLeft() {
+    this.leftSplit.expand();
+    this.isHoveringLeft = true;
+  }
+  expandBoth() {
+    this.expandRight();
+    this.expandLeft();
+  }
+  collapseRight() {
+    this.rightSplit.collapse();
+    this.isHoveringRight = false;
+  }
+  collapseLeft() {
+    this.leftSplit.collapse();
+    this.isHoveringLeft = false;
+  }
+  collapseBoth() {
+    this.collapseRight();
+    this.collapseLeft();
+  }
+};
+
+// src/sidebar/features/ribbon.ts
+var RibbonFeature = class {
+  constructor(app, plugin) {
+    // Debounce timer for observer
+    this.observerTimer = null;
+    this.isInternalChange = false;
+    this.app = app;
+    this.plugin = plugin;
+  }
+  get settings() {
+    return this.plugin.settings.mySideBar.ribbon;
+  }
+  async onload() {
+    var _a;
+    if (!((_a = this.plugin.settings.mySideBar) == null ? void 0 : _a.ribbon)) {
+      if (!this.plugin.settings.mySideBar) {
+        this.plugin.settings.mySideBar = {};
+      }
+      this.plugin.settings.mySideBar.ribbon = { elements: {} };
+      await this.plugin.saveSettings();
+    }
+    this.app.workspace.onLayoutReady(() => {
+      this.init();
+    });
+  }
+  onunload() {
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+    const resetEl = (el) => {
+      el.style.removeProperty("order");
+      el.style.removeProperty("display");
+      el.removeClass("assistant-ribbon-hidden");
+    };
+    if (this.ribbonActions)
+      Array.from(this.ribbonActions.children).forEach((el) => resetEl(el));
+    if (this.ribbonSettings)
+      Array.from(this.ribbonSettings.children).forEach((el) => resetEl(el));
+  }
+  init() {
+    const ribbon = document.querySelector(".workspace-ribbon.mod-left");
+    if (!ribbon)
+      return;
+    this.ribbonActions = ribbon.querySelector(".side-dock-actions");
+    this.ribbonSettings = ribbon.querySelector(".side-dock-settings");
+    if (!this.ribbonActions && !this.ribbonSettings)
+      return;
+    this.processRibbon();
+    this.observer = new MutationObserver((mutations) => {
+      if (this.isInternalChange)
+        return;
+      let shouldUpdate = false;
+      for (const mutation of mutations) {
+        if (mutation.type === "childList") {
+          shouldUpdate = true;
+          break;
+        }
+      }
+      if (shouldUpdate) {
+        this.scheduleProcess();
+      }
+    });
+    if (this.ribbonActions)
+      this.observer.observe(this.ribbonActions, { childList: true });
+    if (this.ribbonSettings)
+      this.observer.observe(this.ribbonSettings, { childList: true });
+  }
+  scheduleProcess() {
+    if (this.observerTimer !== null) {
+      window.clearTimeout(this.observerTimer);
+    }
+    this.observerTimer = window.setTimeout(() => {
+      this.processRibbon();
+      this.observerTimer = null;
+    }, 200);
+  }
+  async processRibbon() {
+    var _a, _b;
+    if (!this.ribbonActions && !this.ribbonSettings)
+      return;
+    const actionsChildren = this.ribbonActions ? Array.from(this.ribbonActions.children) : [];
+    const settingsChildren = this.ribbonSettings ? Array.from(this.ribbonSettings.children) : [];
+    const domElementsMap = /* @__PURE__ */ new Map();
+    actionsChildren.forEach((el) => {
+      const ariaLabel = el.getAttribute("aria-label");
+      if (ariaLabel && !el.classList.contains("assistant-ghost")) {
+        domElementsMap.set(ariaLabel, el);
+      }
+    });
+    settingsChildren.forEach((el) => {
+      const ariaLabel = el.getAttribute("aria-label");
+      if (ariaLabel && !el.classList.contains("assistant-ghost")) {
+        domElementsMap.set(ariaLabel, el);
+      }
+    });
+    const settingsElements = this.settings.elements;
+    const knownIDs = Object.keys(settingsElements);
+    let maxOrder = 0;
+    Object.values(settingsElements).forEach((el) => {
+      if (el.order > maxOrder)
+        maxOrder = el.order;
+    });
+    const newElements = [];
+    for (const [id, el] of domElementsMap.entries()) {
+      if (!settingsElements[id]) {
+        maxOrder++;
+        const newEl = {
+          id,
+          name: id,
+          visible: true,
+          order: maxOrder,
+          icon: ((_a = el.querySelector("svg")) == null ? void 0 : _a.outerHTML) || el.innerHTML
+        };
+        newElements.push(newEl);
+        settingsElements[id] = newEl;
+      } else {
+        const icon = ((_b = el.querySelector("svg")) == null ? void 0 : _b.outerHTML) || el.innerHTML;
+        if (icon && settingsElements[id].icon !== icon) {
+          settingsElements[id].icon = icon;
+        }
+      }
+    }
+    this.isInternalChange = true;
+    const sortedIDs = Object.keys(settingsElements).sort((a, b) => settingsElements[a].order - settingsElements[b].order);
+    for (const id of sortedIDs) {
+      const setting = settingsElements[id];
+      const el = domElementsMap.get(id);
+      if (el) {
+        if (setting.visible) {
+          el.style.setProperty("display", "flex", "important");
+          el.removeClass("assistant-ribbon-hidden");
+        } else {
+          el.style.setProperty("display", "none", "important");
+          el.addClass("assistant-ribbon-hidden");
+        }
+        if (this.ribbonActions && el.parentElement !== this.ribbonActions) {
+          this.ribbonActions.appendChild(el);
+        }
+        if (this.ribbonActions) {
+          this.ribbonActions.appendChild(el);
+        }
+      }
+    }
+    this.isInternalChange = false;
+    if (newElements.length > 0) {
+      await this.plugin.saveSettings();
+    }
+  }
+  async toggleVisibility(id) {
+    if (this.settings.elements[id]) {
+      this.settings.elements[id].visible = !this.settings.elements[id].visible;
+      await this.plugin.saveSettings();
+      await this.processRibbon();
+    }
+  }
+  async saveOrder(newOrder) {
+    newOrder.forEach((id, index) => {
+      if (this.settings.elements[id]) {
+        this.settings.elements[id].order = index;
+      }
+    });
+    await this.plugin.saveSettings();
+    await this.processRibbon();
+  }
+};
+
+// src/sidebar/manager.ts
+var SidebarManager = class {
+  constructor(app, plugin) {
+    this.app = app;
+    this.plugin = plugin;
+    this.autoHideFeature = new AutoHideFeature(app, plugin);
+    this.ribbonFeature = new RibbonFeature(app, plugin);
+  }
+  async onload() {
+    this.autoHideFeature.load();
+    await this.ribbonFeature.onload();
+  }
+  onunload() {
+    this.autoHideFeature.unload();
+    this.ribbonFeature.onunload();
+  }
+};
+
+// src/sidebar/settings-ui.ts
+var import_obsidian22 = require("obsidian");
+function renderSidebarSettings(containerEl, manager) {
+  createSubSection(containerEl, t("Left Sidebar"), (contentEl) => {
+    new import_obsidian22.Setting(contentEl).setName(t("Coming Soon")).setDesc(t("Settings for Left Sidebar control will be here."));
+  });
+  createSubSection(containerEl, t("Ribbon Buttons"), (contentEl) => {
+    renderRibbonSettings(contentEl, manager);
+  });
+  createSubSection(containerEl, t("Right Sidebar"), (contentEl) => {
+    new import_obsidian22.Setting(contentEl).setName(t("Coming Soon")).setDesc(t("Settings for Right Sidebar control will be here."));
+  });
+  createSubSection(containerEl, t("Auto Hide"), (contentEl) => {
+    renderAutoHideSettings(contentEl, manager);
+  });
+}
+function createSubSection(containerEl, title, renderBody) {
+  const details = containerEl.createEl("details");
+  details.open = false;
+  details.style.marginBottom = "10px";
+  details.style.border = "1px solid var(--background-modifier-border)";
+  details.style.borderRadius = "5px";
+  details.style.padding = "0.5em";
+  const summary = details.createEl("summary");
+  summary.style.cursor = "pointer";
+  summary.style.fontWeight = "bold";
+  summary.innerText = title;
+  summary.style.outline = "none";
+  const content = details.createEl("div");
+  content.style.marginTop = "10px";
+  content.style.paddingLeft = "5px";
+  content.style.borderLeft = "2px solid var(--background-modifier-border)";
+  renderBody(content);
+}
+function renderAutoHideSettings(containerEl, manager) {
+  const plugin = manager.plugin;
+  const settings = plugin.settings.mySideBar.autoHide;
+  new import_obsidian22.Setting(containerEl).setName(t("Left sidebar hover")).setDesc(t("Enables the expansion and collapsing of the left sidebar on hover.")).addToggle(
+    (t2) => t2.setValue(settings.leftSidebar).onChange(async (value) => {
+      settings.leftSidebar = value;
+      await plugin.saveSettings();
+    })
+  );
+  new import_obsidian22.Setting(containerEl).setName(t("Right sidebar hover")).setDesc(t("Enables the expansion and collapsing of the right sidebar on hover. Only collapses the right panel unless you have a right ribbon.")).addToggle(
+    (t2) => t2.setValue(settings.rightSidebar).onChange(async (value) => {
+      settings.rightSidebar = value;
+      await plugin.saveSettings();
+    })
+  );
+  new import_obsidian22.Setting(containerEl).setName(t("Sync left and right")).setDesc(t("If enabled, hovering over the right sidebar will also expand the left sidebar at the same time, and vice versa. (Left and Right sidebar must both be enabled above)")).addToggle(
+    (t2) => t2.setValue(settings.syncLeftRight).onChange(async (value) => {
+      settings.syncLeftRight = value;
+      await plugin.saveSettings();
+    })
+  );
+  new import_obsidian22.Setting(containerEl).setName(t("Overlay mode")).setDesc(t("When enabled, sidebars will slide over the main content without affecting the layout. When disabled, sidebars will expand by pushing content.")).addToggle(
+    (t2) => t2.setValue(settings.overlayMode).onChange(async (value) => {
+      settings.overlayMode = value;
+      if (value) {
+        document.body.classList.add("sidebar-overlay-mode");
+      } else {
+        document.body.classList.remove("sidebar-overlay-mode");
+      }
+      await plugin.saveSettings();
+    })
+  );
+  new import_obsidian22.Setting(containerEl).setName(t("Behavior")).setHeading();
+  new import_obsidian22.Setting(containerEl).setName(t("Left sidebar pixel trigger")).setDesc(t("Specify the number of pixels from the left edge of the editor that will trigger the left sidebar to open on hover (must be greater than 0)")).addText((text) => {
+    text.setPlaceholder("20").setValue(settings.leftSideBarPixelTrigger.toString()).onChange(async (value) => {
+      const v = Number(value);
+      if (!value || isNaN(v) || v < 1) {
+        settings.leftSideBarPixelTrigger = DEFAULT_MY_SIDEBAR_SETTINGS.autoHide.leftSideBarPixelTrigger;
+      } else {
+        settings.leftSideBarPixelTrigger = v;
+      }
+      await plugin.saveSettings();
+    });
+  });
+  new import_obsidian22.Setting(containerEl).setName(t("Right sidebar pixel trigger")).setDesc(t("Specify the number of pixels from the right edge of the editor that will trigger the right sidebar to open on hover (must be greater than 0)")).addText((text) => {
+    text.setPlaceholder("20").setValue(settings.rightSideBarPixelTrigger.toString()).onChange(async (value) => {
+      const v = Number(value);
+      if (!value || isNaN(v) || v < 1) {
+        settings.rightSideBarPixelTrigger = DEFAULT_MY_SIDEBAR_SETTINGS.autoHide.rightSideBarPixelTrigger;
+      } else {
+        settings.rightSideBarPixelTrigger = v;
+      }
+      await plugin.saveSettings();
+    });
+  });
+  new import_obsidian22.Setting(containerEl).setName(t("Timing")).setHeading();
+  new import_obsidian22.Setting(containerEl).setName(t("Sidebar collapse delay")).setDesc(t("The delay in milliseconds before the sidebar collapses after the mouse has left. Enter '0' to disable delay.")).addText((text) => {
+    text.setPlaceholder("300").setValue(settings.sidebarDelay.toString()).onChange(async (value) => {
+      const v = Number(value);
+      if (!v || isNaN(v) || v < 0) {
+        settings.sidebarDelay = DEFAULT_MY_SIDEBAR_SETTINGS.autoHide.sidebarDelay;
+      } else {
+        settings.sidebarDelay = v;
+      }
+      await plugin.saveSettings();
+    });
+  });
+  new import_obsidian22.Setting(containerEl).setName(t("Sidebar expand delay")).setDesc(t("The delay in milliseconds before the sidebar expands after hovering. Default is 200ms.")).addText((text) => {
+    text.setPlaceholder("200").setValue(settings.sidebarExpandDelay.toString()).onChange(async (value) => {
+      const v = Number(value);
+      if (!v || isNaN(v) || v < 0) {
+        settings.sidebarExpandDelay = DEFAULT_MY_SIDEBAR_SETTINGS.autoHide.sidebarExpandDelay;
+      } else {
+        settings.sidebarExpandDelay = v;
+      }
+      manager.autoHideFeature.updateCSSVariables();
+      await plugin.saveSettings();
+    });
+  });
+  new import_obsidian22.Setting(containerEl).setName(t("Expand/collapse animation speed")).setDesc(t("The speed of the sidebar expand/collapse animation in milliseconds.")).addText((text) => {
+    var _a;
+    text.setPlaceholder("300").setValue(((_a = settings.expandCollapseSpeed) == null ? void 0 : _a.toString()) || "300").onChange(async (value) => {
+      const v = Number(value);
+      if (!value || isNaN(v) || v < 0) {
+        settings.expandCollapseSpeed = DEFAULT_MY_SIDEBAR_SETTINGS.autoHide.expandCollapseSpeed;
+      } else {
+        settings.expandCollapseSpeed = v;
+      }
+      manager.autoHideFeature.updateCSSVariables();
+      await plugin.saveSettings();
+    });
+  });
+  new import_obsidian22.Setting(containerEl).setName(t("Appearance")).setHeading();
+  new import_obsidian22.Setting(containerEl).setName(t("Left sidebar maximum width")).setDesc(t("Specify the maximum width in pixels for the left sidebar when expanded")).addText((text) => {
+    text.setPlaceholder("300").setValue(settings.leftSidebarMaxWidth.toString()).onChange(async (value) => {
+      const v = Number(value);
+      if (!value || isNaN(v) || v < 100) {
+        settings.leftSidebarMaxWidth = DEFAULT_MY_SIDEBAR_SETTINGS.autoHide.leftSidebarMaxWidth;
+      } else {
+        settings.leftSidebarMaxWidth = v;
+      }
+      manager.autoHideFeature.updateCSSVariables();
+      await plugin.saveSettings();
+    });
+  });
+  new import_obsidian22.Setting(containerEl).setName(t("Right sidebar maximum width")).setDesc(t("Specify the maximum width in pixels for the right sidebar when expanded")).addText((text) => {
+    text.setPlaceholder("300").setValue(settings.rightSidebarMaxWidth.toString()).onChange(async (value) => {
+      const v = Number(value);
+      if (!value || isNaN(v) || v < 100) {
+        settings.rightSidebarMaxWidth = DEFAULT_MY_SIDEBAR_SETTINGS.autoHide.rightSidebarMaxWidth;
+      } else {
+        settings.rightSidebarMaxWidth = v;
+      }
+      manager.autoHideFeature.updateCSSVariables();
+      await plugin.saveSettings();
+    });
+  });
+}
+function renderRibbonSettings(containerEl, manager) {
+  containerEl.empty();
+  const plugin = manager.plugin;
+  const settings = plugin.settings.mySideBar.ribbon;
+  manager.ribbonFeature.processRibbon().then(() => {
+    const elements = Object.values(settings.elements).sort((a, b) => a.order - b.order);
+    const info = containerEl.createEl("div", { cls: "setting-item-description" });
+    info.style.marginBottom = "10px";
+    info.innerText = t("Drag to reorder ribbon icons. Click eye icon to toggle visibility.");
+    const rowsContainer = containerEl.createEl("div");
+    rowsContainer.addClass("statusbar-organizer-rows-container");
+    if (elements.length === 0) {
+      rowsContainer.createEl("div", { text: t("No ribbon elements found yet.") });
+      return;
+    }
+    elements.forEach((el) => {
+      renderRibbonRow(rowsContainer, el, manager, elements);
+    });
+  });
+}
+function renderRibbonRow(container, el, manager, allElements) {
+  const rowEntry = container.createEl("div");
+  rowEntry.addClass("statusbar-organizer-row");
+  rowEntry.style.gridTemplateColumns = "2em 1fr 2em";
+  if (!el.visible)
+    rowEntry.addClass("statusbar-organizer-row-hidden");
+  rowEntry.setAttribute("data-ribbon-id", el.id);
+  const handle = rowEntry.createEl("span");
+  handle.style.cursor = "grab";
+  handle.style.display = "flex";
+  handle.style.alignItems = "center";
+  handle.style.justifyContent = "center";
+  handle.setAttribute("aria-label", t("Drag to reorder"));
+  (0, import_obsidian22.setIcon)(handle, "grip-horizontal");
+  handle.addEventListener("mousedown", (e) => handleRibbonDrag(e, rowEntry, el, manager, container, allElements));
+  const nameContainer = rowEntry.createEl("span", { cls: "statusbar-organizer-row-title" });
+  nameContainer.style.display = "flex";
+  nameContainer.style.alignItems = "center";
+  nameContainer.style.gap = "8px";
+  if (el.icon) {
+    const iconSpan = nameContainer.createEl("span");
+    iconSpan.innerHTML = el.icon;
+    const svg = iconSpan.querySelector("svg");
+    if (svg) {
+      svg.setAttribute("width", "16");
+      svg.setAttribute("height", "16");
+      svg.style.verticalAlign = "middle";
+    }
+  }
+  const nameSpan = nameContainer.createEl("span");
+  nameSpan.innerText = el.name || el.id;
+  const visBtn = rowEntry.createEl("span", { cls: "statusbar-organizer-row-visibility" });
+  visBtn.style.cursor = "pointer";
+  (0, import_obsidian22.setIcon)(visBtn, el.visible ? "eye" : "eye-off");
+  visBtn.addEventListener("click", async () => {
+    await manager.ribbonFeature.toggleVisibility(el.id);
+    if (manager.plugin.settings.mySideBar.ribbon.elements[el.id].visible) {
+      rowEntry.removeClass("statusbar-organizer-row-hidden");
+      (0, import_obsidian22.setIcon)(visBtn, "eye");
+    } else {
+      rowEntry.addClass("statusbar-organizer-row-hidden");
+      (0, import_obsidian22.setIcon)(visBtn, "eye-off");
+    }
+  });
+}
+function handleRibbonDrag(event, rowEntry, item, manager, container, allElements) {
+  event.preventDefault();
+  const rect = rowEntry.getBoundingClientRect();
+  const offsetY = event.clientY - rect.top;
+  const clone = rowEntry.cloneNode(true);
+  clone.style.position = "fixed";
+  clone.style.width = `${rect.width}px`;
+  clone.style.zIndex = "1000";
+  clone.style.opacity = "0.8";
+  clone.addClass("is-dragging");
+  document.body.appendChild(clone);
+  rowEntry.style.opacity = "0.2";
+  const moveHandler = (e) => {
+    clone.style.top = `${e.clientY - offsetY}px`;
+    clone.style.left = `${rect.left}px`;
+    const children = Array.from(container.children);
+    const draggingIdx = children.indexOf(rowEntry);
+    let targetIdx = -1;
+    let closestDist = Infinity;
+    let closestEl = null;
+    children.forEach((child, idx) => {
+      if (child === rowEntry)
+        return;
+      const childRect = child.getBoundingClientRect();
+      const childCenter = childRect.top + childRect.height / 2;
+      const dist = Math.abs(e.clientY - childCenter);
+      if (dist < closestDist && dist < childRect.height) {
+        closestDist = dist;
+        closestEl = child;
+        targetIdx = idx;
+      }
+    });
+    if (closestEl && targetIdx !== -1) {
+      if (draggingIdx < targetIdx) {
+        container.insertBefore(rowEntry, closestEl.nextSibling);
+      } else {
+        container.insertBefore(rowEntry, closestEl);
+      }
+    }
+  };
+  const upHandler = async () => {
+    document.removeEventListener("mousemove", moveHandler);
+    document.removeEventListener("mouseup", upHandler);
+    clone.remove();
+    rowEntry.style.opacity = "";
+    const children = Array.from(container.children);
+    const newOrderIds = [];
+    children.forEach((child) => {
+      const id = child.getAttribute("data-ribbon-id");
+      if (id)
+        newOrderIds.push(id);
+    });
+    if (newOrderIds.length > 0) {
+      await manager.ribbonFeature.saveOrder(newOrderIds);
+    }
+  };
+  document.addEventListener("mousemove", moveHandler);
+  document.addEventListener("mouseup", upHandler);
+}
+
 // src/utils/auto-numbering.ts
-var import_obsidian24 = require("obsidian");
+var import_obsidian23 = require("obsidian");
 var AutoNumberingController = class {
   constructor(app, plugin, headingsManager, formulasManager) {
     this.autoUpdateTimeout = null;
@@ -3739,7 +4372,7 @@ var AutoNumberingController = class {
     this.plugin.registerDomEvent(window, "focus", () => this.handleFocus());
   }
   handleBlur() {
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian24.MarkdownView);
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian23.MarkdownView);
     if (!activeView || !activeView.file)
       return;
     const data = this.app.metadataCache.getFileCache(activeView.file);
@@ -3804,7 +4437,7 @@ var AutoNumberingController = class {
 };
 
 // src/main.ts
-var AssistantPlugin = class extends import_obsidian25.Plugin {
+var AssistantPlugin = class extends import_obsidian24.Plugin {
   async onload() {
     console.log(t("Loading Obsidian Assistant..."));
     console.log(t("Loading Settings..."));
@@ -3815,6 +4448,7 @@ var AssistantPlugin = class extends import_obsidian25.Plugin {
     this.snippetsManager = new SnippetsManager(this.app, this);
     this.headingsManager = new HeadingsManager(this.app, this);
     this.formulasManager = new FormulasManager(this.app, this);
+    this.sidebarManager = new SidebarManager(this.app, this);
     this.autoNumberingController = new AutoNumberingController(this.app, this, this.headingsManager, this.formulasManager);
     if (this.settings.myFolders.enabled)
       await this.foldersManager.onload();
@@ -3828,13 +4462,15 @@ var AssistantPlugin = class extends import_obsidian25.Plugin {
       await this.headingsManager.onload();
     if (this.settings.myFormulas.enabled)
       await this.formulasManager.onload();
+    if (this.settings.mySideBar.enabled)
+      await this.sidebarManager.onload();
     if (this.settings.myHeadings.enabled || this.settings.myFormulas.enabled) {
       this.autoNumberingController.onload();
     }
     this.addSettingTab(new AssistantSettingsTab(this.app, this));
   }
   onunload() {
-    var _a, _b, _c, _d, _e, _f, _g;
+    var _a, _b, _c, _d, _e, _f, _g, _h;
     console.log(t("Unloading Obsidian Assistant..."));
     (_a = this.foldersManager) == null ? void 0 : _a.onunload();
     (_b = this.pluginsManager) == null ? void 0 : _b.onunload();
@@ -3842,10 +4478,22 @@ var AssistantPlugin = class extends import_obsidian25.Plugin {
     (_d = this.snippetsManager) == null ? void 0 : _d.onunload();
     (_e = this.headingsManager) == null ? void 0 : _e.onunload();
     (_f = this.formulasManager) == null ? void 0 : _f.onunload();
-    (_g = this.autoNumberingController) == null ? void 0 : _g.onunload();
+    (_g = this.sidebarManager) == null ? void 0 : _g.onunload();
+    (_h = this.autoNumberingController) == null ? void 0 : _h.onunload();
   }
   async loadSettings() {
     const loadedData = await this.loadData();
+    if (loadedData) {
+      if (loadedData.myStatusBar) {
+        delete loadedData.myStatusBar.presets;
+        delete loadedData.myStatusBar.activePreset;
+        delete loadedData.myStatusBar.activeFullscreenPreset;
+        delete loadedData.myStatusBar.separateFullscreenPreset;
+        delete loadedData.myStatusBar.presetsOrder;
+      }
+      delete loadedData.statusBar;
+      delete loadedData.statusBarOrganizer;
+    }
     this.settings = Object.assign({}, DEFAULT_SETTINGS, loadedData);
     if (loadedData == null ? void 0 : loadedData.myHeadings) {
       this.settings.myHeadings = Object.assign({}, DEFAULT_SETTINGS.myHeadings, loadedData.myHeadings);
@@ -3856,12 +4504,13 @@ var AssistantPlugin = class extends import_obsidian25.Plugin {
     if (loadedData == null ? void 0 : loadedData.mySnippets) {
       this.settings.mySnippets = Object.assign({}, DEFAULT_SETTINGS.mySnippets, loadedData.mySnippets);
     }
+    await this.saveSettings();
   }
   async saveSettings() {
     await this.saveData(this.settings);
   }
 };
-var AssistantSettingsTab = class extends import_obsidian25.PluginSettingTab {
+var AssistantSettingsTab = class extends import_obsidian24.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -3871,7 +4520,7 @@ var AssistantSettingsTab = class extends import_obsidian25.PluginSettingTab {
     containerEl.empty();
     containerEl.createEl("h2", { text: t("Obsidian Assistant Settings") });
     containerEl.createEl("h3", { text: t("Global Settings") });
-    new import_obsidian25.Setting(containerEl).setName(t("Auto-Numbering Refresh Interval")).setDesc(t("Time in milliseconds to wait before auto-numbering triggers (after losing focus)")).addText((text) => text.setPlaceholder("1000").setValue(String(this.plugin.settings.refreshInterval)).onChange(async (value) => {
+    new import_obsidian24.Setting(containerEl).setName(t("Auto-Numbering Refresh Interval")).setDesc(t("Time in milliseconds to wait before auto-numbering triggers (after losing focus)")).addText((text) => text.setPlaceholder("1000").setValue(String(this.plugin.settings.refreshInterval)).onChange(async (value) => {
       const interval = parseInt(value);
       if (!isNaN(interval) && interval > 0) {
         this.plugin.settings.refreshInterval = interval;
@@ -3996,6 +4645,23 @@ var AssistantSettingsTab = class extends import_obsidian25.PluginSettingTab {
         renderFormulasSettings(el, this.plugin.formulasManager);
       }
     );
+    this.addPluginSection(
+      containerEl,
+      t("My SideBar"),
+      this.plugin.settings.mySideBar.enabled,
+      async (value) => {
+        this.plugin.settings.mySideBar.enabled = value;
+        await this.plugin.saveSettings();
+        if (value) {
+          this.plugin.sidebarManager.onload();
+        } else {
+          this.plugin.sidebarManager.onunload();
+        }
+      },
+      (el) => {
+        renderSidebarSettings(el, this.plugin.sidebarManager);
+      }
+    );
   }
   addPluginSection(containerEl, title, isEnabled, onToggle, renderBody) {
     const details = containerEl.createEl("details");
@@ -4019,7 +4685,7 @@ var AssistantSettingsTab = class extends import_obsidian25.PluginSettingTab {
     titleContainer.createEl("strong", { text: title });
     const toggleContainer = summary.createEl("div");
     toggleContainer.onclick = (e) => e.preventDefault();
-    const toggleSetting = new import_obsidian25.Setting(toggleContainer).addToggle((toggle) => toggle.setValue(isEnabled).onChange(onToggle));
+    const toggleSetting = new import_obsidian24.Setting(toggleContainer).addToggle((toggle) => toggle.setValue(isEnabled).onChange(onToggle));
     toggleSetting.settingEl.style.border = "none";
     toggleSetting.settingEl.style.padding = "0";
     toggleSetting.infoEl.remove();

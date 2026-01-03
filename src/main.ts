@@ -14,6 +14,8 @@ import { HeadingsManager } from './headings/manager';
 import { renderHeadingsSettings } from './headings/settings-ui';
 import { FormulasManager } from './formulas/manager';
 import { renderFormulasSettings } from './formulas/settings-ui';
+import { SidebarManager } from './sidebar/manager';
+import { renderSidebarSettings } from './sidebar/settings-ui';
 import { AutoNumberingController } from './utils/auto-numbering';
 
 export default class AssistantPlugin extends Plugin {
@@ -23,7 +25,9 @@ export default class AssistantPlugin extends Plugin {
     statusBarManager: StatusBarManager;
     snippetsManager: SnippetsManager;
     headingsManager: HeadingsManager;
+
     formulasManager: FormulasManager;
+    sidebarManager: SidebarManager;
     autoNumberingController: AutoNumberingController;
 
     async onload() {
@@ -38,6 +42,7 @@ export default class AssistantPlugin extends Plugin {
         this.snippetsManager = new SnippetsManager(this.app, this);
         this.headingsManager = new HeadingsManager(this.app, this);
         this.formulasManager = new FormulasManager(this.app, this);
+        this.sidebarManager = new SidebarManager(this.app, this);
 
         // Initialize Auto Controller
         this.autoNumberingController = new AutoNumberingController(this.app, this, this.headingsManager, this.formulasManager);
@@ -49,6 +54,7 @@ export default class AssistantPlugin extends Plugin {
         if (this.settings.mySnippets.enabled) await this.snippetsManager.onload();
         if (this.settings.myHeadings.enabled) await this.headingsManager.onload();
         if (this.settings.myFormulas.enabled) await this.formulasManager.onload();
+        if (this.settings.mySideBar.enabled) await this.sidebarManager.onload();
 
         // Load Auto Controller if either relevant module is enabled
         if (this.settings.myHeadings.enabled || this.settings.myFormulas.enabled) {
@@ -66,11 +72,27 @@ export default class AssistantPlugin extends Plugin {
         this.snippetsManager?.onunload();
         this.headingsManager?.onunload();
         this.formulasManager?.onunload();
+        this.sidebarManager?.onunload();
         this.autoNumberingController?.onunload();
     }
 
     async loadSettings() {
         const loadedData = await this.loadData();
+
+        // CLEANUP: Remove obsolete keys to ensure data.json matches current settings structure
+        if (loadedData) {
+            if (loadedData.myStatusBar) {
+                delete loadedData.myStatusBar.presets;
+                delete loadedData.myStatusBar.activePreset;
+                delete loadedData.myStatusBar.activeFullscreenPreset;
+                delete loadedData.myStatusBar.separateFullscreenPreset;
+                delete loadedData.myStatusBar.presetsOrder;
+            }
+            // Remove legacy root keys if they exist
+            delete loadedData.statusBar;
+            delete loadedData.statusBarOrganizer;
+        }
+
         this.settings = Object.assign({}, DEFAULT_SETTINGS, loadedData);
 
         // Deep merge for nested settings objects to ensure new defaults (like Heading Shifter) are present
@@ -99,6 +121,11 @@ export default class AssistantPlugin extends Plugin {
         if (loadedData?.mySnippets) {
             this.settings.mySnippets = Object.assign({}, DEFAULT_SETTINGS.mySnippets, loadedData.mySnippets);
         }
+
+
+
+        // Save cleaned settings to disk immediately
+        await this.saveSettings();
     }
 
     async saveSettings() {
@@ -276,6 +303,25 @@ class AssistantSettingsTab extends PluginSettingTab {
             },
             (el) => {
                 renderFormulasSettings(el, this.plugin.formulasManager);
+            }
+        );
+
+        // MySideBar Section
+        this.addPluginSection(
+            containerEl,
+            t('My SideBar'),
+            this.plugin.settings.mySideBar.enabled,
+            async (value) => {
+                this.plugin.settings.mySideBar.enabled = value;
+                await this.plugin.saveSettings();
+                if (value) {
+                    this.plugin.sidebarManager.onload();
+                } else {
+                    this.plugin.sidebarManager.onunload();
+                }
+            },
+            (el) => {
+                renderSidebarSettings(el, this.plugin.sidebarManager);
             }
         );
     }

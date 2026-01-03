@@ -38,9 +38,6 @@ Customize your status bar by reordering and hiding elements.
 
 - Drag-and-drop reordering
 - Toggle element visibility
-- Multiple presets support
-- Fullscreen mode presets
-- Hotkey support for quick preset switching
 
 ### 🔢 MyHeadings & MyFormulas - Number Adder
 Automatically number headings and mathematical formulas in your documents.
@@ -84,6 +81,16 @@ Easily shift and manipulate markdown headings with powerful commands.
 - Children list behavior control (3 modes)
 - RegExp-based custom style handling
 - Seamless CodeMirror 6 integration
+
+### 📏 MySideBar - Sidebar Control & Auto Hide
+Precise control over your Obsidian sidebars with auto-hide functionality.
+
+- **Auto Hide**: Automatically collapse and expand sidebars on hover
+- **Trigger Control**: Customize the hover trigger area width
+- **Timing Control**: Adjust expansion/collapse delays and animation speeds
+- **Overlay Mode**: Sidebars slide over content without resizing the editor
+- **Sync Mode**: Expand both sidebars simultaneously
+- **Width Control**: Set custom widths for expanded sidebars
 
 ---
 
@@ -140,9 +147,7 @@ Each module can be independently enabled or disabled in the plugin settings:
 - Plugins will automatically load with the specified delay on startup
 
 #### MyStatusBar
-- Configure element order and visibility in settings  
-- Create and switch between presets
-- Use hotkeys for quick preset switching
+- Configure element order and visibility in settings
 
 #### MyHeadings
 - Use command: "Number Headings" for manual numbering
@@ -160,6 +165,12 @@ Each module can be independently enabled or disabled in the plugin settings:
 - Use "Insert Heading" commands for smart heading insertion at current/deeper/higher levels
 - Enable Tab override in settings to use Tab/Shift-Tab for quick heading shifts
 - Configure style removal and list behavior in settings
+
+#### MySideBar
+- Enable "Auto Hide" to make sidebars expand on mouse hover
+- Adjust "Trigger Width" if you have multiple monitors or find it hard to trigger
+- Enable "Overlay Mode" for a cleaner, floating sidebar experience
+- Use "Sync left and right" to peek at both sidebars at once
 
 ---
 
@@ -196,6 +207,9 @@ Obsidian Assistant integrates and enhances the work of several amazing plugin de
 
 6. **[kasahala (k4a-l)](https://github.com/k4a-l)** - Creator of [Heading Shifter](https://github.com/k4a-dev/obsidian-heading-shifter)
    - Original smart heading manipulation system with apply, shift, and insert features
+
+7. **[Mara V (marah)](https://github.com/marah)** - Creator of [Obsidian Quick Peek Sidebar](https://github.com/marah/obsidian-quick-peek-sidebar)
+   - Original sidebar auto-hide and hover interaction logic
 
 ### Enhanced Version Contributors
 

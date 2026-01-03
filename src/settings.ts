@@ -68,11 +68,7 @@ export const DEFAULT_MY_PLUGINS_SETTINGS: MyPluginsSettings = {
 import { StatusBarElementStatus } from './statusbar/types';
 
 export interface StatusBarOrganizerSettings {
-    activePreset: string;
-    activeFullscreenPreset: string;
-    separateFullscreenPreset: boolean;
-    presets: { [key: string]: { [key: string]: StatusBarElementStatus } };
-    presetsOrder: string[];
+    status: { [key: string]: StatusBarElementStatus };
     version: string;
 }
 
@@ -82,11 +78,7 @@ export interface MyStatusBarSettings extends StatusBarOrganizerSettings {
 
 export const DEFAULT_STATUS_BAR_SETTINGS: MyStatusBarSettings = {
     enabled: true,
-    activePreset: "Default",
-    activeFullscreenPreset: "Default",
-    separateFullscreenPreset: false,
-    presets: { "Default": {} },
-    presetsOrder: ["Default"],
+    status: {},
     version: "0.0.1"
 };
 
@@ -205,6 +197,47 @@ export const DEFAULT_MY_FORMULAS_SETTINGS: MyFormulasSettings = {
     maxDepth: 4
 };
 
+// MySideBar Settings
+export interface AutoHideSettings {
+    leftSidebar: boolean;
+    rightSidebar: boolean;
+    syncLeftRight: boolean;
+    enforceSameDelay: boolean;
+    sidebarDelay: number;
+    sidebarExpandDelay: number;
+    leftSideBarPixelTrigger: number;
+    rightSideBarPixelTrigger: number;
+    overlayMode: boolean;
+    expandCollapseSpeed: number;
+    leftSidebarMaxWidth: number;
+    rightSidebarMaxWidth: number;
+}
+
+export interface MySideBarSettings {
+    enabled: boolean;
+    autoHide: AutoHideSettings;
+    ribbon: { elements: { [key: string]: any } };
+}
+
+export const DEFAULT_MY_SIDEBAR_SETTINGS: MySideBarSettings = {
+    enabled: true,
+    autoHide: {
+        leftSidebar: true,
+        rightSidebar: true,
+        syncLeftRight: false,
+        enforceSameDelay: true,
+        sidebarDelay: 150,
+        sidebarExpandDelay: 10,
+        leftSideBarPixelTrigger: 20,
+        rightSideBarPixelTrigger: 20,
+        overlayMode: false,
+        expandCollapseSpeed: 370,
+        leftSidebarMaxWidth: 325,
+        rightSidebarMaxWidth: 325,
+    },
+    ribbon: { elements: {} }
+};
+
 export interface AssistantSettings {
     myFolders: MyFoldersSettings;
     myPlugins: MyPluginsSettings;
@@ -212,6 +245,7 @@ export interface AssistantSettings {
     mySnippets: MySnippetsSettings;
     myHeadings: MyHeadingsSettings;
     myFormulas: MyFormulasSettings;
+    mySideBar: MySideBarSettings;
     refreshInterval: number; // Global auto-numbering refresh interval in milliseconds
 }
 
@@ -222,5 +256,6 @@ export const DEFAULT_SETTINGS: AssistantSettings = {
     mySnippets: DEFAULT_MY_SNIPPETS_SETTINGS,
     myHeadings: DEFAULT_MY_HEADINGS_SETTINGS,
     myFormulas: DEFAULT_MY_FORMULAS_SETTINGS,
+    mySideBar: DEFAULT_MY_SIDEBAR_SETTINGS,
     refreshInterval: 1000, // Default 1 second (1000ms) as per source
 };

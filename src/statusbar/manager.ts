@@ -3,11 +3,7 @@ import AssistantPlugin from "../main";
 import { StatusBarOrganizerSettings } from "./types";
 import Spooler from "./spooler";
 import { fixOrder } from "./organizer";
-import { monitorFullscreen, setFullscreenListener, stopMonitoringFullscreen } from "./fullscreen";
-import { registerHotkeys } from "./hotkeys";
 import { BarStatus, ExistsStatus, StatusBarElement, StatusBarElementStatus } from "./types";
-import { deepCopy } from "./util";
-import { getActivePreset } from "./presets";
 import { getStatusBarElements, parseElementId } from "./parser";
 
 export class StatusBarManager {
@@ -45,21 +41,14 @@ export class StatusBarManager {
         // Initialize Spooler
         this.spooler = new Spooler(this, fixOrder);
 
-        // Initialize Fullscreen monitor
-        monitorFullscreen(this);
-
         // Initial Order Fix
         fixOrder(this);
-
-        // Register Hotkeys
-        registerHotkeys(this);
 
         this.spooler.enableObserver();
     }
 
     onunload() {
         if (this.spooler) this.spooler.disableObserver();
-        stopMonitoringFullscreen();
         // Reset order? Or just leave it?
         // Original plugin didn't seem to reset order on unload.
     }
@@ -68,8 +57,8 @@ export class StatusBarManager {
         return this.plugin.saveSettings();
     }
 
-    async savePreset(currentBarStatus: BarStatus) {
-        this.settings.presets[getActivePreset(this)] = deepCopy(currentBarStatus);
+    async saveStatus(currentBarStatus: BarStatus) {
+        this.settings.status = currentBarStatus;
         await this.saveSettings();
     }
 
@@ -83,7 +72,7 @@ export class StatusBarManager {
         existsStatus: ExistsStatus
     }> {
         // Initialize status from settings
-        const loadedElementStatus: { [key: string]: StatusBarElementStatus } = this.settings.presets[getActivePreset(this)] || {};
+        const loadedElementStatus: { [key: string]: StatusBarElementStatus } = this.settings.status || {};
 
         // Aggregate all HTML status bar elements and provisionally assign them default status
         if (!this.statusBar) {
@@ -139,7 +128,7 @@ export class StatusBarManager {
             .map((x: [StatusBarElement, any]) => x[0]);
 
         // Save new order of elements (in particular of the previously unknown ones)
-        await this.savePreset(barStatus);
+        await this.saveStatus(barStatus);
         this.spooler.spoolFix(0);
 
         return {

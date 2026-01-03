@@ -20,11 +20,7 @@ export type ExistsStatus = {
 }
 
 export interface StatusBarOrganizerSettings {
-    activePreset: string;
-    activeFullscreenPreset: string,
-    separateFullscreenPreset: boolean,
-    presets: { [key: string]: BarStatus }
-    presetsOrder: string[];
+    status: BarStatus;
     version: string;
 }
 

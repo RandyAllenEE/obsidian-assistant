@@ -113,7 +113,7 @@ async function toggleVisibility(plugin: StatusBarManager, barStatus: BarStatus, 
         setIcon((row.entry as HTMLDivElement).children[3] as HTMLElement, "eye-off");
     }
 
-    plugin.savePreset(barStatus);
+    plugin.saveStatus(barStatus);
 }
 
 async function removeOrphan(plugin: StatusBarManager, rowsContainer: HTMLDivElement, barStatus: BarStatus, row: StatusBarElement) {
@@ -127,7 +127,7 @@ async function removeOrphan(plugin: StatusBarManager, rowsContainer: HTMLDivElem
         barStatus[entry.getAttribute("data-statusbar-organizer-id") as string].position = entryIndex;
 
     // Save the settings
-    plugin.savePreset(barStatus);
+    plugin.saveStatus(barStatus);
 }
 
 function cloneRow(
@@ -288,7 +288,7 @@ function handleMouseDown(
         window.removeEventListener('mouseup', handleMouseUp);
         window.removeEventListener('mousemove', handleMouseMove);
 
-        plugin.savePreset(barStatus);
+        plugin.saveStatus(barStatus);
     }
     window.addEventListener('mouseup', handleMouseUp);
 }

@@ -1,15 +1,13 @@
 import { StatusBarManager } from "./manager";
 import { getStatusBarElements } from "./parser";
-import { getActivePreset } from "./presets";
 import { StatusBarElement } from "./types";
 
 export function fixOrder(plugin: StatusBarManager) {
     if (!plugin.statusBar) return;
     const elements = getStatusBarElements(plugin.statusBar);
-    const activePresetName = getActivePreset(plugin);
-    const status = plugin.settings.presets[activePresetName];
+    const status = plugin.settings.status;
 
-    // If status is undefined (new preset issue?), try default or return
+    // If status is undefined, return
     if (!status) return;
 
     // Elements with known position

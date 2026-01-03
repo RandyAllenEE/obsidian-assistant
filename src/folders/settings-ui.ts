@@ -7,9 +7,24 @@ export function renderFoldersSettings(containerEl: HTMLElement, manager: Folders
     const settings = manager.settings;
 
     const experimentalSettingsContainerEl = document.createElement("details");
+    experimentalSettingsContainerEl.style.marginBottom = '10px';
+    experimentalSettingsContainerEl.style.border = '1px solid var(--background-modifier-border)';
+    experimentalSettingsContainerEl.style.borderRadius = '5px';
+    experimentalSettingsContainerEl.style.padding = '0.5em';
+
     const experimentalSettingsTitleEl = document.createElement("summary");
     experimentalSettingsTitleEl.innerText = t("Experimental & Unstable Settings");
+    experimentalSettingsTitleEl.style.cursor = 'pointer';
+    experimentalSettingsTitleEl.style.fontWeight = 'bold';
+    experimentalSettingsTitleEl.style.outline = 'none';
+
     experimentalSettingsContainerEl.appendChild(experimentalSettingsTitleEl);
+
+    // Create a wrapper for content to enforce left border style
+    const experimentalContent = experimentalSettingsContainerEl.createDiv();
+    experimentalContent.style.marginTop = '10px';
+    experimentalContent.style.paddingLeft = '5px';
+    experimentalContent.style.borderLeft = '2px solid var(--background-modifier-border)';
 
     new Setting(containerEl)
         .setName(t("Folders to hide"))
@@ -79,7 +94,7 @@ export function renderFoldersSettings(containerEl: HTMLElement, manager: Folders
                 await plugin.saveSettings();
             }));
 
-    new Setting(experimentalSettingsContainerEl)
+    new Setting(experimentalContent)
         .setName(t("[EXPERIMENTAL] Compatibility: quick-explorer by pjeby"))
         .setDesc(t("[WARNING: UNSTABLE] Also hide hidden folders in the https://github.com/pjeby/quick-explorer plugin. Not affiliated with quick-explorer's author."))
         .addToggle(toggle => toggle

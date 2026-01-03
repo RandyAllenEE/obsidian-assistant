@@ -77,17 +77,13 @@ export default {
     "💤 Long delay": "💤 Long delay",
     "{id} after a {type} delay": "{id} after a {type} delay",
 
-    // My Status Bar
     "My Status Bar": "My Status Bar",
-    "Separate fullscreen and windowed mode": "Separate fullscreen and windowed mode",
-    "When enabled, the plugin will remember which preset was active for fullscreen mode and which for windowed mode and switch correspondingly.": "When enabled, the plugin will remember which preset was active for fullscreen mode and which for windowed mode and switch correspondingly.",
-    "Switch to preset slot {n}": "Switch to preset slot {n}",
-    "Default": "Default",
-    "New Preset": "New Preset",
     "Drag to reorder": "Drag to reorder",
     "Visibility": "Visibility",
     "Remove orphan": "Remove orphan",
     "This element is currently not present in the status bar.": "This element is currently not present in the status bar.",
+    "Drag to reorder ribbon icons. Click eye icon to toggle visibility.": "Drag to reorder ribbon icons. Click eye icon to toggle visibility.",
+    "No ribbon elements found yet.": "No ribbon elements found yet.",
 
     // My Snippets
     "My Snippets": "My Snippets",
@@ -209,7 +205,6 @@ export default {
 
     // Commands & Modals
     'Configure Headings': 'Configure Headings',
-    // 'Configure Formulas': 'Configure Formulas', // Duplicate
     'Apply Now': 'Apply Now',
     'Apply numbering once without saving to frontmatter': 'Apply numbering once without saving to frontmatter',
     'Save to Frontmatter': 'Save to Frontmatter',
@@ -220,4 +215,39 @@ export default {
     'Settings saved to frontmatter and applied': 'Settings saved to frontmatter and applied',
     'Heading numbering removed': 'Heading numbering removed',
     'Formula numbering removed': 'Formula numbering removed',
+
+    // MySideBar
+    'My SideBar': 'My SideBar',
+    'Left Sidebar': 'Left Sidebar',
+    'Right Sidebar': 'Right Sidebar',
+    'Auto Hide': 'Auto Hide',
+    'Coming Soon': 'Coming Soon',
+    'Settings for Left Sidebar control will be here.': 'Settings for Left Sidebar control will be here.',
+    'Settings for Right Sidebar control will be here.': 'Settings for Right Sidebar control will be here.',
+    'Left sidebar hover': 'Left sidebar hover',
+    'Enables the expansion and collapsing of the left sidebar on hover.': 'Enables the expansion and collapsing of the left sidebar on hover.',
+    'Right sidebar hover': 'Right sidebar hover',
+    'Enables the expansion and collapsing of the right sidebar on hover. Only collapses the right panel unless you have a right ribbon.': 'Enables the expansion and collapsing of the right sidebar on hover. Only collapses the right panel unless you have a right ribbon.',
+    'Sync left and right': 'Sync left and right',
+    'If enabled, hovering over the right sidebar will also expand the left sidebar at the same time, and vice versa. (Left and Right sidebar must both be enabled above)': 'If enabled, hovering over the right sidebar will also expand the left sidebar at the same time, and vice versa. (Left and Right sidebar must both be enabled above)',
+    'Overlay mode': 'Overlay mode',
+    'When enabled, sidebars will slide over the main content without affecting the layout. When disabled, sidebars will expand by pushing content.': 'When enabled, sidebars will slide over the main content without affecting the layout. When disabled, sidebars will expand by pushing content.',
+    'Behavior': 'Behavior',
+    'Left sidebar pixel trigger': 'Left sidebar pixel trigger',
+    'Specify the number of pixels from the left edge of the editor that will trigger the left sidebar to open on hover (must be greater than 0)': 'Specify the number of pixels from the left edge of the editor that will trigger the left sidebar to open on hover (must be greater than 0)',
+    'Right sidebar pixel trigger': 'Right sidebar pixel trigger',
+    'Specify the number of pixels from the right edge of the editor that will trigger the right sidebar to open on hover (must be greater than 0)': 'Specify the number of pixels from the right edge of the editor that will trigger the right sidebar to open on hover (must be greater than 0)',
+    'Timing': 'Timing',
+    'Sidebar collapse delay': 'Sidebar collapse delay',
+    'The delay in milliseconds before the sidebar collapses after the mouse has left. Enter \'0\' to disable delay.': 'The delay in milliseconds before the sidebar collapses after the mouse has left. Enter \'0\' to disable delay.',
+    'Sidebar expand delay': 'Sidebar expand delay',
+    'The delay in milliseconds before the sidebar expands after hovering. Default is 200ms.': 'The delay in milliseconds before the sidebar expands after hovering. Default is 200ms.',
+    'Expand/collapse animation speed': 'Expand/collapse animation speed',
+    'The speed of the sidebar expand/collapse animation in milliseconds.': 'The speed of the sidebar expand/collapse animation in milliseconds.',
+    'Appearance': 'Appearance',
+    'Left sidebar maximum width': 'Left sidebar maximum width',
+    'Specify the maximum width in pixels for the left sidebar when expanded': 'Specify the maximum width in pixels for the left sidebar when expanded',
+    'Right sidebar maximum width': 'Right sidebar maximum width',
+    'Specify the maximum width in pixels for the right sidebar when expanded': 'Specify the maximum width in pixels for the right sidebar when expanded',
+    'Ribbon Buttons': 'Ribbon Buttons',
 };
