@@ -144,8 +144,15 @@ export class ContextualSplitFeature {
             const parent = (slaveLeaf as any).parent;
             // Check if parent has dimension property
             if (parent && typeof parent.dimension === 'number') {
-                if (this.activeBinding.splitRatio !== parent.dimension) {
-                    this.activeBinding.splitRatio = parent.dimension;
+                let dim = parent.dimension;
+
+                // Enforce Integer and Layout Constraints (10-90)
+                dim = Math.round(dim);
+                if (dim < 10) dim = 10;
+                if (dim > 90) dim = 90;
+
+                if (this.activeBinding.splitRatio !== dim) {
+                    this.activeBinding.splitRatio = dim;
                     this.plugin.saveSettings();
                 }
             }
@@ -166,9 +173,29 @@ export class ContextualSplitFeature {
         if (parent && parent.containerEl) {
             parent.containerEl.addClass('contextual-split-hidden-header');
 
-            // Restore Dimension if exists
-            if (binding.splitRatio !== undefined && typeof (parent as any).setDimension === 'function') {
-                (parent as any).setDimension(binding.splitRatio);
+            // Restore Dimension with Constraints and Balance Sibling
+            if (typeof (parent as any).setDimension === 'function') {
+                let dim = binding.splitRatio || 50;
+                dim = Math.round(dim);
+                if (dim < 10) dim = 10;
+                if (dim > 90) dim = 90;
+
+                const split = parent.parent; // WorkspaceSplit (Vertical)
+                if (split && split.children) {
+                    const others = split.children.filter((c: any) => c !== parent);
+                    if (others.length > 0) {
+                        const sibling = others[0]; // Master Tabs
+
+                        // Set BOTH to create correct ratio (e.g. 20/80)
+                        (parent as any).setDimension(dim);
+                        if (typeof (sibling as any).setDimension === 'function') {
+                            (sibling as any).setDimension(100 - dim);
+                        }
+                    } else {
+                        // Fallback if no sibling found (should not happen in split)
+                        (parent as any).setDimension(dim);
+                    }
+                }
             }
         }
     }
