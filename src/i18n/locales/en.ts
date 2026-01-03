@@ -265,4 +265,28 @@ export default {
     'Show Tab': 'Show Tab',
 
     'Unknown Tab': 'Unknown Tab',
+
+    // Contextual Groups
+    'Contextual Groups': 'Contextual Groups',
+    'Contextual Groups Description': 'Bind a secondary view (Slave) to a primary view (Master). When you active Master, Slave appears split at bottom. The Master tab will show a composite identity.',
+    'Add New Group': 'Add New Group',
+    'Master View ID': 'Master View ID (e.g. file-explorer)',
+    'Slave View ID': 'Slave View ID (e.g. outline)',
+    'Group Name': 'Group Name (Optional)',
+    'Group Icon': 'Group Icon (Lucide name)',
+    'Add Binding': 'Add Binding',
+    'Delete': 'Delete',
+    'Error: Same Side': 'Error: Master and Slave must be on the same sidebar.',
+    'Error: Invalid ID': 'Error: Invalid View ID or View not found in settings.',
+    'Binding Removed': 'Binding removed because one of the views changed sides.',
+
+    // Group Modal & New UI
+    'Create a new contextual group binding': 'Create a new contextual group binding',
+    'The view ID of the main tab (will be replaced by the group tab)': 'The view ID of the main tab (will be replaced by the group tab)',
+    'The view ID of the split tab (hidden until group is active)': 'The view ID of the split tab (hidden until group is active)',
+    'Name to display on the tab': 'Name to display on the tab',
+    'SVG Code or Lucide Icon Name': 'SVG Code or Lucide Icon Name',
+    'Add Group': 'Add Group',
+    'Unbind': 'Unbind',
+    'Error: Master ID already bound': 'Error: This Master View ID is already bound in another group.',
 };

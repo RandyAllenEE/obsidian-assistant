@@ -252,4 +252,28 @@ export default {
     'Show Tab': '显示标签页',
 
     'Unknown Tab': '未知标签页',
+
+    // Contextual Groups
+    'Contextual Groups': '上下文编组',
+    'Contextual Groups Description': '将从属视图（Slave）绑定到主视图（Master）。当您激活主视图时，从属视图将作为分屏显示在底部。主视图将显示组合的名称和图标。',
+    'Add New Group': '添加新编组',
+    'Master View ID': '主视图 ID (例如 file-explorer)',
+    'Slave View ID': '从属视图 ID (例如 outline)',
+    'Group Name': '编组名称 (可选)',
+    'Group Icon': '编组图标 (Lucide 图标名)',
+    'Add Binding': '添加绑定',
+    'Delete': '删除',
+    'Error: Same Side': '错误：主视图和从属视图必须位于同一侧边栏。',
+    'Error: Invalid ID': '错误：无效的视图 ID 或设置中未找到该视图。',
+    'Binding Removed': '绑定已移除，因为其中一个视图更改了侧边栏位置。',
+
+    // Group Modal & New UI
+    'Create a new contextual group binding': '创建一个新的上下文编组绑定',
+    'The view ID of the main tab (will be replaced by the group tab)': '主视图 ID（将被编组标签替换）',
+    'The view ID of the split tab (hidden until group is active)': '从属视图 ID（在编组激活前隐藏）',
+    'Name to display on the tab': '标签页显示的名称',
+    'SVG Code or Lucide Icon Name': 'SVG 代码或 Lucide 图标名称',
+    'Add Group': '添加编组',
+    'Unbind': '解除编组',
+    'Error: Master ID already bound': '错误：该主视图 ID 已在另一个编组中绑定。',
 };

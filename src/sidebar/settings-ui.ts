@@ -1,9 +1,10 @@
-import { Setting, setIcon, ToggleComponent, DropdownComponent } from "obsidian";
+import { Setting, setIcon, ToggleComponent, DropdownComponent, TextComponent, TextAreaComponent, ButtonComponent, Notice } from "obsidian";
 import { SidebarManager } from "./manager";
 import { t } from "../i18n/helpers";
-import { SidebarTabElement } from "../settings";
+import { SidebarTabElement, SidebarBinding } from "../settings";
 import { RibbonElement } from "./types";
 import { DEFAULT_MY_SIDEBAR_SETTINGS } from "../settings";
+import { GroupModal } from "./group-modal";
 
 export function renderSidebarSettings(containerEl: HTMLElement, manager: SidebarManager) {
     // 1. Auto Hide Sub-menu
@@ -308,6 +309,9 @@ function renderSidebarTabsSettings(containerEl: HTMLElement, manager: SidebarMan
     containerEl.empty();
     const settings = manager.plugin.settings.mySideBar.tabs;
 
+    // Remove Contextual Bindings Top View, now integrated.
+
+    // Main Layout controls
     new Setting(containerEl)
         .setName(t("Scan Current Layout"))
         .setDesc(t("Scan and apply"))
@@ -318,11 +322,24 @@ function renderSidebarTabsSettings(containerEl: HTMLElement, manager: SidebarMan
                 renderSidebarTabsSettings(containerEl, manager);
             }));
 
-    const elements = Object.values(settings.elements).sort((a, b) => a.order - b.order);
+    new Setting(containerEl)
+        .setName(t("Add New Group"))
+        .setDesc(t("Create a new contextual group binding"))
+        .addButton(btn => btn
+            .setButtonText(t("Add Group"))
+            .onClick(() => {
+                new GroupModal(manager.app, manager, () => renderSidebarTabsSettings(containerEl, manager)).open();
+            }));
 
-    const leftElements = elements.filter(e => e.side === 'left' && e.visible);
-    const rightElements = elements.filter(e => e.side === 'right' && e.visible);
-    const hiddenElements = elements.filter(e => !e.visible);
+    const elements = Object.values(settings.elements).sort((a, b) => a.order - b.order);
+    const bindings = settings.bindings || [];
+
+    // Filter out Slave tabs from UI lists
+    const slaveIds = bindings.map(b => b.slaveId);
+
+    const leftElements = elements.filter(e => e.side === 'left' && e.visible && !slaveIds.includes(e.id));
+    const rightElements = elements.filter(e => e.side === 'right' && e.visible && !slaveIds.includes(e.id));
+    const hiddenElements = elements.filter(e => !e.visible && !slaveIds.includes(e.id));
 
     renderTabGroup(containerEl, t("Left Sidebar"), leftElements, manager);
     renderTabGroup(containerEl, t("Right Sidebar"), rightElements, manager);
@@ -332,12 +349,10 @@ function renderSidebarTabsSettings(containerEl: HTMLElement, manager: SidebarMan
 function renderTabGroup(container: HTMLElement, title: string, groupElements: SidebarTabElement[], manager: SidebarManager) {
     if (groupElements.length === 0 && title !== t("Hidden")) return;
 
-    // Standard Obsidian Heading Style with small styling tweak
     const heading = container.createEl("div", {
         cls: "setting-item setting-item-heading",
         text: title
     });
-    // Add green color as requested for "small titles" (sidebar headings)
     heading.style.color = "var(--text-success)";
 
     if (groupElements.length === 0) {
@@ -356,31 +371,79 @@ function renderTabRow(container: HTMLElement, el: SidebarTabElement, manager: Si
     const row = container.createEl("div", { cls: "setting-item" });
     row.style.borderTop = "none";
     row.style.borderBottom = "1px solid var(--background-modifier-border)";
+    row.setAttribute("data-tab-id", el.id); // Critical for reordering logic
+
+    // Check if this is a master of a group
+    const settings = manager.plugin.settings.mySideBar.tabs;
+    const bindings = settings.bindings || [];
+    const binding = bindings.find(b => b.masterId === el.id);
 
     // Info (Name)
     const info = row.createEl("div", { cls: "setting-item-info" });
-    info.createEl("div", { cls: "setting-item-name", text: el.id }); // Using ID as name
 
-    // Control (Dropdown + Handle)
+    let displayName = el.id;
+    if (binding) {
+        const namePart = binding.groupName ? binding.groupName : "Group";
+        displayName = `${namePart} (${binding.masterId} + ${binding.slaveId})`;
+    }
+
+    info.createEl("div", { cls: "setting-item-name", text: displayName });
+
     const control = row.createEl("div", { cls: "setting-item-control" });
 
-    // Dropdown for placement
-    new DropdownComponent(control)
-        .addOption("left", t("Left Sidebar"))
-        .addOption("right", t("Right Sidebar"))
-        .addOption("hidden", t("Hidden"))
-        .setValue(el.visible ? el.side : "hidden")
-        .onChange(async (value) => {
-            if (value === "hidden") {
-                await manager.tabsFeature.updateTab(el.id, { visible: false });
-            } else {
-                await manager.tabsFeature.updateTab(el.id, { side: value as 'left' | 'right', visible: true });
-            }
-            // Refresh entire Tabs section to reflect group change
-            renderSidebarTabsSettings(container.parentElement!.parentElement!, manager);
-        });
+    if (binding) {
+        // Unbind Button
+        new ButtonComponent(control)
+            .setButtonText(t("Unbind"))
+            .setWarning()
+            .onClick(async () => {
+                // Restore Logic
+                const index = bindings.indexOf(binding);
+                if (index > -1) {
+                    const master = settings.elements[binding.masterId];
+                    const slave = settings.elements[binding.slaveId];
 
-    // Drag Handle
+                    if (slave && master) {
+                        slave.visible = true;
+                        slave.side = master.side;
+                        slave.order = master.order + 0.5;
+
+                        const all = Object.values(settings.elements).sort((a, b) => a.order - b.order);
+                        all.forEach((item, idx) => item.order = idx);
+                    }
+
+                    bindings.splice(index, 1);
+                    settings.bindings = bindings;
+
+                    await manager.plugin.saveSettings();
+
+                    // Fixed: Use contextualFeature
+                    const leaves = manager.contextualFeature.findLeavesByType(binding.masterId);
+                    leaves.forEach(l => manager.contextualFeature.restoreVisuals(l, binding.masterId));
+
+                    await manager.tabsFeature.applyLayout();
+
+                    // Re-render
+                    renderSidebarTabsSettings(container.parentElement!.parentElement!, manager);
+                }
+            });
+    } else {
+        // Dropdown
+        new DropdownComponent(control)
+            .addOption("left", t("Left Sidebar"))
+            .addOption("right", t("Right Sidebar"))
+            .addOption("hidden", t("Hidden"))
+            .setValue(el.visible ? el.side : "hidden")
+            .onChange(async (value) => {
+                if (value === "hidden") {
+                    await manager.tabsFeature.updateTab(el.id, { visible: false });
+                } else {
+                    await manager.tabsFeature.updateTab(el.id, { side: value as 'left' | 'right', visible: true });
+                }
+                renderSidebarTabsSettings(container.parentElement!.parentElement!, manager);
+            });
+    }
+
     const handle = control.createEl("span", { cls: "clickable-icon", style: "cursor: grab; margin-left: 10px;" });
     setIcon(handle, "grip-horizontal");
     handle.addEventListener("mousedown", (e) => handleTabDrag(e, row, el, manager, container));
@@ -414,25 +477,47 @@ function handleTabDrag(e: MouseEvent, row: HTMLElement, el: SidebarTabElement, m
         document.removeEventListener("mouseup", onMouseUp);
 
         if (newIndex !== startIndex) {
-            // Re-order logic
-            const siblings = Array.from(container.children) as HTMLElement[];
-            const newOrderIds = siblings.map(s => s.querySelector(".setting-item-name")?.textContent || "");
-
             const settings = manager.plugin.settings.mySideBar.tabs;
-            const groupItems = newOrderIds.map(id => settings.elements[id]).filter(x => x);
-            // Get current sorted orders for this group
-            const sortedOrders = groupItems.map(x => x.order).sort((a, b) => a - b);
 
-            // Re-assign sorted orders to new sequence
-            newOrderIds.forEach((id, index) => {
-                if (settings.elements[id]) {
-                    settings.elements[id].order = sortedOrders[index];
+            // 1. Determine NEW visual order from DOM
+            const siblings = Array.from(container.children) as HTMLElement[];
+            // Filter only those representing IDs (they have data-tab-id)
+            const orderedIds = siblings.map(s => s.getAttribute("data-tab-id")).filter(id => id && settings.elements[id]);
+
+            // 2. We only re-order the SUBSET of elements shown in this specific list (Layout Container)
+            //    But we need to assign them 'global' orders.
+            //    Strategy: Get the current orders of these elements, sort them to get the "slots" available.
+            //    Then re-assign them based on the new visual sequence.
+
+            if (orderedIds.length > 0) {
+                const subsetElements = orderedIds.map(id => settings.elements[id!]);
+                const availableOrders = subsetElements.map(x => x.order).sort((a, b) => a - b);
+
+                // Apply new order
+                orderedIds.forEach((id, idx) => {
+                    if (id) {
+                        settings.elements[id].order = availableOrders[idx];
+                    }
+                });
+            }
+
+            // 3. SLAVE FOLLOW MASTER
+            //    Check if any binding needs sync
+            const bindings = settings.bindings || [];
+            bindings.forEach(b => {
+                const master = settings.elements[b.masterId];
+                const slave = settings.elements[b.slaveId];
+                if (master && slave) {
+                    // Force slave to be just after master
+                    slave.order = master.order + 0.01;
                 }
             });
 
-            await manager.plugin.saveSettings();
+            // 4. Normalize ALL orders to clean integers/floats
+            const all = Object.values(settings.elements).sort((a, b) => a.order - b.order);
+            all.forEach((item, index) => item.order = index);
 
-            // CRITICAL Fix: Apply layout immediately after sorting
+            await manager.plugin.saveSettings();
             await manager.tabsFeature.applyLayout();
         }
     };

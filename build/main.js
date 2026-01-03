@@ -27,9 +27,19 @@ __export(main_exports, {
   default: () => AssistantPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian24 = require("obsidian");
+var import_obsidian27 = require("obsidian");
 
 // src/settings.ts
+var DEFAULT_SETTINGS = {
+  myPlugins: null,
+  // Initialized below
+  myFolders: null,
+  mySideBar: null,
+  myStatusBar: null,
+  mySnippets: null,
+  myHeadings: null,
+  myFormulas: null
+};
 var DEFAULT_MY_FOLDERS_SETTINGS = {
   enabled: true,
   areFoldersHidden: true,
@@ -119,31 +129,34 @@ var DEFAULT_MY_SIDEBAR_SETTINGS = {
     enabled: true,
     leftSidebar: true,
     rightSidebar: true,
-    syncLeftRight: false,
+    syncLeftRight: true,
     enforceSameDelay: true,
-    sidebarDelay: 150,
-    sidebarExpandDelay: 10,
-    leftSideBarPixelTrigger: 20,
-    rightSideBarPixelTrigger: 20,
+    sidebarDelay: 500,
+    sidebarExpandDelay: 200,
+    leftSideBarPixelTrigger: 40,
+    rightSideBarPixelTrigger: 40,
     overlayMode: false,
-    expandCollapseSpeed: 370,
-    leftSidebarMaxWidth: 325,
-    rightSidebarMaxWidth: 325
+    expandCollapseSpeed: 300,
+    leftSidebarMaxWidth: 350,
+    rightSidebarMaxWidth: 350
   },
-  ribbon: { enabled: true, elements: {} },
-  tabs: { enabled: true, elements: {} }
+  ribbon: {
+    enabled: true,
+    elements: {}
+  },
+  tabs: {
+    enabled: true,
+    elements: {},
+    bindings: []
+  }
 };
-var DEFAULT_SETTINGS = {
-  myFolders: DEFAULT_MY_FOLDERS_SETTINGS,
-  myPlugins: DEFAULT_MY_PLUGINS_SETTINGS,
-  myStatusBar: DEFAULT_STATUS_BAR_SETTINGS,
-  mySnippets: DEFAULT_MY_SNIPPETS_SETTINGS,
-  myHeadings: DEFAULT_MY_HEADINGS_SETTINGS,
-  myFormulas: DEFAULT_MY_FORMULAS_SETTINGS,
-  mySideBar: DEFAULT_MY_SIDEBAR_SETTINGS,
-  refreshInterval: 1e3
-  // Default 1 second (1000ms) as per source
-};
+DEFAULT_SETTINGS.myPlugins = DEFAULT_MY_PLUGINS_SETTINGS;
+DEFAULT_SETTINGS.myFolders = DEFAULT_MY_FOLDERS_SETTINGS;
+DEFAULT_SETTINGS.mySideBar = DEFAULT_MY_SIDEBAR_SETTINGS;
+DEFAULT_SETTINGS.myStatusBar = DEFAULT_STATUS_BAR_SETTINGS;
+DEFAULT_SETTINGS.mySnippets = DEFAULT_MY_SNIPPETS_SETTINGS;
+DEFAULT_SETTINGS.myHeadings = DEFAULT_MY_HEADINGS_SETTINGS;
+DEFAULT_SETTINGS.myFormulas = DEFAULT_MY_FORMULAS_SETTINGS;
 
 // src/folders/manager.ts
 var import_obsidian2 = require("obsidian");
@@ -445,7 +458,29 @@ var en_default = {
   "Move to Right Sidebar": "Move to Right Sidebar",
   "Hide Tab": "Hide Tab",
   "Show Tab": "Show Tab",
-  "Unknown Tab": "Unknown Tab"
+  "Unknown Tab": "Unknown Tab",
+  // Contextual Groups
+  "Contextual Groups": "Contextual Groups",
+  "Contextual Groups Description": "Bind a secondary view (Slave) to a primary view (Master). When you active Master, Slave appears split at bottom. The Master tab will show a composite identity.",
+  "Add New Group": "Add New Group",
+  "Master View ID": "Master View ID (e.g. file-explorer)",
+  "Slave View ID": "Slave View ID (e.g. outline)",
+  "Group Name": "Group Name (Optional)",
+  "Group Icon": "Group Icon (Lucide name)",
+  "Add Binding": "Add Binding",
+  "Delete": "Delete",
+  "Error: Same Side": "Error: Master and Slave must be on the same sidebar.",
+  "Error: Invalid ID": "Error: Invalid View ID or View not found in settings.",
+  "Binding Removed": "Binding removed because one of the views changed sides.",
+  // Group Modal & New UI
+  "Create a new contextual group binding": "Create a new contextual group binding",
+  "The view ID of the main tab (will be replaced by the group tab)": "The view ID of the main tab (will be replaced by the group tab)",
+  "The view ID of the split tab (hidden until group is active)": "The view ID of the split tab (hidden until group is active)",
+  "Name to display on the tab": "Name to display on the tab",
+  "SVG Code or Lucide Icon Name": "SVG Code or Lucide Icon Name",
+  "Add Group": "Add Group",
+  "Unbind": "Unbind",
+  "Error: Master ID already bound": "Error: This Master View ID is already bound in another group."
 };
 
 // src/i18n/locales/zh.ts
@@ -688,7 +723,29 @@ var zh_default = {
   "Move to Right Sidebar": "\u79FB\u52A8\u5230\u53F3\u4FA7\u8FB9\u680F",
   "Hide Tab": "\u9690\u85CF\u6807\u7B7E\u9875",
   "Show Tab": "\u663E\u793A\u6807\u7B7E\u9875",
-  "Unknown Tab": "\u672A\u77E5\u6807\u7B7E\u9875"
+  "Unknown Tab": "\u672A\u77E5\u6807\u7B7E\u9875",
+  // Contextual Groups
+  "Contextual Groups": "\u4E0A\u4E0B\u6587\u7F16\u7EC4",
+  "Contextual Groups Description": "\u5C06\u4ECE\u5C5E\u89C6\u56FE\uFF08Slave\uFF09\u7ED1\u5B9A\u5230\u4E3B\u89C6\u56FE\uFF08Master\uFF09\u3002\u5F53\u60A8\u6FC0\u6D3B\u4E3B\u89C6\u56FE\u65F6\uFF0C\u4ECE\u5C5E\u89C6\u56FE\u5C06\u4F5C\u4E3A\u5206\u5C4F\u663E\u793A\u5728\u5E95\u90E8\u3002\u4E3B\u89C6\u56FE\u5C06\u663E\u793A\u7EC4\u5408\u7684\u540D\u79F0\u548C\u56FE\u6807\u3002",
+  "Add New Group": "\u6DFB\u52A0\u65B0\u7F16\u7EC4",
+  "Master View ID": "\u4E3B\u89C6\u56FE ID (\u4F8B\u5982 file-explorer)",
+  "Slave View ID": "\u4ECE\u5C5E\u89C6\u56FE ID (\u4F8B\u5982 outline)",
+  "Group Name": "\u7F16\u7EC4\u540D\u79F0 (\u53EF\u9009)",
+  "Group Icon": "\u7F16\u7EC4\u56FE\u6807 (Lucide \u56FE\u6807\u540D)",
+  "Add Binding": "\u6DFB\u52A0\u7ED1\u5B9A",
+  "Delete": "\u5220\u9664",
+  "Error: Same Side": "\u9519\u8BEF\uFF1A\u4E3B\u89C6\u56FE\u548C\u4ECE\u5C5E\u89C6\u56FE\u5FC5\u987B\u4F4D\u4E8E\u540C\u4E00\u4FA7\u8FB9\u680F\u3002",
+  "Error: Invalid ID": "\u9519\u8BEF\uFF1A\u65E0\u6548\u7684\u89C6\u56FE ID \u6216\u8BBE\u7F6E\u4E2D\u672A\u627E\u5230\u8BE5\u89C6\u56FE\u3002",
+  "Binding Removed": "\u7ED1\u5B9A\u5DF2\u79FB\u9664\uFF0C\u56E0\u4E3A\u5176\u4E2D\u4E00\u4E2A\u89C6\u56FE\u66F4\u6539\u4E86\u4FA7\u8FB9\u680F\u4F4D\u7F6E\u3002",
+  // Group Modal & New UI
+  "Create a new contextual group binding": "\u521B\u5EFA\u4E00\u4E2A\u65B0\u7684\u4E0A\u4E0B\u6587\u7F16\u7EC4\u7ED1\u5B9A",
+  "The view ID of the main tab (will be replaced by the group tab)": "\u4E3B\u89C6\u56FE ID\uFF08\u5C06\u88AB\u7F16\u7EC4\u6807\u7B7E\u66FF\u6362\uFF09",
+  "The view ID of the split tab (hidden until group is active)": "\u4ECE\u5C5E\u89C6\u56FE ID\uFF08\u5728\u7F16\u7EC4\u6FC0\u6D3B\u524D\u9690\u85CF\uFF09",
+  "Name to display on the tab": "\u6807\u7B7E\u9875\u663E\u793A\u7684\u540D\u79F0",
+  "SVG Code or Lucide Icon Name": "SVG \u4EE3\u7801\u6216 Lucide \u56FE\u6807\u540D\u79F0",
+  "Add Group": "\u6DFB\u52A0\u7F16\u7EC4",
+  "Unbind": "\u89E3\u9664\u7F16\u7EC4",
+  "Error: Master ID already bound": "\u9519\u8BEF\uFF1A\u8BE5\u4E3B\u89C6\u56FE ID \u5DF2\u5728\u53E6\u4E00\u4E2A\u7F16\u7EC4\u4E2D\u7ED1\u5B9A\u3002"
 };
 
 // src/i18n/helpers.ts
@@ -3630,8 +3687,10 @@ var AutoHideFeature = class {
     // State
     this.isHoveringLeft = false;
     this.isHoveringRight = false;
+    // New State for Manual Override
+    this.isAutoExpandedLeft = false;
+    this.isAutoExpandedRight = false;
     // -- Non-Obsidian API --------------------------
-    // Helpers
     this.getEditorWidth = () => this.app.workspace.containerEl.clientWidth;
     // Event handlers
     this.mouseMoveHandler = (event) => {
@@ -3733,6 +3792,14 @@ var AutoHideFeature = class {
       this.leftSplitMouseEnterHandler
     );
     document.addEventListener("click", this.documentClickHandler);
+    this.plugin.registerEvent(
+      this.app.workspace.on("layout-change", () => {
+        if (this.leftSplit && this.leftSplit.collapsed)
+          this.isAutoExpandedLeft = false;
+        if (this.rightSplit && this.rightSplit.collapsed)
+          this.isAutoExpandedRight = false;
+      })
+    );
   }
   unload() {
     document.body.classList.remove("sidebar-overlay-mode");
@@ -3878,7 +3945,6 @@ var AutoHideFeature = class {
                 --left-sidebar-max-width: ${this.settings.leftSidebarMaxWidth}px;
                 --right-sidebar-max-width: ${this.settings.rightSidebarMaxWidth}px;
             }
-            
             body {
                 --sidebar-width: ${this.settings.leftSidebarMaxWidth}px !important;
                 --right-sidebar-width: ${this.settings.rightSidebarMaxWidth}px !important;
@@ -3887,10 +3953,14 @@ var AutoHideFeature = class {
     document.head.appendChild(styleEl);
   }
   expandRight() {
+    if (this.rightSplit.collapsed)
+      this.isAutoExpandedRight = true;
     this.rightSplit.expand();
     this.isHoveringRight = true;
   }
   expandLeft() {
+    if (this.leftSplit.collapsed)
+      this.isAutoExpandedLeft = true;
     this.leftSplit.expand();
     this.isHoveringLeft = true;
   }
@@ -3899,11 +3969,17 @@ var AutoHideFeature = class {
     this.expandLeft();
   }
   collapseRight() {
-    this.rightSplit.collapse();
+    if (this.isAutoExpandedRight) {
+      this.rightSplit.collapse();
+      this.isAutoExpandedRight = false;
+    }
     this.isHoveringRight = false;
   }
   collapseLeft() {
-    this.leftSplit.collapse();
+    if (this.isAutoExpandedLeft) {
+      this.leftSplit.collapse();
+      this.isAutoExpandedLeft = false;
+    }
     this.isHoveringLeft = false;
   }
   collapseBoth() {
@@ -4079,6 +4155,7 @@ var RibbonFeature = class {
 };
 
 // src/sidebar/features/tabs.ts
+var import_obsidian22 = require("obsidian");
 var SidebarTabsFeature = class {
   constructor(app, plugin) {
     this.app = app;
@@ -4198,10 +4275,242 @@ var SidebarTabsFeature = class {
   async updateTab(id, updates) {
     const settings = this.plugin.settings.mySideBar.tabs;
     if (settings.elements[id]) {
+      const oldSide = settings.elements[id].side;
       Object.assign(settings.elements[id], updates);
+      if (updates.side && updates.side !== oldSide && settings.bindings) {
+        const initialLength = settings.bindings.length;
+        settings.bindings = settings.bindings.filter((b) => {
+          var _a, _b;
+          if (b.masterId === id || b.slaveId === id) {
+            const masterSide = (_a = settings.elements[b.masterId]) == null ? void 0 : _a.side;
+            const slaveSide = (_b = settings.elements[b.slaveId]) == null ? void 0 : _b.side;
+            return masterSide === slaveSide;
+          }
+          return true;
+        });
+        if (settings.bindings.length < initialLength) {
+          new import_obsidian22.Notice(t("Binding Removed"));
+        }
+      }
       await this.plugin.saveSettings();
       await this.applyLayout();
     }
+  }
+};
+
+// src/sidebar/features/contextual-split.ts
+var import_obsidian23 = require("obsidian");
+var ContextualSplitFeature = class {
+  constructor(app, plugin) {
+    // Store original visual states of master tabs: { viewType: { icon: string, title: string } }
+    this.originalStates = /* @__PURE__ */ new Map();
+    this.activeBinding = null;
+    this.app = app;
+    this.plugin = plugin;
+  }
+  onload() {
+    this.app.workspace.onLayoutReady(() => {
+      this.cleanOrphans();
+      this.applyAllMasquerades();
+    });
+    this.app.workspace.on("layout-change", (0, import_obsidian23.debounce)(() => {
+      this.applyAllMasquerades();
+      this.checkActiveBindingValidity();
+    }, 200));
+    this.app.workspace.on("active-leaf-change", (0, import_obsidian23.debounce)((leaf) => {
+      if (leaf)
+        this.handleActiveLeaf(leaf);
+    }, 50, true));
+  }
+  onunload() {
+    if (this.activeBinding) {
+      this.cleanupSplit(this.activeBinding);
+    }
+    const bindings = this.plugin.settings.mySideBar.tabs.bindings || [];
+    bindings.forEach((b) => {
+      const leaves = this.findLeavesByType(b.masterId);
+      leaves.forEach((l) => this.restoreVisuals(l, b.masterId));
+    });
+  }
+  cleanOrphans() {
+    const removeOrphans = (split) => {
+      if (!split)
+        return;
+      const toDetach = [];
+      this.app.workspace.iterateLeaves((leaf) => {
+        if (leaf.view.containerEl.dataset.assistantContextualSlave === "true") {
+          toDetach.push(leaf);
+        }
+      }, split);
+      toDetach.forEach((l) => l.detach());
+    };
+    removeOrphans(this.app.workspace.leftSplit);
+    removeOrphans(this.app.workspace.rightSplit);
+  }
+  applyAllMasquerades() {
+    const bindings = this.plugin.settings.mySideBar.tabs.bindings || [];
+    bindings.forEach((b) => {
+      const masterLeaves = this.findLeavesByType(b.masterId);
+      masterLeaves.forEach((leaf) => this.applyVisualOverride(leaf, b));
+    });
+  }
+  async handleActiveLeaf(leaf) {
+    var _a;
+    if (!((_a = this.plugin.settings.mySideBar.tabs) == null ? void 0 : _a.enabled))
+      return;
+    const viewType = leaf.view.getViewType();
+    const bindings = this.plugin.settings.mySideBar.tabs.bindings || [];
+    const matchingBinding = bindings.find((b) => b.masterId === viewType);
+    if (matchingBinding) {
+      if (this.activeBinding && this.activeBinding !== matchingBinding) {
+        await this.cleanupSplit(this.activeBinding);
+      }
+      this.activeBinding = matchingBinding;
+      await this.activateSplit(leaf, matchingBinding);
+    } else {
+      if (this.activeBinding) {
+        if (viewType === this.activeBinding.slaveId) {
+          if (leaf.view.containerEl.dataset.assistantContextualSlave === "true") {
+            return;
+          }
+        }
+        if (this.isMasterVisible(this.activeBinding.masterId)) {
+          return;
+        }
+        await this.cleanupSplit(this.activeBinding);
+        this.activeBinding = null;
+      }
+    }
+  }
+  checkActiveBindingValidity() {
+    const bindings = this.plugin.settings.mySideBar.tabs.bindings || [];
+    for (const binding of bindings) {
+      if (this.isMasterVisible(binding.masterId)) {
+        if (this.activeBinding !== binding) {
+          if (this.activeBinding)
+            this.cleanupSplit(this.activeBinding);
+          this.activeBinding = binding;
+          const leaves = this.findLeavesByType(binding.masterId);
+          const visibleLeaf = leaves.find((l) => l.view.containerEl.isShown());
+          if (visibleLeaf)
+            this.activateSplit(visibleLeaf, binding);
+        }
+        return;
+      }
+    }
+    if (this.activeBinding) {
+      this.cleanupSplit(this.activeBinding);
+      this.activeBinding = null;
+    }
+  }
+  isMasterVisible(masterId) {
+    const leaves = this.findLeavesByType(masterId);
+    return leaves.some((l) => l.view.containerEl.isShown());
+  }
+  async activateSplit(masterLeaf, binding) {
+    let slaveLeaf = this.findUniqueSlaveLeaf(binding.slaveId);
+    if (!slaveLeaf) {
+      slaveLeaf = this.app.workspace.createLeafBySplit(masterLeaf, "horizontal");
+      await slaveLeaf.setViewState({ type: binding.slaveId });
+      slaveLeaf.view.containerEl.dataset.assistantContextualSlave = "true";
+    }
+    const parent = slaveLeaf.parent;
+    if (parent && parent.containerEl) {
+      parent.containerEl.addClass("contextual-split-hidden-header");
+    }
+  }
+  async cleanupSplit(binding) {
+    const slaveLeaf = this.findUniqueSlaveLeaf(binding.slaveId);
+    if (slaveLeaf) {
+      if (slaveLeaf.view.containerEl.dataset.assistantContextualSlave === "true") {
+        slaveLeaf.detach();
+      }
+    }
+  }
+  findLeavesByType(type) {
+    const leaves = [];
+    this.app.workspace.iterateAllLeaves((l) => {
+      if (l.view.getViewType() === type)
+        leaves.push(l);
+    });
+    return leaves;
+  }
+  findUniqueSlaveLeaf(type) {
+    let found = null;
+    const checkSplit = (split) => {
+      if (!split)
+        return;
+      this.app.workspace.iterateLeaves((l) => {
+        if (l.view.getViewType() === type && l.view.containerEl.dataset.assistantContextualSlave === "true") {
+          found = l;
+        }
+      }, split);
+    };
+    checkSplit(this.app.workspace.leftSplit);
+    checkSplit(this.app.workspace.rightSplit);
+    return found;
+  }
+  applyVisualOverride(leaf, binding) {
+    if (!binding.groupName && !binding.groupSvg)
+      return;
+    const viewType = leaf.view.getViewType();
+    if (!this.originalStates.has(viewType)) {
+      const icon = leaf.view.icon;
+      const title = leaf.view.getDisplayText();
+      this.originalStates.set(viewType, { icon, title });
+    }
+    const workspaceTabs = leaf.parent;
+    if (workspaceTabs && workspaceTabs.tabHeaderContainerEl) {
+      const header = workspaceTabs.tabHeaderContainerEl.querySelector(`.workspace-tab-header[data-type="${viewType}"]`);
+      if (header) {
+        if (binding.groupName) {
+          const titleEl = header.querySelector(".workspace-tab-header-inner-title");
+          if (titleEl) {
+            titleEl.textContent = binding.groupName;
+            header.setAttribute("aria-label", binding.groupName);
+          }
+        }
+        if (binding.groupSvg && binding.groupSvg.trim().length > 0) {
+          const iconEl = header.querySelector(".workspace-tab-header-inner-icon");
+          if (iconEl) {
+            const val = binding.groupSvg.trim();
+            if (val.startsWith("<svg")) {
+              iconEl.empty();
+              iconEl.innerHTML = val;
+            } else {
+              if (!val.includes("<") && !val.includes(">")) {
+                iconEl.empty();
+                (0, import_obsidian23.setIcon)(iconEl, val);
+              }
+            }
+          }
+        }
+        header.addClass("assistant-contextual-group-tab");
+      }
+    }
+  }
+  restoreVisuals(leaf, viewType) {
+    const original = this.originalStates.get(viewType);
+    if (!original)
+      return;
+    const workspaceTabs = leaf.parent;
+    if (workspaceTabs && workspaceTabs.tabHeaderContainerEl) {
+      const header = workspaceTabs.tabHeaderContainerEl.querySelector(`.workspace-tab-header[data-type="${viewType}"]`);
+      if (header) {
+        const titleEl = header.querySelector(".workspace-tab-header-inner-title");
+        if (titleEl) {
+          titleEl.textContent = original.title;
+          header.setAttribute("aria-label", original.title);
+        }
+        const iconEl = header.querySelector(".workspace-tab-header-inner-icon");
+        if (iconEl) {
+          iconEl.empty();
+          (0, import_obsidian23.setIcon)(iconEl, original.icon);
+        }
+        header.removeClass("assistant-contextual-group-tab");
+      }
+    }
+    this.originalStates.delete(viewType);
   }
 };
 
@@ -4213,27 +4522,103 @@ var SidebarManager = class {
     this.autoHideFeature = new AutoHideFeature(app, plugin);
     this.ribbonFeature = new RibbonFeature(app, plugin);
     this.tabsFeature = new SidebarTabsFeature(app, plugin);
+    this.contextualFeature = new ContextualSplitFeature(app, plugin);
   }
   async onload() {
     var _a, _b, _c;
-    if (((_a = this.plugin.settings.mySideBar.autoHide) == null ? void 0 : _a.enabled) !== false) {
+    if ((_a = this.plugin.settings.mySideBar.autoHide) == null ? void 0 : _a.enabled)
       this.autoHideFeature.load();
-    }
-    if (((_b = this.plugin.settings.mySideBar.ribbon) == null ? void 0 : _b.enabled) !== false) {
+    if ((_b = this.plugin.settings.mySideBar.ribbon) == null ? void 0 : _b.enabled)
       await this.ribbonFeature.onload();
-    }
-    if (((_c = this.plugin.settings.mySideBar.tabs) == null ? void 0 : _c.enabled) !== false) {
+    if ((_c = this.plugin.settings.mySideBar.tabs) == null ? void 0 : _c.enabled) {
       await this.tabsFeature.onload();
+      this.contextualFeature.onload();
     }
   }
   onunload() {
     this.autoHideFeature.unload();
     this.ribbonFeature.onunload();
+    this.contextualFeature.onunload();
   }
 };
 
 // src/sidebar/settings-ui.ts
-var import_obsidian22 = require("obsidian");
+var import_obsidian25 = require("obsidian");
+
+// src/sidebar/group-modal.ts
+var import_obsidian24 = require("obsidian");
+var GroupModal = class extends import_obsidian24.Modal {
+  constructor(app, manager, onSubmit) {
+    super(app);
+    this.masterId = "";
+    this.slaveId = "";
+    this.groupName = "";
+    this.groupSvg = "";
+    this.manager = manager;
+    this.onSubmit = onSubmit;
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl("h2", { text: t("Add New Group") });
+    new import_obsidian24.Setting(contentEl).setName(t("Master View ID")).setDesc(t("The view ID of the main tab (will be replaced by the group tab)")).addText((text) => text.onChange((value) => this.masterId = value));
+    new import_obsidian24.Setting(contentEl).setName(t("Slave View ID")).setDesc(t("The view ID of the split tab (hidden until group is active)")).addText((text) => text.onChange((value) => this.slaveId = value));
+    new import_obsidian24.Setting(contentEl).setName(t("Group Name")).setDesc(t("Name to display on the tab")).addText((text) => text.onChange((value) => this.groupName = value));
+    new import_obsidian24.Setting(contentEl).setName(t("Group Icon")).setDesc(t("SVG Code or Lucide Icon Name")).addTextArea((text) => text.setPlaceholder('<svg...> or "star"').onChange((value) => this.groupSvg = value));
+    new import_obsidian24.Setting(contentEl).addButton((btn) => btn.setButtonText(t("Add Group")).setCta().onClick(async () => {
+      if (await this.createGroup()) {
+        this.close();
+        this.onSubmit();
+      }
+    }));
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+  async createGroup() {
+    const settings = this.manager.plugin.settings.mySideBar.tabs;
+    if (!this.masterId || !this.slaveId) {
+      new import_obsidian24.Notice(t("Error: Invalid ID"));
+      return false;
+    }
+    const masterParams = settings.elements[this.masterId];
+    const slaveParams = settings.elements[this.slaveId];
+    if (!masterParams || !slaveParams) {
+      new import_obsidian24.Notice(t("Error: Invalid ID"));
+      return false;
+    }
+    if (masterParams.side !== slaveParams.side) {
+      new import_obsidian24.Notice(t("Error: Same Side"));
+      return false;
+    }
+    if (!settings.bindings)
+      settings.bindings = [];
+    if (settings.bindings.some((b) => b.masterId === this.masterId)) {
+      new import_obsidian24.Notice(t("Error: Master ID already bound"));
+      return false;
+    }
+    const newBinding = {
+      masterId: this.masterId,
+      slaveId: this.slaveId,
+      groupName: this.groupName,
+      groupSvg: this.groupSvg
+    };
+    settings.bindings.push(newBinding);
+    settings.elements[this.slaveId].visible = false;
+    settings.elements[this.masterId].visible = true;
+    settings.elements[this.slaveId].order = settings.elements[this.masterId].order + 0.01;
+    const all = Object.values(settings.elements).sort((a, b) => a.order - b.order);
+    all.forEach((el, idx) => el.order = idx);
+    await this.manager.plugin.saveSettings();
+    const leaves = this.manager.contextualFeature.findLeavesByType(this.masterId);
+    leaves.forEach((l) => this.manager.contextualFeature.applyVisualOverride(l, newBinding));
+    await this.manager.tabsFeature.applyLayout();
+    return true;
+  }
+};
+
+// src/sidebar/settings-ui.ts
 function renderSidebarSettings(containerEl, manager) {
   var _a, _b, _c, _d, _e, _f, _g, _h, _i;
   createToggledSubSection(
@@ -4306,7 +4691,7 @@ function createToggledSubSection(containerEl, title, isEnabled, onToggle, render
   titleEl.innerText = title;
   const toggleContainer = summary.createEl("span");
   toggleContainer.addEventListener("click", (e) => e.stopPropagation());
-  new import_obsidian22.ToggleComponent(toggleContainer).setValue(isEnabled).onChange((value) => {
+  new import_obsidian25.ToggleComponent(toggleContainer).setValue(isEnabled).onChange((value) => {
     onToggle(value);
   });
   const content = details.createEl("div");
@@ -4322,69 +4707,69 @@ function createToggledSubSection(containerEl, title, isEnabled, onToggle, render
 function renderAutoHideSettings(containerEl, manager) {
   const plugin = manager.plugin;
   const settings = plugin.settings.mySideBar.autoHide;
-  new import_obsidian22.Setting(containerEl).setName(t("Left sidebar hover")).setDesc(t("Enables the expansion and collapsing of the left sidebar on hover.")).addToggle((t2) => t2.setValue(settings.leftSidebar).onChange(async (v) => {
+  new import_obsidian25.Setting(containerEl).setName(t("Left sidebar hover")).setDesc(t("Enables the expansion and collapsing of the left sidebar on hover.")).addToggle((t2) => t2.setValue(settings.leftSidebar).onChange(async (v) => {
     settings.leftSidebar = v;
     await plugin.saveSettings();
   }));
-  new import_obsidian22.Setting(containerEl).setName(t("Right sidebar hover")).setDesc(t("Enables the expansion and collapsing of the right sidebar on hover. Only collapses the right panel unless you have a right ribbon.")).addToggle((t2) => t2.setValue(settings.rightSidebar).onChange(async (v) => {
+  new import_obsidian25.Setting(containerEl).setName(t("Right sidebar hover")).setDesc(t("Enables the expansion and collapsing of the right sidebar on hover. Only collapses the right panel unless you have a right ribbon.")).addToggle((t2) => t2.setValue(settings.rightSidebar).onChange(async (v) => {
     settings.rightSidebar = v;
     await plugin.saveSettings();
   }));
-  new import_obsidian22.Setting(containerEl).setName(t("Sync left and right")).setDesc(t("If enabled, hovering over the right sidebar will also expand the left sidebar at the same time, and vice versa. (Left and Right sidebar must both be enabled above)")).addToggle((t2) => t2.setValue(settings.syncLeftRight).onChange(async (v) => {
+  new import_obsidian25.Setting(containerEl).setName(t("Sync left and right")).setDesc(t("If enabled, hovering over the right sidebar will also expand the left sidebar at the same time, and vice versa. (Left and Right sidebar must both be enabled above)")).addToggle((t2) => t2.setValue(settings.syncLeftRight).onChange(async (v) => {
     settings.syncLeftRight = v;
     await plugin.saveSettings();
   }));
-  new import_obsidian22.Setting(containerEl).setName(t("Overlay mode")).setDesc(t("When enabled, sidebars will slide over the main content without affecting the layout. When disabled, sidebars will expand by pushing content.")).addToggle((t2) => t2.setValue(settings.overlayMode).onChange(async (v) => {
+  new import_obsidian25.Setting(containerEl).setName(t("Overlay mode")).setDesc(t("When enabled, sidebars will slide over the main content without affecting the layout. When disabled, sidebars will expand by pushing content.")).addToggle((t2) => t2.setValue(settings.overlayMode).onChange(async (v) => {
     settings.overlayMode = v;
     document.body.toggleClass("obsidian-assistant-overlay-mode", v);
     await plugin.saveSettings();
   }));
-  new import_obsidian22.Setting(containerEl).setName(t("Behavior")).setHeading();
-  new import_obsidian22.Setting(containerEl).setName(t("Left sidebar pixel trigger")).setDesc(t("Specify the number of pixels from the left edge of the editor that will trigger the left sidebar to open on hover (must be greater than 0)")).addText((text) => text.setValue(String(settings.leftSideBarPixelTrigger)).onChange(async (v) => {
+  new import_obsidian25.Setting(containerEl).setName(t("Behavior")).setHeading();
+  new import_obsidian25.Setting(containerEl).setName(t("Left sidebar pixel trigger")).setDesc(t("Specify the number of pixels from the left edge of the editor that will trigger the left sidebar to open on hover (must be greater than 0)")).addText((text) => text.setValue(String(settings.leftSideBarPixelTrigger)).onChange(async (v) => {
     const num = parseInt(v);
     if (!isNaN(num) && num > 0) {
       settings.leftSideBarPixelTrigger = num;
       await plugin.saveSettings();
     }
   }));
-  new import_obsidian22.Setting(containerEl).setName(t("Right sidebar pixel trigger")).setDesc(t("Specify the number of pixels from the right edge of the editor that will trigger the right sidebar to open on hover (must be greater than 0)")).addText((text) => text.setValue(String(settings.rightSideBarPixelTrigger)).onChange(async (v) => {
+  new import_obsidian25.Setting(containerEl).setName(t("Right sidebar pixel trigger")).setDesc(t("Specify the number of pixels from the right edge of the editor that will trigger the right sidebar to open on hover (must be greater than 0)")).addText((text) => text.setValue(String(settings.rightSideBarPixelTrigger)).onChange(async (v) => {
     const num = parseInt(v);
     if (!isNaN(num) && num > 0) {
       settings.rightSideBarPixelTrigger = num;
       await plugin.saveSettings();
     }
   }));
-  new import_obsidian22.Setting(containerEl).setName(t("Timing")).setHeading();
-  new import_obsidian22.Setting(containerEl).setName(t("Sidebar collapse delay")).setDesc(t("The delay in milliseconds before the sidebar collapses after the mouse has left. Enter '0' to disable delay.")).addText((text) => text.setValue(String(settings.sidebarDelay)).onChange(async (v) => {
+  new import_obsidian25.Setting(containerEl).setName(t("Timing")).setHeading();
+  new import_obsidian25.Setting(containerEl).setName(t("Sidebar collapse delay")).setDesc(t("The delay in milliseconds before the sidebar collapses after the mouse has left. Enter '0' to disable delay.")).addText((text) => text.setValue(String(settings.sidebarDelay)).onChange(async (v) => {
     const num = parseInt(v);
     if (!isNaN(num) && num >= 0) {
       settings.sidebarDelay = num;
       await plugin.saveSettings();
     }
   }));
-  new import_obsidian22.Setting(containerEl).setName(t("Sidebar expand delay")).setDesc(t("The delay in milliseconds before the sidebar expands after hovering. Default is 200ms.")).addText((text) => text.setValue(String(settings.sidebarExpandDelay)).onChange(async (v) => {
+  new import_obsidian25.Setting(containerEl).setName(t("Sidebar expand delay")).setDesc(t("The delay in milliseconds before the sidebar expands after hovering. Default is 200ms.")).addText((text) => text.setValue(String(settings.sidebarExpandDelay)).onChange(async (v) => {
     const num = parseInt(v);
     if (!isNaN(num) && num >= 0) {
       settings.sidebarExpandDelay = num;
       await plugin.saveSettings();
     }
   }));
-  new import_obsidian22.Setting(containerEl).setName(t("Expand/collapse animation speed")).setDesc(t("The speed of the sidebar expand/collapse animation in milliseconds.")).addText((text) => text.setValue(String(settings.expandCollapseSpeed)).onChange(async (v) => {
+  new import_obsidian25.Setting(containerEl).setName(t("Expand/collapse animation speed")).setDesc(t("The speed of the sidebar expand/collapse animation in milliseconds.")).addText((text) => text.setValue(String(settings.expandCollapseSpeed)).onChange(async (v) => {
     const num = parseInt(v);
     if (!isNaN(num) && num > 0) {
       settings.expandCollapseSpeed = num;
       await plugin.saveSettings();
     }
   }));
-  new import_obsidian22.Setting(containerEl).setName(t("Appearance")).setHeading();
-  new import_obsidian22.Setting(containerEl).setName(t("Left sidebar maximum width")).setDesc(t("Specify the maximum width in pixels for the left sidebar when expanded")).addText((text) => text.setValue(String(settings.leftSidebarMaxWidth)).onChange(async (v) => {
+  new import_obsidian25.Setting(containerEl).setName(t("Appearance")).setHeading();
+  new import_obsidian25.Setting(containerEl).setName(t("Left sidebar maximum width")).setDesc(t("Specify the maximum width in pixels for the left sidebar when expanded")).addText((text) => text.setValue(String(settings.leftSidebarMaxWidth)).onChange(async (v) => {
     const num = parseInt(v);
     if (!isNaN(num) && num > 0) {
       settings.leftSidebarMaxWidth = num;
       await plugin.saveSettings();
     }
   }));
-  new import_obsidian22.Setting(containerEl).setName(t("Right sidebar maximum width")).setDesc(t("Specify the maximum width in pixels for the right sidebar when expanded")).addText((text) => text.setValue(String(settings.rightSidebarMaxWidth)).onChange(async (v) => {
+  new import_obsidian25.Setting(containerEl).setName(t("Right sidebar maximum width")).setDesc(t("Specify the maximum width in pixels for the right sidebar when expanded")).addText((text) => text.setValue(String(settings.rightSidebarMaxWidth)).onChange(async (v) => {
     const num = parseInt(v);
     if (!isNaN(num) && num > 0) {
       settings.rightSidebarMaxWidth = num;
@@ -4424,7 +4809,7 @@ function renderRibbonRow(container, el, manager, allElements) {
   handle.style.display = "flex";
   handle.style.alignItems = "center";
   handle.style.justifyContent = "center";
-  (0, import_obsidian22.setIcon)(handle, "grip-horizontal");
+  (0, import_obsidian25.setIcon)(handle, "grip-horizontal");
   handle.addEventListener("mousedown", (e) => handleRibbonDrag(e, rowEntry, el, manager, container, allElements));
   const nameContainer = rowEntry.createEl("span", { cls: "statusbar-organizer-row-title" });
   nameContainer.style.display = "flex";
@@ -4443,15 +4828,15 @@ function renderRibbonRow(container, el, manager, allElements) {
   nameContainer.createEl("span", { text: el.name || el.id });
   const visBtn = rowEntry.createEl("span", { cls: "statusbar-organizer-row-visibility" });
   visBtn.style.cursor = "pointer";
-  (0, import_obsidian22.setIcon)(visBtn, el.visible ? "eye" : "eye-off");
+  (0, import_obsidian25.setIcon)(visBtn, el.visible ? "eye" : "eye-off");
   visBtn.addEventListener("click", async () => {
     await manager.ribbonFeature.toggleVisibility(el.id);
     if (manager.plugin.settings.mySideBar.ribbon.elements[el.id].visible) {
       rowEntry.removeClass("statusbar-organizer-row-hidden");
-      (0, import_obsidian22.setIcon)(visBtn, "eye");
+      (0, import_obsidian25.setIcon)(visBtn, "eye");
     } else {
       rowEntry.addClass("statusbar-organizer-row-hidden");
-      (0, import_obsidian22.setIcon)(visBtn, "eye-off");
+      (0, import_obsidian25.setIcon)(visBtn, "eye-off");
     }
   });
 }
@@ -4496,14 +4881,19 @@ function handleRibbonDrag(e, row, el, manager, container, allElements) {
 function renderSidebarTabsSettings(containerEl, manager) {
   containerEl.empty();
   const settings = manager.plugin.settings.mySideBar.tabs;
-  new import_obsidian22.Setting(containerEl).setName(t("Scan Current Layout")).setDesc(t("Scan and apply")).addButton((btn) => btn.setButtonText(t("Scan")).onClick(async () => {
+  new import_obsidian25.Setting(containerEl).setName(t("Scan Current Layout")).setDesc(t("Scan and apply")).addButton((btn) => btn.setButtonText(t("Scan")).onClick(async () => {
     await manager.tabsFeature.scanAndApply();
     renderSidebarTabsSettings(containerEl, manager);
   }));
+  new import_obsidian25.Setting(containerEl).setName(t("Add New Group")).setDesc(t("Create a new contextual group binding")).addButton((btn) => btn.setButtonText(t("Add Group")).onClick(() => {
+    new GroupModal(manager.app, manager, () => renderSidebarTabsSettings(containerEl, manager)).open();
+  }));
   const elements = Object.values(settings.elements).sort((a, b) => a.order - b.order);
-  const leftElements = elements.filter((e) => e.side === "left" && e.visible);
-  const rightElements = elements.filter((e) => e.side === "right" && e.visible);
-  const hiddenElements = elements.filter((e) => !e.visible);
+  const bindings = settings.bindings || [];
+  const slaveIds = bindings.map((b) => b.slaveId);
+  const leftElements = elements.filter((e) => e.side === "left" && e.visible && !slaveIds.includes(e.id));
+  const rightElements = elements.filter((e) => e.side === "right" && e.visible && !slaveIds.includes(e.id));
+  const hiddenElements = elements.filter((e) => !e.visible && !slaveIds.includes(e.id));
   renderTabGroup(containerEl, t("Left Sidebar"), leftElements, manager);
   renderTabGroup(containerEl, t("Right Sidebar"), rightElements, manager);
   renderTabGroup(containerEl, t("Hidden"), hiddenElements, manager);
@@ -4529,19 +4919,52 @@ function renderTabRow(container, el, manager) {
   const row = container.createEl("div", { cls: "setting-item" });
   row.style.borderTop = "none";
   row.style.borderBottom = "1px solid var(--background-modifier-border)";
+  row.setAttribute("data-tab-id", el.id);
+  const settings = manager.plugin.settings.mySideBar.tabs;
+  const bindings = settings.bindings || [];
+  const binding = bindings.find((b) => b.masterId === el.id);
   const info = row.createEl("div", { cls: "setting-item-info" });
-  info.createEl("div", { cls: "setting-item-name", text: el.id });
+  let displayName = el.id;
+  if (binding) {
+    const namePart = binding.groupName ? binding.groupName : "Group";
+    displayName = `${namePart} (${binding.masterId} + ${binding.slaveId})`;
+  }
+  info.createEl("div", { cls: "setting-item-name", text: displayName });
   const control = row.createEl("div", { cls: "setting-item-control" });
-  new import_obsidian22.DropdownComponent(control).addOption("left", t("Left Sidebar")).addOption("right", t("Right Sidebar")).addOption("hidden", t("Hidden")).setValue(el.visible ? el.side : "hidden").onChange(async (value) => {
-    if (value === "hidden") {
-      await manager.tabsFeature.updateTab(el.id, { visible: false });
-    } else {
-      await manager.tabsFeature.updateTab(el.id, { side: value, visible: true });
-    }
-    renderSidebarTabsSettings(container.parentElement.parentElement, manager);
-  });
+  if (binding) {
+    new import_obsidian25.ButtonComponent(control).setButtonText(t("Unbind")).setWarning().onClick(async () => {
+      const index = bindings.indexOf(binding);
+      if (index > -1) {
+        const master = settings.elements[binding.masterId];
+        const slave = settings.elements[binding.slaveId];
+        if (slave && master) {
+          slave.visible = true;
+          slave.side = master.side;
+          slave.order = master.order + 0.5;
+          const all = Object.values(settings.elements).sort((a, b) => a.order - b.order);
+          all.forEach((item, idx) => item.order = idx);
+        }
+        bindings.splice(index, 1);
+        settings.bindings = bindings;
+        await manager.plugin.saveSettings();
+        const leaves = manager.contextualFeature.findLeavesByType(binding.masterId);
+        leaves.forEach((l) => manager.contextualFeature.restoreVisuals(l, binding.masterId));
+        await manager.tabsFeature.applyLayout();
+        renderSidebarTabsSettings(container.parentElement.parentElement, manager);
+      }
+    });
+  } else {
+    new import_obsidian25.DropdownComponent(control).addOption("left", t("Left Sidebar")).addOption("right", t("Right Sidebar")).addOption("hidden", t("Hidden")).setValue(el.visible ? el.side : "hidden").onChange(async (value) => {
+      if (value === "hidden") {
+        await manager.tabsFeature.updateTab(el.id, { visible: false });
+      } else {
+        await manager.tabsFeature.updateTab(el.id, { side: value, visible: true });
+      }
+      renderSidebarTabsSettings(container.parentElement.parentElement, manager);
+    });
+  }
   const handle = control.createEl("span", { cls: "clickable-icon", style: "cursor: grab; margin-left: 10px;" });
-  (0, import_obsidian22.setIcon)(handle, "grip-horizontal");
+  (0, import_obsidian25.setIcon)(handle, "grip-horizontal");
   handle.addEventListener("mousedown", (e) => handleTabDrag(e, row, el, manager, container));
 }
 function handleTabDrag(e, row, el, manager, container) {
@@ -4570,19 +4993,28 @@ function handleTabDrag(e, row, el, manager, container) {
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
     if (newIndex !== startIndex) {
-      const siblings = Array.from(container.children);
-      const newOrderIds = siblings.map((s) => {
-        var _a;
-        return ((_a = s.querySelector(".setting-item-name")) == null ? void 0 : _a.textContent) || "";
-      });
       const settings = manager.plugin.settings.mySideBar.tabs;
-      const groupItems = newOrderIds.map((id) => settings.elements[id]).filter((x) => x);
-      const sortedOrders = groupItems.map((x) => x.order).sort((a, b) => a - b);
-      newOrderIds.forEach((id, index) => {
-        if (settings.elements[id]) {
-          settings.elements[id].order = sortedOrders[index];
+      const siblings = Array.from(container.children);
+      const orderedIds = siblings.map((s) => s.getAttribute("data-tab-id")).filter((id) => id && settings.elements[id]);
+      if (orderedIds.length > 0) {
+        const subsetElements = orderedIds.map((id) => settings.elements[id]);
+        const availableOrders = subsetElements.map((x) => x.order).sort((a, b) => a - b);
+        orderedIds.forEach((id, idx) => {
+          if (id) {
+            settings.elements[id].order = availableOrders[idx];
+          }
+        });
+      }
+      const bindings = settings.bindings || [];
+      bindings.forEach((b) => {
+        const master = settings.elements[b.masterId];
+        const slave = settings.elements[b.slaveId];
+        if (master && slave) {
+          slave.order = master.order + 0.01;
         }
       });
+      const all = Object.values(settings.elements).sort((a, b) => a.order - b.order);
+      all.forEach((item, index) => item.order = index);
       await manager.plugin.saveSettings();
       await manager.tabsFeature.applyLayout();
     }
@@ -4592,7 +5024,7 @@ function handleTabDrag(e, row, el, manager, container) {
 }
 
 // src/utils/auto-numbering.ts
-var import_obsidian23 = require("obsidian");
+var import_obsidian26 = require("obsidian");
 var AutoNumberingController = class {
   constructor(app, plugin, headingsManager, formulasManager) {
     this.autoUpdateTimeout = null;
@@ -4614,7 +5046,7 @@ var AutoNumberingController = class {
     this.plugin.registerDomEvent(window, "focus", () => this.handleFocus());
   }
   handleBlur() {
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian23.MarkdownView);
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian26.MarkdownView);
     if (!activeView || !activeView.file)
       return;
     const data = this.app.metadataCache.getFileCache(activeView.file);
@@ -4679,7 +5111,7 @@ var AutoNumberingController = class {
 };
 
 // src/main.ts
-var AssistantPlugin = class extends import_obsidian24.Plugin {
+var AssistantPlugin = class extends import_obsidian27.Plugin {
   async onload() {
     console.log(t("Loading Obsidian Assistant..."));
     console.log(t("Loading Settings..."));
@@ -4764,7 +5196,7 @@ var AssistantPlugin = class extends import_obsidian24.Plugin {
     await this.saveData(this.settings);
   }
 };
-var AssistantSettingsTab = class extends import_obsidian24.PluginSettingTab {
+var AssistantSettingsTab = class extends import_obsidian27.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -4774,7 +5206,7 @@ var AssistantSettingsTab = class extends import_obsidian24.PluginSettingTab {
     containerEl.empty();
     containerEl.createEl("h2", { text: t("Obsidian Assistant Settings") });
     containerEl.createEl("h3", { text: t("Global Settings") });
-    new import_obsidian24.Setting(containerEl).setName(t("Auto-Numbering Refresh Interval")).setDesc(t("Time in milliseconds to wait before auto-numbering triggers (after losing focus)")).addText((text) => text.setPlaceholder("1000").setValue(String(this.plugin.settings.refreshInterval)).onChange(async (value) => {
+    new import_obsidian27.Setting(containerEl).setName(t("Auto-Numbering Refresh Interval")).setDesc(t("Time in milliseconds to wait before auto-numbering triggers (after losing focus)")).addText((text) => text.setPlaceholder("1000").setValue(String(this.plugin.settings.refreshInterval)).onChange(async (value) => {
       const interval = parseInt(value);
       if (!isNaN(interval) && interval > 0) {
         this.plugin.settings.refreshInterval = interval;
@@ -4939,7 +5371,7 @@ var AssistantSettingsTab = class extends import_obsidian24.PluginSettingTab {
     titleContainer.createEl("strong", { text: title });
     const toggleContainer = summary.createEl("div");
     toggleContainer.onclick = (e) => e.preventDefault();
-    const toggleSetting = new import_obsidian24.Setting(toggleContainer).addToggle((toggle) => toggle.setValue(isEnabled).onChange(onToggle));
+    const toggleSetting = new import_obsidian27.Setting(toggleContainer).addToggle((toggle) => toggle.setValue(isEnabled).onChange(onToggle));
     toggleSetting.settingEl.style.border = "none";
     toggleSetting.settingEl.style.padding = "0";
     toggleSetting.infoEl.remove();

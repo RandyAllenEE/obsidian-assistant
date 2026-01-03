@@ -9,6 +9,11 @@ export class AutoHideFeature {
     // State
     isHoveringLeft = false;
     isHoveringRight = false;
+
+    // New State for Manual Override
+    isAutoExpandedLeft = false;
+    isAutoExpandedRight = false;
+
     leftSplit: ExtendedWorkspaceSplit;
     rightSplit: ExtendedWorkspaceSplit;
     leftRibbon: ExtendedWorkspaceRibbon;
@@ -58,7 +63,7 @@ export class AutoHideFeature {
         // Initialize handlers
         this.initializeHandlers();
 
-        // add event listeners - IMPORTANT: REMOVE IN UNLOAD()
+        // add event listeners
         document.addEventListener("mousemove", this.mouseMoveHandler);
 
         // Enhanced implementation with hover class for right split
@@ -98,6 +103,14 @@ export class AutoHideFeature {
 
         // Add a document-wide click handler to help with collapse issues
         document.addEventListener("click", this.documentClickHandler);
+
+        // Manual Toggle Logic: Reset auto flags if collapsed manually
+        this.plugin.registerEvent(
+            this.app.workspace.on('layout-change', () => {
+                if (this.leftSplit && this.leftSplit.collapsed) this.isAutoExpandedLeft = false;
+                if (this.rightSplit && this.rightSplit.collapsed) this.isAutoExpandedRight = false;
+            })
+        );
     }
 
     unload() {
@@ -270,17 +283,12 @@ export class AutoHideFeature {
 
     // Helper method to update CSS variables
     updateCSSVariables() {
-        // Create a style element to hold custom CSS variables
         const styleEl = document.createElement('style');
         styleEl.id = 'obsidian-assistant-sidebar-variables';
-
-        // Remove any existing style element with this ID
         const existingStyle = document.getElementById(styleEl.id);
         if (existingStyle) {
             existingStyle.remove();
         }
-
-        // Add the CSS variables to the style element
         styleEl.textContent = `
             :root {
                 --sidebar-expand-collapse-speed: ${this.settings.expandCollapseSpeed}ms;
@@ -288,29 +296,29 @@ export class AutoHideFeature {
                 --left-sidebar-max-width: ${this.settings.leftSidebarMaxWidth}px;
                 --right-sidebar-max-width: ${this.settings.rightSidebarMaxWidth}px;
             }
-            
             body {
                 --sidebar-width: ${this.settings.leftSidebarMaxWidth}px !important;
                 --right-sidebar-width: ${this.settings.rightSidebarMaxWidth}px !important;
             }
         `;
-
-        // Add the style element to the document head
         document.head.appendChild(styleEl);
     }
 
     // -- Non-Obsidian API --------------------------
-    // Helpers
     getEditorWidth = () => this.app.workspace.containerEl.clientWidth;
 
     expandRight() {
-        // Start animation by expanding
+        // Track auto-expansion
+        if (this.rightSplit.collapsed) this.isAutoExpandedRight = true;
+
         this.rightSplit.expand();
         this.isHoveringRight = true;
     }
 
     expandLeft() {
-        // Start animation by expanding
+        // Track auto-expansion
+        if (this.leftSplit.collapsed) this.isAutoExpandedLeft = true;
+
         this.leftSplit.expand();
         this.isHoveringLeft = true;
     }
@@ -321,12 +329,22 @@ export class AutoHideFeature {
     }
 
     collapseRight() {
-        this.rightSplit.collapse();
+        // Only collapse if it was auto-expanded
+        if (this.isAutoExpandedRight) {
+            this.rightSplit.collapse();
+            this.isAutoExpandedRight = false;
+        }
+        // If manually expanded (isAutoExpandedRight == false), DO NOTHING
         this.isHoveringRight = false;
     }
 
     collapseLeft() {
-        this.leftSplit.collapse();
+        // Only collapse if it was auto-expanded
+        if (this.isAutoExpandedLeft) {
+            this.leftSplit.collapse();
+            this.isAutoExpandedLeft = false;
+        }
+        // If manually expanded, DO NOTHING
         this.isHoveringLeft = false;
     }
 

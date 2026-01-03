@@ -348,3 +348,8 @@ details summary:hover {
 /*----------------------------------------------------------------
 MYSNIPPETS SUPPORT
 ----------------------------------------------------------------*/
+
+/* Contextual Split */
+.contextual-split-hidden-header .workspace-tab-header-container {
+    display: none !important;
+}

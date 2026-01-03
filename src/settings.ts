@@ -1,3 +1,26 @@
+import { t } from "./i18n/helpers";
+
+export interface AssistantSettings {
+    myPlugins: MyPluginsSettings;
+    myFolders: MyFoldersSettings;
+    mySideBar: MySideBarSettings;
+    myStatusBar: MyStatusBarSettings;
+    mySnippets: MySnippetsSettings;
+    myHeadings: MyHeadingsSettings;
+    myFormulas: MyFormulasSettings;
+}
+
+export const DEFAULT_SETTINGS: AssistantSettings = {
+    myPlugins: null as any, // Initialized below
+    myFolders: null as any,
+    mySideBar: null as any,
+    myStatusBar: null as any,
+    mySnippets: null as any,
+    myHeadings: null as any,
+    myFormulas: null as any
+};
+
+// MyFolders Settings
 export interface MyFoldersSettings {
     enabled: boolean;
     areFoldersHidden: boolean;
@@ -83,16 +106,6 @@ export const DEFAULT_STATUS_BAR_SETTINGS: MyStatusBarSettings = {
 };
 
 // MySnippets Settings
-export interface MySnippetsSettings {
-    aestheticStyle: boolean;
-    snippetViewPosition: string; // "right" | "left"
-    openSnippetFile: boolean;
-    stylingTemplate: string;
-    snippetEnabledStatus: boolean;
-    showStatusBarIcon: boolean; // [NEW] Toggle status bar icon
-    enabled: boolean; // Add enabled flag for module control
-}
-
 export interface MySnippetsSettings {
     aestheticStyle: boolean;
     snippetViewPosition: string; // "right" | "left"
@@ -198,6 +211,8 @@ export const DEFAULT_MY_FORMULAS_SETTINGS: MyFormulasSettings = {
 };
 
 // MySideBar Settings
+import { RibbonElement } from "./sidebar/types";
+
 export interface AutoHideSettings {
     enabled: boolean;
     leftSidebar: boolean;
@@ -221,15 +236,28 @@ export interface SidebarTabElement {
     order: number;
 }
 
+export interface SidebarBinding {
+    masterId: string;
+    slaveId: string;
+    groupSvg?: string;
+    groupName?: string;
+}
+
 export interface SidebarTabsSettings {
     enabled: boolean;
     elements: { [viewType: string]: SidebarTabElement };
+    bindings: SidebarBinding[];
+}
+
+export interface RibbonSettings {
+    enabled: boolean;
+    elements: { [id: string]: RibbonElement };
 }
 
 export interface MySideBarSettings {
     enabled: boolean;
     autoHide: AutoHideSettings;
-    ribbon: { enabled: boolean; elements: { [key: string]: any } };
+    ribbon: RibbonSettings;
     tabs: SidebarTabsSettings;
 }
 
@@ -239,39 +267,33 @@ export const DEFAULT_MY_SIDEBAR_SETTINGS: MySideBarSettings = {
         enabled: true,
         leftSidebar: true,
         rightSidebar: true,
-        syncLeftRight: false,
+        syncLeftRight: true,
         enforceSameDelay: true,
-        sidebarDelay: 150,
-        sidebarExpandDelay: 10,
-        leftSideBarPixelTrigger: 20,
-        rightSideBarPixelTrigger: 20,
+        sidebarDelay: 500,
+        sidebarExpandDelay: 200,
+        leftSideBarPixelTrigger: 40,
+        rightSideBarPixelTrigger: 40,
         overlayMode: false,
-        expandCollapseSpeed: 370,
-        leftSidebarMaxWidth: 325,
-        rightSidebarMaxWidth: 325,
+        expandCollapseSpeed: 300,
+        leftSidebarMaxWidth: 350,
+        rightSidebarMaxWidth: 350,
     },
-    ribbon: { enabled: true, elements: {} },
-    tabs: { enabled: true, elements: {} }
+    ribbon: {
+        enabled: true,
+        elements: {}
+    },
+    tabs: {
+        enabled: true,
+        elements: {},
+        bindings: []
+    }
 };
 
-export interface AssistantSettings {
-    myFolders: MyFoldersSettings;
-    myPlugins: MyPluginsSettings;
-    myStatusBar: MyStatusBarSettings;
-    mySnippets: MySnippetsSettings;
-    myHeadings: MyHeadingsSettings;
-    myFormulas: MyFormulasSettings;
-    mySideBar: MySideBarSettings;
-    refreshInterval: number; // Global auto-numbering refresh interval in milliseconds
-}
-
-export const DEFAULT_SETTINGS: AssistantSettings = {
-    myFolders: DEFAULT_MY_FOLDERS_SETTINGS,
-    myPlugins: DEFAULT_MY_PLUGINS_SETTINGS,
-    myStatusBar: DEFAULT_STATUS_BAR_SETTINGS,
-    mySnippets: DEFAULT_MY_SNIPPETS_SETTINGS,
-    myHeadings: DEFAULT_MY_HEADINGS_SETTINGS,
-    myFormulas: DEFAULT_MY_FORMULAS_SETTINGS,
-    mySideBar: DEFAULT_MY_SIDEBAR_SETTINGS,
-    refreshInterval: 1000, // Default 1 second (1000ms) as per source
-};
+// Initialize the main settings object with defaults
+DEFAULT_SETTINGS.myPlugins = DEFAULT_MY_PLUGINS_SETTINGS;
+DEFAULT_SETTINGS.myFolders = DEFAULT_MY_FOLDERS_SETTINGS;
+DEFAULT_SETTINGS.mySideBar = DEFAULT_MY_SIDEBAR_SETTINGS;
+DEFAULT_SETTINGS.myStatusBar = DEFAULT_STATUS_BAR_SETTINGS;
+DEFAULT_SETTINGS.mySnippets = DEFAULT_MY_SNIPPETS_SETTINGS;
+DEFAULT_SETTINGS.myHeadings = DEFAULT_MY_HEADINGS_SETTINGS;
+DEFAULT_SETTINGS.myFormulas = DEFAULT_MY_FORMULAS_SETTINGS;

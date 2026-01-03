@@ -1,6 +1,7 @@
-import { App, WorkspaceLeaf, WorkspaceItem } from "obsidian";
+import { App, WorkspaceLeaf, WorkspaceItem, Notice } from "obsidian";
 import AssistantPlugin from "../../main";
 import { SidebarTabElement } from "../../settings";
+import { t } from "../../i18n/helpers";
 
 export class SidebarTabsFeature {
     app: App;
@@ -157,7 +158,29 @@ export class SidebarTabsFeature {
     async updateTab(id: string, updates: Partial<SidebarTabElement>) {
         const settings = this.plugin.settings.mySideBar.tabs;
         if (settings.elements[id]) {
+            const oldSide = settings.elements[id].side;
+
             Object.assign(settings.elements[id], updates);
+
+            // Binding Check: If side changed, remove any conflicting bindings
+            if (updates.side && updates.side !== oldSide && settings.bindings) {
+                const initialLength = settings.bindings.length;
+                settings.bindings = settings.bindings.filter(b => {
+                    // Check if this tab is part of a binding
+                    if (b.masterId === id || b.slaveId === id) {
+                        const masterSide = settings.elements[b.masterId]?.side;
+                        const slaveSide = settings.elements[b.slaveId]?.side;
+                        // Filter out if sides don't match (one of them just changed)
+                        return masterSide === slaveSide;
+                    }
+                    return true;
+                });
+
+                if (settings.bindings.length < initialLength) {
+                    new Notice(t('Binding Removed'));
+                }
+            }
+
             await this.plugin.saveSettings();
             await this.applyLayout(); // Immediate reflection
         }
