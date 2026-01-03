@@ -318,10 +318,9 @@ export class AutoHideFeature {
                 --sidebar-expand-delay: ${this.settings.sidebarExpandDelay}ms;
                 --left-sidebar-max-width: ${this.settings.leftSidebarMaxWidth}px;
                 --right-sidebar-max-width: ${this.settings.rightSidebarMaxWidth}px;
-            }
-            body {
-                --sidebar-width: ${this.settings.leftSidebarMaxWidth}px !important;
-                --right-sidebar-width: ${this.settings.rightSidebarMaxWidth}px !important;
+                /* Unified Variables */
+                --sidebar-width: ${this.settings.leftSidebarMaxWidth}px;
+                --right-sidebar-width: ${this.settings.rightSidebarMaxWidth}px;
             }
         `;
         document.head.appendChild(styleEl);

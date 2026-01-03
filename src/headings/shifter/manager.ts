@@ -41,12 +41,8 @@ export class ShifterManager {
             const applyHeadingCmd = new ApplyHeading(settings, heading);
             this.plugin.addCommand({
                 ...applyHeadingCmd.createCommand(),
-                id: `heading-shifter-${applyHeadingCmd.createCommand().id}` // Prefix to avoid conflict? Or use as derived.
-                // The createCommand in classes returned generic IDs e.g. 'increase-heading'.
-                // obsidian-assistant will prefix with 'obsidian-assistant:'.
-                // I should probably ensure unique IDs within my plugin if I have other heading commands.
-                // But previously I removed 'number-headings' command.
-                // Let's keep IDs simple: 'increase-heading' -> 'obsidian-assistant:increase-heading'.
+                // Unified naming: Use the ID from the command itself (e.g., 'apply-heading-0')
+                // Obsidian will prefix with 'obsidian-assistant:' automatically.
             });
         });
 

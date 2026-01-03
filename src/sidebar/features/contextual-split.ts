@@ -1,4 +1,4 @@
-import { App, WorkspaceLeaf, WorkspaceItem, setIcon, debounce } from "obsidian";
+import { App, WorkspaceLeaf, WorkspaceItem, setIcon, debounce, EventRef } from "obsidian";
 import AssistantPlugin from "../../main";
 import { SidebarBinding } from "../../settings";
 
@@ -9,6 +9,7 @@ export class ContextualSplitFeature {
     // Store original visual states of master tabs: { viewType: { icon: string, title: string } }
     private originalStates: Map<string, { icon: string, title: string }> = new Map();
     private activeBinding: SidebarBinding | null = null;
+    private listeners: EventRef[] = [];
 
     constructor(app: App, plugin: AssistantPlugin) {
         this.app = app;
@@ -22,21 +23,30 @@ export class ContextualSplitFeature {
         });
 
         // Re-apply masquerade and check validity on layout changes
-        this.app.workspace.on('layout-change', debounce(() => {
-            this.applyAllMasquerades();
-            this.checkActiveBindingValidity();
-        }, 200));
+        this.listeners.push(
+            this.app.workspace.on('layout-change', debounce(() => {
+                this.applyAllMasquerades();
+                this.checkActiveBindingValidity();
+            }, 200))
+        );
 
-        this.app.workspace.on('resize', debounce(() => {
-            this.saveSplitState();
-        }, 500));
+        this.listeners.push(
+            this.app.workspace.on('resize', debounce(() => {
+                this.saveSplitState();
+            }, 500))
+        );
 
-        this.app.workspace.on('active-leaf-change', debounce((leaf) => {
-            if (leaf) this.handleActiveLeaf(leaf);
-        }, 50, true));
+        this.listeners.push(
+            this.app.workspace.on('active-leaf-change', debounce((leaf) => {
+                if (leaf) this.handleActiveLeaf(leaf);
+            }, 50, true))
+        );
     }
 
     onunload() {
+        this.listeners.forEach(ref => this.app.workspace.offref(ref));
+        this.listeners = [];
+
         if (this.activeBinding) {
             this.cleanupSplit(this.activeBinding);
         }

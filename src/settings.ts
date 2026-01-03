@@ -8,6 +8,7 @@ export interface AssistantSettings {
     mySnippets: MySnippetsSettings;
     myHeadings: MyHeadingsSettings;
     myFormulas: MyFormulasSettings;
+    refreshInterval?: number; // Global auto-numbering refresh interval
 }
 
 export const DEFAULT_SETTINGS: AssistantSettings = {
@@ -17,7 +18,8 @@ export const DEFAULT_SETTINGS: AssistantSettings = {
     myStatusBar: null as any,
     mySnippets: null as any,
     myHeadings: null as any,
-    myFormulas: null as any
+    myFormulas: null as any,
+    refreshInterval: 1000,
 };
 
 // MyFolders Settings
