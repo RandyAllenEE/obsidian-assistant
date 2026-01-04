@@ -255,6 +255,8 @@ export default {
 
 
     'Ribbon Buttons': 'Ribbon Buttons',
+    'Startup Display Delay': 'Startup Display Delay',
+    'Delay in milliseconds before showing ribbon icons on startup. If \'My Plugins\' is enabled, this acts as a buffer time added to the max plugin load delay.': 'Delay in milliseconds before showing ribbon icons on startup. If \'My Plugins\' is enabled, this acts as a buffer time added to the max plugin load delay.',
     'Sidebar Tabs': 'Sidebar Tabs',
     'Manage placement of sidebar tabs (like File Explorer, Search).': 'Manage placement of sidebar tabs (like File Explorer, Search).',
     'Scan Current Layout': 'Scan Current Layout',

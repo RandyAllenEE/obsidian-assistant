@@ -61,28 +61,54 @@ export class RibbonFeature {
 
         if (!this.ribbonActions && !this.ribbonSettings) return;
 
-        // Initial process
-        this.processRibbon();
+        // Initial process - HIDING
+        this.ribbonActions.addClass("assistant-ribbon-loading");
 
-        // Start observing both
-        this.observer = new MutationObserver((mutations) => {
-            if (this.isInternalChange) return;
+        // Determine delay
+        const configuredDelay = this.plugin.settings.mySideBar.ribbon.ribbonDisplayDelay || 1000;
+        let delayMs = configuredDelay;
 
-            let shouldUpdate = false;
-            for (const mutation of mutations) {
-                if (mutation.type === "childList") {
-                    shouldUpdate = true;
-                    break;
+        if (this.plugin.settings.myPlugins.enabled) {
+            // Lazy Load Logic
+            const deviceSettings = this.plugin.settings.myPlugins.dualConfigs && (this.app as any).isMobile
+                ? (this.plugin.settings.myPlugins.mobile || this.plugin.settings.myPlugins.desktop)
+                : this.plugin.settings.myPlugins.desktop;
+
+            const maxDelay = Math.max(deviceSettings.shortDelaySeconds, deviceSettings.longDelaySeconds);
+            delayMs = (maxDelay * 1000) + configuredDelay; // Max Delay + Configured Buffer
+        } else {
+            // Manual Fallback
+            delayMs = configuredDelay;
+        }
+
+        // Set timeout to reveal
+        setTimeout(async () => {
+            await this.processRibbon();
+            this.ribbonActions.removeClass("assistant-ribbon-loading");
+
+            // Start observing both AFTER initial load is done
+            this.observer = new MutationObserver((mutations) => {
+                if (this.isInternalChange) return;
+
+                let shouldUpdate = false;
+                for (const mutation of mutations) {
+                    if (mutation.type === "childList") {
+                        shouldUpdate = true;
+                        break;
+                    }
                 }
-            }
 
-            if (shouldUpdate) {
-                this.scheduleProcess();
-            }
-        });
+                if (shouldUpdate) {
+                    this.scheduleProcess();
+                }
+            });
 
-        if (this.ribbonActions) this.observer.observe(this.ribbonActions, { childList: true });
-        if (this.ribbonSettings) this.observer.observe(this.ribbonSettings, { childList: true });
+            if (this.ribbonActions) this.observer.observe(this.ribbonActions, { childList: true });
+            if (this.ribbonSettings) this.observer.observe(this.ribbonSettings, { childList: true });
+
+        }, delayMs);
+
+
     }
 
     private scheduleProcess() {

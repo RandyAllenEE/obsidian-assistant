@@ -143,6 +143,7 @@ var DEFAULT_MY_SIDEBAR_SETTINGS = {
   },
   ribbon: {
     enabled: true,
+    ribbonDisplayDelay: 1e3,
     elements: {}
   },
   tabs: {
@@ -452,6 +453,8 @@ var en_default = {
   "Right sidebar maximum width": "Right sidebar maximum width",
   "Specify the maximum width in pixels for the right sidebar when expanded": "Specify the maximum width in pixels for the right sidebar when expanded",
   "Ribbon Buttons": "Ribbon Buttons",
+  "Startup Display Delay": "Startup Display Delay",
+  "Delay in milliseconds before showing ribbon icons on startup. If 'My Plugins' is enabled, this acts as a buffer time added to the max plugin load delay.": "Delay in milliseconds before showing ribbon icons on startup. If 'My Plugins' is enabled, this acts as a buffer time added to the max plugin load delay.",
   "Sidebar Tabs": "Sidebar Tabs",
   "Manage placement of sidebar tabs (like File Explorer, Search).": "Manage placement of sidebar tabs (like File Explorer, Search).",
   "Scan Current Layout": "Scan Current Layout",
@@ -717,6 +720,8 @@ var zh_default = {
   "Right sidebar maximum width": "\u53F3\u4FA7\u8FB9\u680F\u6700\u5927\u5BBD\u5EA6",
   "Specify the maximum width in pixels for the right sidebar when expanded": "\u6307\u5B9A\u53F3\u4FA7\u8FB9\u680F\u5C55\u5F00\u65F6\u7684\u6700\u5927\u5BBD\u5EA6\uFF08\u50CF\u7D20\uFF09",
   "Ribbon Buttons": "\u529F\u80FD\u533A\u6309\u94AE",
+  "Startup Display Delay": "\u542F\u52A8\u663E\u793A\u5EF6\u8FDF",
+  "Delay in milliseconds before showing ribbon icons on startup. If 'My Plugins' is enabled, this acts as a buffer time added to the max plugin load delay.": "\u542F\u52A8\u65F6\u663E\u793A\u529F\u80FD\u533A\u56FE\u6807\u524D\u7684\u5EF6\u8FDF\uFF08\u6BEB\u79D2\uFF09\u3002\u5982\u679C\u542F\u7528\u4E86 '\u6211\u7684\u63D2\u4EF6'\uFF0C\u6B64\u65F6\u95F4\u5C06\u4F5C\u4E3A\u7F13\u51B2\u65F6\u95F4\u6DFB\u52A0\u5230\u6700\u5927\u63D2\u4EF6\u52A0\u8F7D\u5EF6\u8FDF\u4E4B\u540E\u3002",
   "Sidebar Tabs": "\u4FA7\u8FB9\u680F\u6807\u7B7E\u9875",
   "Manage placement of sidebar tabs (like File Explorer, Search).": "\u7BA1\u7406\u4FA7\u8FB9\u680F\u6807\u7B7E\u9875\uFF08\u5982\u6587\u4EF6\u8D44\u6E90\u7BA1\u7406\u5668\u3001\u641C\u7D22\uFF09\u7684\u653E\u7F6E\u4F4D\u7F6E\u3002",
   "Scan Current Layout": "\u626B\u63CF\u5F53\u524D\u5E03\u5C40",
@@ -4148,25 +4153,38 @@ var RibbonFeature = class {
     this.ribbonSettings = ribbon.querySelector(".side-dock-settings");
     if (!this.ribbonActions && !this.ribbonSettings)
       return;
-    this.processRibbon();
-    this.observer = new MutationObserver((mutations) => {
-      if (this.isInternalChange)
-        return;
-      let shouldUpdate = false;
-      for (const mutation of mutations) {
-        if (mutation.type === "childList") {
-          shouldUpdate = true;
-          break;
+    this.ribbonActions.addClass("assistant-ribbon-loading");
+    const configuredDelay = this.plugin.settings.mySideBar.ribbon.ribbonDisplayDelay || 1e3;
+    let delayMs = configuredDelay;
+    if (this.plugin.settings.myPlugins.enabled) {
+      const deviceSettings = this.plugin.settings.myPlugins.dualConfigs && this.app.isMobile ? this.plugin.settings.myPlugins.mobile || this.plugin.settings.myPlugins.desktop : this.plugin.settings.myPlugins.desktop;
+      const maxDelay = Math.max(deviceSettings.shortDelaySeconds, deviceSettings.longDelaySeconds);
+      delayMs = maxDelay * 1e3 + configuredDelay;
+    } else {
+      delayMs = configuredDelay;
+    }
+    setTimeout(async () => {
+      await this.processRibbon();
+      this.ribbonActions.removeClass("assistant-ribbon-loading");
+      this.observer = new MutationObserver((mutations) => {
+        if (this.isInternalChange)
+          return;
+        let shouldUpdate = false;
+        for (const mutation of mutations) {
+          if (mutation.type === "childList") {
+            shouldUpdate = true;
+            break;
+          }
         }
-      }
-      if (shouldUpdate) {
-        this.scheduleProcess();
-      }
-    });
-    if (this.ribbonActions)
-      this.observer.observe(this.ribbonActions, { childList: true });
-    if (this.ribbonSettings)
-      this.observer.observe(this.ribbonSettings, { childList: true });
+        if (shouldUpdate) {
+          this.scheduleProcess();
+        }
+      });
+      if (this.ribbonActions)
+        this.observer.observe(this.ribbonActions, { childList: true });
+      if (this.ribbonSettings)
+        this.observer.observe(this.ribbonSettings, { childList: true });
+    }, delayMs);
   }
   scheduleProcess() {
     if (this.observerTimer !== null) {
@@ -4308,8 +4326,12 @@ var SidebarTabsFeature = class {
             id: viewType,
             side,
             visible: true,
-            order: maxOrder + 1
+            order: maxOrder + 1,
+            icon: leaf.view.icon
           };
+          changed = true;
+        } else if (!settings.elements[viewType].icon && leaf.view.icon) {
+          settings.elements[viewType].icon = leaf.view.icon;
           changed = true;
         }
       }, split);
@@ -4983,6 +5005,13 @@ function renderRibbonSettings(containerEl, manager) {
   const plugin = manager.plugin;
   const settings = plugin.settings.mySideBar.ribbon;
   manager.ribbonFeature.processRibbon().then(() => {
+    new import_obsidian25.Setting(containerEl).setName(t("Startup Display Delay")).setDesc(t("Delay in milliseconds before showing ribbon icons on startup. If 'My Plugins' is enabled, this acts as a buffer time added to the max plugin load delay.")).addText((text) => text.setPlaceholder("1000").setValue(String(settings.ribbonDisplayDelay)).onChange(async (value) => {
+      const num = parseInt(value);
+      if (!isNaN(num) && num >= 0) {
+        settings.ribbonDisplayDelay = num;
+        await plugin.saveSettings();
+      }
+    }));
     const elements = Object.values(settings.elements).sort((a, b) => a.order - b.order);
     const info = containerEl.createEl("div", { cls: "setting-item-description" });
     info.style.marginBottom = "10px";
@@ -5006,11 +5035,7 @@ function renderRibbonRow(container, el, manager, allElements) {
     rowEntry.addClass("statusbar-organizer-row-hidden");
   rowEntry.setAttribute("data-ribbon-id", el.id);
   const handle = rowEntry.createEl("span");
-  handle.style.cursor = "grab";
-  handle.style.display = "flex";
-  handle.style.alignItems = "center";
-  handle.style.justifyContent = "center";
-  (0, import_obsidian25.setIcon)(handle, "grip-horizontal");
+  handle.addClass("statusbar-organizer-row-handle");
   handle.addEventListener("mousedown", (e) => handleRibbonDrag(e, rowEntry, el, manager, container, allElements));
   const nameContainer = rowEntry.createEl("span", { cls: "statusbar-organizer-row-title" });
   nameContainer.style.display = "flex";
@@ -5120,11 +5145,45 @@ function renderTabRow(container, el, manager) {
   const row = container.createEl("div", { cls: "setting-item" });
   row.style.borderTop = "none";
   row.style.borderBottom = "1px solid var(--background-modifier-border)";
+  row.style.display = "flex";
+  row.style.alignItems = "center";
   row.setAttribute("data-tab-id", el.id);
   const settings = manager.plugin.settings.mySideBar.tabs;
   const bindings = settings.bindings || [];
   const binding = bindings.find((b) => b.masterId === el.id);
+  const handle = row.createEl("span");
+  handle.addClass("statusbar-organizer-row-handle");
+  handle.style.marginRight = "8px";
+  handle.style.flexShrink = "0";
+  handle.style.alignSelf = "center";
+  handle.addEventListener("mousedown", (e) => handleTabDrag(e, row, el, manager, container));
+  const iconToUse = binding && binding.groupSvg ? binding.groupSvg : el.icon;
+  if (iconToUse) {
+    const iconSpan = row.createEl("span");
+    iconSpan.style.display = "flex";
+    iconSpan.style.alignItems = "center";
+    iconSpan.style.marginRight = "8px";
+    iconSpan.style.color = "var(--text-muted)";
+    iconSpan.style.flexShrink = "0";
+    iconSpan.style.alignSelf = "center";
+    if (iconToUse.startsWith("<svg") || iconToUse.includes("xmlns")) {
+      iconSpan.innerHTML = iconToUse;
+      const svg = iconSpan.querySelector("svg");
+      if (svg) {
+        svg.setAttribute("width", "16");
+        svg.setAttribute("height", "16");
+      }
+    } else {
+      (0, import_obsidian25.setIcon)(iconSpan, iconToUse);
+      const svg = iconSpan.querySelector("svg");
+      if (svg) {
+        svg.setAttribute("width", "16");
+        svg.setAttribute("height", "16");
+      }
+    }
+  }
   const info = row.createEl("div", { cls: "setting-item-info" });
+  info.style.alignSelf = "center";
   let displayName = el.id;
   if (binding) {
     const namePart = binding.groupName ? binding.groupName : "Group";
@@ -5164,9 +5223,6 @@ function renderTabRow(container, el, manager) {
       renderSidebarTabsSettings(container.parentElement.parentElement, manager);
     });
   }
-  const handle = control.createEl("span", { cls: "clickable-icon", style: "cursor: grab; margin-left: 10px;" });
-  (0, import_obsidian25.setIcon)(handle, "grip-horizontal");
-  handle.addEventListener("mousedown", (e) => handleTabDrag(e, row, el, manager, container));
 }
 function handleTabDrag(e, row, el, manager, container) {
   e.preventDefault();

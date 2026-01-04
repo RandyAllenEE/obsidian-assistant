@@ -236,6 +236,7 @@ export interface SidebarTabElement {
     side: 'left' | 'right';
     visible: boolean;
     order: number;
+    icon?: string;
 }
 
 export interface SidebarBinding {
@@ -254,6 +255,7 @@ export interface SidebarTabsSettings {
 
 export interface RibbonSettings {
     enabled: boolean;
+    ribbonDisplayDelay: number;
     elements: { [id: string]: RibbonElement };
 }
 
@@ -283,6 +285,7 @@ export const DEFAULT_MY_SIDEBAR_SETTINGS: MySideBarSettings = {
     },
     ribbon: {
         enabled: true,
+        ribbonDisplayDelay: 1000,
         elements: {}
     },
     tabs: {

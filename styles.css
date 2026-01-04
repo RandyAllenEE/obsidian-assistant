@@ -353,3 +353,7 @@ MYSNIPPETS SUPPORT
 .contextual-split-hidden-header .workspace-tab-header-container {
     display: none !important;
 }
+/* Hides all ribbon icons while loading, except the side-dock-settings container which usually stays at bottom */
+.side-dock-actions.assistant-ribbon-loading > .side-dock-ribbon-action {
+    display: none !important;
+}

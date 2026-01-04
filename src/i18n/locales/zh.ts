@@ -239,6 +239,8 @@ export default {
 
 
     'Ribbon Buttons': '功能区按钮',
+    'Startup Display Delay': '启动显示延迟',
+    'Delay in milliseconds before showing ribbon icons on startup. If \'My Plugins\' is enabled, this acts as a buffer time added to the max plugin load delay.': '启动时显示功能区图标前的延迟（毫秒）。如果启用了 \'我的插件\'，此时间将作为缓冲时间添加到最大插件加载延迟之后。',
     'Sidebar Tabs': '侧边栏标签页',
     'Manage placement of sidebar tabs (like File Explorer, Search).': '管理侧边栏标签页（如文件资源管理器、搜索）的放置位置。',
     'Scan Current Layout': '扫描当前布局',

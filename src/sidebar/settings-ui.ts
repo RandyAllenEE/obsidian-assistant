@@ -196,6 +196,20 @@ function renderRibbonSettings(containerEl: HTMLElement, manager: SidebarManager)
     const settings = plugin.settings.mySideBar.ribbon;
 
     manager.ribbonFeature.processRibbon().then(() => {
+        new Setting(containerEl)
+            .setName(t("Startup Display Delay"))
+            .setDesc(t("Delay in milliseconds before showing ribbon icons on startup. If 'My Plugins' is enabled, this acts as a buffer time added to the max plugin load delay."))
+            .addText(text => text
+                .setPlaceholder("1000")
+                .setValue(String(settings.ribbonDisplayDelay))
+                .onChange(async (value) => {
+                    const num = parseInt(value);
+                    if (!isNaN(num) && num >= 0) {
+                        settings.ribbonDisplayDelay = num;
+                        await plugin.saveSettings();
+                    }
+                }));
+
         const elements = Object.values(settings.elements).sort((a, b) => a.order - b.order);
 
         const info = containerEl.createEl("div", { cls: "setting-item-description" });
@@ -226,11 +240,7 @@ function renderRibbonRow(container: HTMLElement, el: RibbonElement, manager: Sid
 
     // Handle
     const handle = rowEntry.createEl("span");
-    handle.style.cursor = "grab";
-    handle.style.display = "flex";
-    handle.style.alignItems = "center";
-    handle.style.justifyContent = "center";
-    setIcon(handle, "grip-horizontal");
+    handle.addClass("statusbar-organizer-row-handle");
     handle.addEventListener("mousedown", (e) => handleRibbonDrag(e, rowEntry, el, manager, container, allElements));
 
     // Name
@@ -371,6 +381,8 @@ function renderTabRow(container: HTMLElement, el: SidebarTabElement, manager: Si
     const row = container.createEl("div", { cls: "setting-item" });
     row.style.borderTop = "none";
     row.style.borderBottom = "1px solid var(--background-modifier-border)";
+    row.style.display = "flex"; // Ensure flex
+    row.style.alignItems = "center"; // Vertical alignment
     row.setAttribute("data-tab-id", el.id); // Critical for reordering logic
 
     // Check if this is a master of a group
@@ -378,8 +390,45 @@ function renderTabRow(container: HTMLElement, el: SidebarTabElement, manager: Si
     const bindings = settings.bindings || [];
     const binding = bindings.find(b => b.masterId === el.id);
 
+    // Handle (Now on the left)
+    const handle = row.createEl("span");
+    handle.addClass("statusbar-organizer-row-handle");
+    handle.style.marginRight = "8px"; // Spacing
+    handle.style.flexShrink = "0";
+    handle.style.alignSelf = "center"; // Fix vertical alignment
+    handle.addEventListener("mousedown", (e) => handleTabDrag(e, row, el, manager, container));
+
+    // Icon
+    const iconToUse = (binding && binding.groupSvg) ? binding.groupSvg : el.icon;
+    if (iconToUse) {
+        const iconSpan = row.createEl("span");
+        iconSpan.style.display = "flex";
+        iconSpan.style.alignItems = "center";
+        iconSpan.style.marginRight = "8px";
+        iconSpan.style.color = "var(--text-muted)";
+        iconSpan.style.flexShrink = "0";
+        iconSpan.style.alignSelf = "center"; // Fix vertical alignment
+
+        if (iconToUse.startsWith("<svg") || iconToUse.includes("xmlns")) {
+            iconSpan.innerHTML = iconToUse;
+            const svg = iconSpan.querySelector("svg");
+            if (svg) {
+                svg.setAttribute("width", "16");
+                svg.setAttribute("height", "16");
+            }
+        } else {
+            setIcon(iconSpan, iconToUse);
+            const svg = iconSpan.querySelector("svg");
+            if (svg) {
+                svg.setAttribute("width", "16");
+                svg.setAttribute("height", "16");
+            }
+        }
+    }
+
     // Info (Name)
     const info = row.createEl("div", { cls: "setting-item-info" });
+    info.style.alignSelf = "center"; // Ensure vertical centering
 
     let displayName = el.id;
     if (binding) {
@@ -443,10 +492,6 @@ function renderTabRow(container: HTMLElement, el: SidebarTabElement, manager: Si
                 renderSidebarTabsSettings(container.parentElement!.parentElement!, manager);
             });
     }
-
-    const handle = control.createEl("span", { cls: "clickable-icon", style: "cursor: grab; margin-left: 10px;" });
-    setIcon(handle, "grip-horizontal");
-    handle.addEventListener("mousedown", (e) => handleTabDrag(e, row, el, manager, container));
 }
 
 function handleTabDrag(e: MouseEvent, row: HTMLElement, el: SidebarTabElement, manager: SidebarManager, container: HTMLElement) {

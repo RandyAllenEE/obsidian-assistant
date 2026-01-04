@@ -58,8 +58,13 @@ export class SidebarTabsFeature {
                         id: viewType,
                         side: side,
                         visible: true,
-                        order: maxOrder + 1
+                        order: maxOrder + 1,
+                        icon: leaf.view.icon
                     };
+                    changed = true;
+                } else if (!settings.elements[viewType].icon && leaf.view.icon) {
+                    // Update icon if missing
+                    settings.elements[viewType].icon = leaf.view.icon;
                     changed = true;
                 }
             }, split);
